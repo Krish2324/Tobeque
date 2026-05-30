@@ -1,48 +1,28 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { getProductById, productsData, type Product, type ProductColor } from "../../data/products";
+import { type Product, type ProductColor } from "../../data/products";
+import { useProduct, useProducts } from "../../hooks/useProducts";
 
 import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
-
-// Real product IDs to look up from the centralized database for related carousels
-const styleItWithIds = [
-  "high-waisted-tailored-trousers",
-  "structured-mini-leather-tote",
-  "oversized-wool-blend-blazer",
-  "minimalist-strappy-sandal"
-];
-
-const youMightAlsoLikeIds = [
-  "sheer-panelled-bodysuit",
-  "asymmetric-polka-dot-slip-dress",
-  "cut-out-ribbed-knit-top",
-  "draped-chiffon-mini-dress"
-];
 
 
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
 
-  // Fetch specific product, fall back to leopard print top if not found
-  const product = getProductById(id) || productsData[0];
+  // Fetch specific product from backend
+  const { product, loading, error } = useProduct(id);
 
-  // Resolve related products from the central database
-  const styleItWithProducts = styleItWithIds.map(prodId => getProductById(prodId)).filter(Boolean) as Product[];
-  const youMightAlsoLikeProducts = youMightAlsoLikeIds.map(prodId => getProductById(prodId)).filter(Boolean) as Product[];
+  // Fetch related products (e.g. latest 8 published products)
+  const { products: relatedProducts } = useProducts({ limit: 8, status: 'published' });
+  const styleItWithProducts = relatedProducts.slice(0, 4);
+  const youMightAlsoLikeProducts = relatedProducts.slice(4, 8);
 
   // Interactive States
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(
-    product.detailedColors && product.detailedColors.length > 0
-      ? product.detailedColors[0]
-      : { name: "DEFAULT", class: product.colors?.[0] || "bg-primary" }
-  );
-
-  const [selectedSize, setSelectedSize] = useState<string>(
-    product.sizes && product.sizes.length > 0 ? product.sizes[0] : "S"
-  );
+  const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });
+  const [selectedSize, setSelectedSize] = useState<string>("S");
 
   const { cart, addToCart, setIsCartOpen } = useCart();
   const [isAdding, setIsAdding] = useState(false);
@@ -64,21 +44,23 @@ export function ProductDetailPage() {
 
   // Sync state if product route changes
   useEffect(() => {
-    const updatedProduct = getProductById(id) || productsData[0];
-    if (updatedProduct.detailedColors && updatedProduct.detailedColors.length > 0) {
-      setSelectedColor(updatedProduct.detailedColors[0]);
-    } else {
-      setSelectedColor({ name: "DEFAULT", class: updatedProduct.colors?.[0] || "bg-primary" });
+    if (product) {
+      if (product.detailedColors && product.detailedColors.length > 0) {
+        setSelectedColor(product.detailedColors[0]);
+      } else {
+        setSelectedColor({ name: "DEFAULT", class: product.colors?.[0] || "bg-primary" });
+      }
+      if (product.sizes && product.sizes.length > 0) {
+        setSelectedSize(product.sizes[0]);
+      } else {
+        setSelectedSize("S");
+      }
     }
-    if (updatedProduct.sizes && updatedProduct.sizes.length > 0) {
-      setSelectedSize(updatedProduct.sizes[0]);
-    } else {
-      setSelectedSize("S");
-    }
-  }, [id]);
+  }, [product]);
 
   // Add primary product to bag
   const handleAddToBag = () => {
+    if (!product) return;
     setIsAdding(true);
     setButtonText("ADDING...");
 
@@ -163,6 +145,45 @@ export function ProductDetailPage() {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-surface-container-lowest min-h-screen flex flex-col">
+        <nav className="w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-8 py-4">
+          <Link className="text-headline-md font-headline-md font-bold tracking-widest text-primary uppercase" to="/">
+            TOBEQUE
+          </Link>
+        </nav>
+        <div className="flex-grow flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-label-caps font-label-caps text-secondary tracking-widest">LOADING PRODUCT...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="bg-surface-container-lowest min-h-screen flex flex-col">
+        <nav className="w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-8 py-4">
+          <Link className="text-headline-md font-headline-md font-bold tracking-widest text-primary uppercase" to="/">
+            TOBEQUE
+          </Link>
+        </nav>
+        <div className="flex-grow flex flex-col items-center justify-center gap-4">
+          <h1 className="text-headline-md font-headline-md text-primary">Product Not Found</h1>
+          <Link to="/collection" className="border border-primary text-primary px-6 py-2 text-label-caps font-label-caps hover:bg-neutral-50 transition-colors">
+            RETURN TO COLLECTION
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md min-h-screen flex flex-col">

@@ -2,33 +2,16 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
-
-import { productsData } from '../../data/products';
+import { useProducts } from '../../hooks/useProducts';
 import { QuickViewModal } from '../../components/QuickViewModal/QuickViewModal';
 
-const collectionProductIds = [
-  "architectural-silk-blouse",
-  "ruched-sheer-print-top",
-  "essential-strappy-crop",
-  "eyelet-ribbed-vest",
-  "asymmetric-fine-knit"
-];
-
-const products = collectionProductIds
-  .map((id) => productsData.find((p) => p.id === id))
-  .filter((p): p is Product => !!p);
-
-// Repeat pattern to get 16 items
-const collectionProducts = [
-  ...products,
-  ...products,
-  ...products,
-  products[0]!,
-].map((p, idx) => ({ ...p, id: `${p.id}-col-${idx + 1}` } as Product));
+import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
+import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
 
 export function CollectionPage() {
   const { setIsCartOpen, addToCart, wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { products: liveProducts, loading, error, total } = useProducts({ status: 'published', limit: 40 });
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -123,8 +106,7 @@ export function CollectionPage() {
             <div
               className="w-full h-full bg-cover bg-center"
               style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrrzAR_qXLevSn61zYuBflMT8cWpuFJ6p7CWHH3Zm17pqBRshLUavBhVZdduWRK_3PulltrYJ-lNmQygLArIFhsrysx1IbAiiigCU55uB9vVmKbzULGiPJtGmvkCHkwjwEIlG4sReshjl7aYcMmJFi_ZTq8mSDwCumg25zUKaIoMP0VY-PtG4CEjh0AKZl-LgJFuA0uxTuOEA1ymNPoUnM_QNyrEYspiu7MCVIkTP9z9GEfHMAalTAu434znMvQf1Vy8Ch9DfSUg')",
+                backgroundImage: `url(${collectionHeroLeft})`,
               }}
             ></div>
           </div>
@@ -132,8 +114,7 @@ export function CollectionPage() {
             <div
               className="w-full h-full bg-cover bg-center"
               style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDmmd03WVpvNiT8bLfo_a3wlJVNevWrAQKgKkfIXiyLGNvBwOYgOcV_ykpxMrp8HpyJBN8g-7YNEZa4stTsxcqtoAdSY_b3Eh5ZYV5HE7UIMzvEzktJjE3CFjNmKclxzrHy3TqjT-JCTyPP9-fw4dbtf7Vaz6mgdXh-XwT2QZnsiljpOfJm-UU3ouwApM2nQfNnZkv39ZfidkBxUWI5DNNHoCk2KGx30Duz4u0IkeA9xj31iSVG0E4ku_4TZkxPPAx3reINxtrg_Q')",
+                backgroundImage: `url(${collectionHeroRight})`,
               }}
             ></div>
           </div>
@@ -142,9 +123,9 @@ export function CollectionPage() {
         {/* SECTION 2: COLLECTION HEADER */}
         <div className="sticky top-[72px] z-40 bg-surface-container-lowest border-b border-outline-variant py-4 px-outer-margin md:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="font-headline-md text-headline-md text-primary">
-            TOPS{" "}
+            ALL PRODUCTS{" "}
             <span className="text-on-surface-variant text-body-md font-body-md ml-2">
-              (48)
+              ({loading ? '...' : total})
             </span>
           </div>
           <div className="flex items-center gap-6 font-label-caps text-label-caps text-primary">
@@ -170,30 +151,63 @@ export function CollectionPage() {
 
         {/* SECTION 3: PRODUCT GRID */}
         <section className="w-full px-1 md:px-2 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-1.5">
-            {collectionProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
-                onWishlistClick={handleWishlist}
-                onQuickViewClick={setQuickViewProduct}
-                onAddToCartClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  addToCart({ ...p, quantity: 1, selectedSize: 'S', selectedColor: 'Default' });
-                  setIsCartOpen(true);
-                }}
-              />
-            ))}
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="w-full flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-on-surface-variant font-body-md text-body-md">Loading products...</p>
+            </div>
+          )}
 
-          {/* Load More */}
-          <div className="w-full flex justify-center mt-16 mb-8">
-            <button className="border border-primary text-primary font-label-caps text-label-caps px-8 py-4 uppercase hover:bg-primary hover:text-on-primary transition-colors duration-300">
-              Load More Products
-            </button>
-          </div>
+          {/* Error State */}
+          {!loading && error && (
+            <div className="w-full flex flex-col items-center justify-center py-24 gap-4 text-center px-4">
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant">error_outline</span>
+              <p className="font-headline-sm text-primary">Could not load products</p>
+              <p className="text-on-surface-variant font-body-md text-body-md max-w-sm">{error}</p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && liveProducts.length === 0 && (
+            <div className="w-full flex flex-col items-center justify-center py-24 gap-4 text-center px-4">
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant">inventory_2</span>
+              <p className="font-headline-sm text-primary">No products available yet</p>
+              <p className="text-on-surface-variant font-body-md text-body-md max-w-sm">
+                Products added from the admin panel will appear here once published.
+              </p>
+            </div>
+          )}
+
+          {/* Product Grid */}
+          {!loading && !error && liveProducts.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-1.5">
+              {liveProducts.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
+                  onWishlistClick={handleWishlist}
+                  onQuickViewClick={setQuickViewProduct}
+                  onAddToCartClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addToCart({ ...p, quantity: 1, selectedSize: 'S', selectedColor: 'Default' });
+                    setIsCartOpen(true);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Load More — only show when there are products and not loading */}
+          {!loading && !error && liveProducts.length > 0 && (
+            <div className="w-full flex justify-center mt-16 mb-8">
+              <button className="border border-primary text-primary font-label-caps text-label-caps px-8 py-4 uppercase hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                Load More Products
+              </button>
+            </div>
+          )}
         </section>
       </main>
 

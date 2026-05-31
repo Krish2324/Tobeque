@@ -3,12 +3,15 @@ import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { useProducts } from "../../hooks/useProducts";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
+import { SearchModal } from "../../components/SearchModal/SearchModal";
+import { Footer } from "../../components/Footer/Footer";
 
 import heroBanner from '../../assets/images/hero-spring-edit.jpg';
 
 export function HomePage() {
   const { setIsCartOpen, addToWishlist, wishlistItems, removeFromWishlist, addToCart } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Fetch live featured products from backend
   const { products: featuredProducts, loading: featuredLoading } = useProducts({ status: 'published', featured: true, limit: 10 });
 
@@ -37,25 +40,25 @@ export function HomePage() {
               Shop
             </a>
             <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               href="#"
             >
               New Arrivals
             </a>
             <a
-              className="text-primary dark:text-on-primary-fixed border-b-2 border-primary pb-1 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               href="/collection"
             >
               Collections
             </a>
             <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               href="#"
             >
               Editorial
             </a>
             <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               href="#"
             >
               About
@@ -75,8 +78,9 @@ export function HomePage() {
           {/* Trailing Icons */}
           <div className="flex items-center gap-4 text-primary dark:text-on-primary-fixed">
             <button
+              onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
             >
               <span className="material-symbols-outlined" data-icon="search">
                 search
@@ -501,113 +505,23 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Footer (matches provided snippet) */}
-      <footer className="w-full px-outer-margin bg-surface dark:bg-primary text-primary dark:text-on-primary full-width border-t border-outline-variant dark:border-on-primary-fixed-variant mt-section-padding-desktop">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-stack-md w-full px-outer-margin py-section-padding-desktop max-w-full mx-auto">
-          <div className="col-span-1 md:col-span-1 flex flex-col items-start">
-            <h3 className="font-headline-md text-headline-md text-primary dark:text-on-primary mb-6">
-              TOBEQUE
-            </h3>
-            <p className="font-body-md text-body-md text-secondary dark:text-secondary-fixed-dim text-sm max-w-xs mb-8">
-              Curated elegance for the modern woman. Discover our latest
-              collections.
-            </p>
-          </div>
-
-          <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-8">
-            <div className="flex flex-col gap-4 font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim">
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Journal
-              </a>
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Sustainability
-              </a>
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Boutiques
-              </a>
-            </div>
-            <div className="flex flex-col gap-4 font-label-caps text-label-caps text-secondary dark:text-secondary-fixed-dim">
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Shipping &amp; Returns
-              </a>
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Privacy Policy
-              </a>
-              <a
-                className="hover:underline transition-all hover:text-primary dark:hover:text-on-primary"
-                href="#"
-              >
-                Contact
-              </a>
-            </div>
-          </div>
-
-          <div className="col-span-1 md:col-span-1 flex flex-col items-start">
-            <h4 className="font-label-caps text-label-caps text-primary dark:text-on-primary mb-4 uppercase">
-              Newsletter
-            </h4>
-            <div className="flex w-full border-b border-outline-variant dark:border-on-primary-fixed-variant pb-2">
-              <input
-                className="w-full bg-transparent border-none focus:ring-0 p-0 font-body-md text-body-md text-primary placeholder:text-secondary italic focus:outline-none"
-                placeholder="Email Address"
-                type="email"
-              />
-              <button className="text-primary dark:text-on-primary hover:opacity-70 transition-opacity">
-                <span
-                  className="material-symbols-outlined"
-                  data-icon="arrow_forward"
-                >
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full px-outer-margin py-8 border-t border-outline-variant/50 dark:border-on-primary-fixed-variant/50 flex flex-col md:flex-row justify-between items-center text-xs text-secondary dark:text-secondary-fixed-dim">
-          <p>© 2024 TOBEQUE LUXE. ALL RIGHTS RESERVED.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <a
-              className="hover:text-primary dark:hover:text-on-primary transition-colors"
-              href="#"
-            >
-              Instagram
-            </a>
-            <a
-              className="hover:text-primary dark:hover:text-on-primary transition-colors"
-              href="#"
-            >
-              Pinterest
-            </a>
-            <a
-              className="hover:text-primary dark:hover:text-on-primary transition-colors"
-              href="#"
-            >
-              TikTok
-            </a>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer />
 
       {/* Quick View Modal */}
       <QuickViewModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onProductSelect={(product) => {
+          setQuickViewProduct(product);
+          setIsSearchOpen(false);
+        }}
       />
 
     </div>

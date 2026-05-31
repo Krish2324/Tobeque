@@ -6,6 +6,7 @@ import { Navbar } from "../../components/Navbar/Navbar";
 import { StatsRow } from "../../components/StatsRow/StatsRow";
 import { ConsoleTerminal } from "../../components/ConsoleTerminal/ConsoleTerminal";
 import { ShowcaseGrid } from "../../components/ShowcaseGrid/ShowcaseGrid";
+import { Footer } from "../../components/Footer/Footer";
 
 export function DashboardPage() {
   const { theme, toggleTheme } = useTheme("dark");
@@ -110,26 +111,7 @@ export function DashboardPage() {
         <ShowcaseGrid />
       </main>
 
-      <footer className="footer">
-        <div className="container">
-          <div className="footer-links">
-            <a href="https://react.dev" target="_blank" rel="noreferrer">
-              React Documentation
-            </a>
-            <a href="https://vite.dev" target="_blank" rel="noreferrer">
-              Vite Guide
-            </a>
-            <a
-              href="https://typescriptlang.org"
-              target="_blank"
-              rel="noreferrer"
-            >
-              TypeScript handbook
-            </a>
-          </div>
-          <p>© 2026 Tobeque Core. Engineered using Antigravity AI.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -6,8 +6,8 @@ import { useProduct, useProducts } from "../../hooks/useProducts";
 import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
-
-
+import { SearchModal } from "../../components/SearchModal/SearchModal";
+import { Footer } from "../../components/Footer/Footer";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +28,7 @@ export function ProductDetailPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [buttonText, setButtonText] = useState("ADD TO BAG");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Checkout Dialog State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -225,7 +226,7 @@ export function ProductDetailPage() {
               </span>
             )}
           </button>
-          <button aria-label="search" className="hover:opacity-70 transition-opacity">
+          <button onClick={() => setIsSearchOpen(true)} aria-label="search" className="hover:opacity-70 transition-opacity cursor-pointer">
             <span className="material-symbols-outlined">search</span>
           </button>
         </div>
@@ -502,17 +503,7 @@ export function ProductDetailPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-12 bg-white border-t border-outline-variant flex flex-col items-center gap-6 px-4 max-w-7xl mx-auto">
-        <h2 className="text-headline-md font-headline-md text-primary font-bold tracking-widest">TOBEQUE</h2>
-        <div className="flex flex-wrap justify-center gap-6 md:gap-8">
-          <Link className="text-secondary hover:text-primary transition-all text-label-caps font-label-caps" to="#">PRIVACY POLICY</Link>
-          <Link className="text-secondary hover:text-primary transition-all text-label-caps font-label-caps" to="#">TERMS OF SERVICE</Link>
-          <Link className="text-secondary hover:text-primary transition-all text-label-caps font-label-caps" to="#">SHIPPING &amp; RETURNS</Link>
-          <Link className="text-secondary hover:text-primary transition-all text-label-caps font-label-caps" to="#">CONTACT US</Link>
-          <Link className="text-secondary hover:text-primary transition-all text-label-caps font-label-caps" to="#">CAREERS</Link>
-        </div>
-        <p className="text-body-md text-secondary mt-4">© 2024 TOBEQUE. ALL RIGHTS RESERVED.</p>
-      </footer>
+      <Footer />
 
       {/* ========================================================================= */}
       {/* 2. MODERN CHECKOUT & ORDER SUCCESS MODAL */}
@@ -637,6 +628,16 @@ export function ProductDetailPage() {
       <QuickViewModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onProductSelect={(product) => {
+          setQuickViewProduct(product);
+          setIsSearchOpen(false);
+        }}
       />
     </div>
   );

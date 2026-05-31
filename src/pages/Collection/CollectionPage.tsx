@@ -4,6 +4,7 @@ import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
 import { useProducts } from '../../hooks/useProducts';
 import { QuickViewModal } from '../../components/QuickViewModal/QuickViewModal';
+import { Footer } from '../../components/Footer/Footer';
 
 import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
 import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
@@ -32,13 +33,13 @@ export function CollectionPage() {
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               to="/"
             >
               Home
             </Link>
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
               to="#"
             >
               New Arrivals
@@ -212,44 +213,7 @@ export function CollectionPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-surface-container-lowest dark:bg-surface-container-highest w-full py-section-padding-mobile md:py-section-padding-desktop border-t border-outline-variant flat no shadows">
-        <div className="flex flex-col items-center gap-stack-md w-full px-outer-margin">
-          {/* Brand Logo */}
-          <Link
-            className="font-display-lg text-headline-lg-mobile text-primary dark:text-on-primary-fixed uppercase mb-8"
-            to="/"
-          >
-            TOBEQUE
-          </Link>
-          {/* Links */}
-          <nav className="flex flex-wrap justify-center gap-6 md:gap-12 mb-8">
-            <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps uppercase"
-              href="#"
-            >
-              Sustainability
-            </a>
-            <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps uppercase"
-              href="#"
-            >
-              Contact
-            </a>
-            <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps uppercase"
-              href="#"
-            >
-              Shipping &amp; Returns
-            </a>
-            <a
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps uppercase"
-              href="#"
-            >
-              Privacy Policy
-            </a>
-          </nav>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Quick View Modal */}
       <QuickViewModal

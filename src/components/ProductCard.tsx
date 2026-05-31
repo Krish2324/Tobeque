@@ -12,6 +12,7 @@ export interface ProductCardProps {
 }
 
 const sizeOptions = ["XS", "S", "M", "L", "XL"];
+const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
 
 export function ProductCard({
   product,
@@ -30,18 +31,34 @@ export function ProductCard({
           className="absolute inset-0 z-0 block cursor-pointer hover:opacity-100"
         >
           {/* Primary Image */}
-          <img
-            alt={product.imageAlt || product.name}
-            className={`w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out ${product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
-            src={product.imageSrc}
-          />
+          {isVideo(product.imageSrc) ? (
+            <video
+              className={`w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out ${product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+              src={product.imageSrc}
+              autoPlay loop muted playsInline
+            />
+          ) : (
+            <img
+              alt={product.imageAlt || product.name}
+              className={`w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out ${product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+              src={product.imageSrc}
+            />
+          )}
           {/* Alternate Image on Hover */}
           {product.hoverImageSrc && (
-            <img
-              alt={(product.imageAlt || product.name) + " alternate view"}
-              className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
-              src={product.hoverImageSrc}
-            />
+            isVideo(product.hoverImageSrc) ? (
+              <video
+                className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                src={product.hoverImageSrc}
+                autoPlay loop muted playsInline
+              />
+            ) : (
+              <img
+                alt={(product.imageAlt || product.name) + " alternate view"}
+                className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                src={product.hoverImageSrc}
+              />
+            )
           )}
         </Link>
 

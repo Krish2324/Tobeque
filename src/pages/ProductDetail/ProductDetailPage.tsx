@@ -9,6 +9,8 @@ import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { SearchModal } from "../../components/SearchModal/SearchModal";
 import { Footer } from "../../components/Footer/Footer";
 
+const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
+
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -251,11 +253,19 @@ export function ProductDetailPage() {
                 key={index}
                 className="snap-center shrink-0 w-[90%] sm:w-[50%] lg:w-full aspect-[2/3] relative overflow-hidden bg-surface-container"
               >
-                <img
-                  alt={`${product.name} detail view ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  src={img}
-                />
+                {isVideo(img) ? (
+                  <video
+                    className="w-full h-full object-cover"
+                    src={img}
+                    autoPlay loop muted playsInline
+                  />
+                ) : (
+                  <img
+                    alt={`${product.name} detail view ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    src={img}
+                  />
+                )}
               </div>
             ))}
           </div>

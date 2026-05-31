@@ -7,6 +7,8 @@ export interface QuickViewModalProps {
   onClose: () => void;
 }
 
+const isVideo = (url: string | undefined) => url && typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i);
+
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addToCart, setIsCartOpen } = useCart();
 
@@ -62,11 +64,19 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           <div className="absolute top-4 left-4 bg-surface text-primary px-3 py-1 text-xs font-bold font-label-caps border border-outline-variant z-10">
             NEW IN
           </div>
-          <img
-            src={product.imageSrc}
-            alt={product.imageAlt || product.name}
-            className="w-full h-full object-cover object-top"
-          />
+          {isVideo(product.imageSrc) ? (
+            <video
+              src={product.imageSrc}
+              className="w-full h-full object-cover object-top"
+              autoPlay loop muted playsInline
+            />
+          ) : (
+            <img
+              src={product.imageSrc}
+              alt={product.imageAlt || product.name}
+              className="w-full h-full object-cover object-top"
+            />
+          )}
         </div>
 
         {/* Right Details Section */}

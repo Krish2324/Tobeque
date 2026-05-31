@@ -7,6 +7,8 @@ export interface SearchModalProps {
   onProductSelect?: (product: any) => void;
 }
 
+const isVideo = (url: string | undefined) => url && typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i);
+
 export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -106,11 +108,19 @@ export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalPro
                     className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                   >
                     <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative">
-                      <img
-                        src={product.thumbnail || '/placeholder.png'}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                      />
+                      {isVideo(product.thumbnail) ? (
+                        <video
+                          src={product.thumbnail}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          autoPlay loop muted playsInline
+                        />
+                      ) : (
+                        <img
+                          src={product.thumbnail || '/placeholder.png'}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      )}
                     </div>
                     <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>
                     <p className="font-bold text-primary text-sm">${product.price}</p>

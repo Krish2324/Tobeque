@@ -59,7 +59,7 @@ export function HomePage() {
             </a>
             <a
               className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              href="#"
+              href="/about"
             >
               About
             </a>

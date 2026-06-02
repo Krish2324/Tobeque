@@ -11,6 +11,7 @@ interface AuthContextType {
   openLoginModal: (onSuccess?: () => void) => void;
   closeLoginModal: () => void;
   loginSuccessCallback: (() => void) | null;
+  updateUser: (userData: UserAuthData) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,6 +57,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoginSuccessCallback(null);
   }, []);
 
+  const updateUser = useCallback((userData: UserAuthData) => {
+    setUser(userData);
+    localStorage.setItem(USER_KEY, JSON.stringify(userData));
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -67,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoginModalOpen,
         openLoginModal,
         closeLoginModal,
-        loginSuccessCallback
+        loginSuccessCallback,
+        updateUser
       }}
     >
       {children}

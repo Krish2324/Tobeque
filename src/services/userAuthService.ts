@@ -7,6 +7,12 @@ export interface UserAuthData {
   lastName?: string | null;
   email?: string | null;
   status: string;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zipCode?: string | null;
+  gender?: string | null;
+  sizePreference?: string | null;
 }
 
 export interface OtpVerifyResponse {
@@ -57,7 +63,17 @@ export const getUserOrders = async (token: string) => {
 
 export const updateUserProfile = async (
   token: string,
-  updates: { firstName?: string; lastName?: string; email?: string }
+  updates: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    gender?: string;
+    sizePreference?: string;
+  }
 ) => {
   const res = await fetch(`${API_BASE}/profile`, {
     method: 'PUT',

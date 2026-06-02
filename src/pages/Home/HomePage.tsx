@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { useProducts } from "../../hooks/useProducts";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { SearchModal } from "../../components/SearchModal/SearchModal";
@@ -10,8 +11,10 @@ import heroBanner from '../../assets/images/hero-spring-edit.jpg';
 
 export function HomePage() {
   const { setIsCartOpen, addToWishlist, wishlistItems, removeFromWishlist, addToCart } = useCart();
+  const { isAuthenticated, openLoginModal, logout } = useAuth();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   // Fetch live featured products from backend
   const { products: featuredProducts, loading: featuredLoading } = useProducts({ status: 'published', featured: true, limit: 10 });
 
@@ -86,14 +89,37 @@ export function HomePage() {
                 search
               </span>
             </button>
-            <button
-              aria-label="Account"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
-            >
-              <span className="material-symbols-outlined" data-icon="person">
-                person
-              </span>
-            </button>
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  aria-label="Account"
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
+                >
+                  <span className="material-symbols-outlined" data-icon="person">
+                    person
+                  </span>
+                </button>
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border border-outline-variant py-2 z-50">
+                    <a href="/profile" className="block px-4 py-2 text-sm text-on-background hover:bg-surface-container transition-colors">My Profile</a>
+                    <button 
+                      onClick={() => { logout?.(); setIsProfileDropdownOpen(false); }} 
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-surface-container transition-colors cursor-pointer"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={openLoginModal}
+                className="text-[10px] font-label-caps uppercase tracking-widest hover:text-primary transition-colors border border-outline-variant px-3 py-1.5 cursor-pointer"
+              >
+                Login
+              </button>
+            )}
             <button
               aria-label="Wishlist"
               className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"

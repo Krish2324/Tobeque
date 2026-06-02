@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Footer } from "../../components/Footer/Footer";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { SearchModal } from "../../components/SearchModal/SearchModal";
 import { Link } from "react-router-dom";
 
@@ -11,6 +12,7 @@ import campaignBanner from "../../assets/images/campaign-banner.jpg";
 
 export function AboutPage() {
   const { setIsCartOpen, wishlistItems } = useCart();
+  const { isAuthenticated, openLoginModal } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
@@ -75,7 +77,8 @@ export function AboutPage() {
             </button>
             <button
               aria-label="Account"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
+              onClick={() => isAuthenticated ? window.location.href = '/profile' : openLoginModal()}
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
             >
               <span className="material-symbols-outlined" data-icon="person">
                 person

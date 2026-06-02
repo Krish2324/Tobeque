@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function CheckoutModal() {
   const { 
@@ -8,6 +9,7 @@ export function CheckoutModal() {
     cart, 
     clearCart 
   } = useCart();
+  const { isAuthenticated, openLoginModal, user } = useAuth();
 
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutEmail, setCheckoutEmail] = useState("");
@@ -15,7 +17,19 @@ export function CheckoutModal() {
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
-  if (!isCheckoutOpen) return null;
+  // Pre-fill from auth user
+  const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user?.phone || '');
+  const displayPhone = user?.phone || '';
+
+  // Auth gate via useEffect — avoids calling setState during render
+  useEffect(() => {
+    if (isCheckoutOpen && !isAuthenticated) {
+      setIsCheckoutOpen(false);
+      openLoginModal(() => setIsCheckoutOpen(true));
+    }
+  }, [isCheckoutOpen, isAuthenticated]);
+
+  if (!isCheckoutOpen || !isAuthenticated) return null;
 
   // Calculate cart total
   const cartSubtotal = cart.reduce((total, item) => {
@@ -26,7 +40,7 @@ export function CheckoutModal() {
 
   const handleCheckoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkoutName || !checkoutEmail || !checkoutCard) return;
+    if (!checkoutName) return;
 
     setIsSubmittingOrder(true);
     setTimeout(() => {
@@ -64,7 +78,15 @@ export function CheckoutModal() {
 
         {/* Modal Header */}
         <div className="px-6 py-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-          <h3 className="font-label-caps text-label-caps tracking-widest text-primary text-base font-bold">SECURE CHECKOUT</h3>
+          <div>
+            <h3 className="font-label-caps text-label-caps tracking-widest text-primary text-base font-bold">SECURE CHECKOUT</h3>
+            {displayName && (
+              <p className="text-xs text-secondary mt-0.5 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">person</span>
+                {displayName} {displayPhone && `· +91 ${displayPhone}`}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setIsCheckoutOpen(false)}
             className="w-10 h-10 flex items-center justify-center hover:bg-neutral-100 rounded-full transition-colors cursor-pointer text-primary"
@@ -90,7 +112,7 @@ export function CheckoutModal() {
                 <div className="h-px bg-outline-variant/50 my-2" />
                 <div className="flex justify-between items-center text-sm font-bold text-primary">
                   <span>Total Due</span>
-                  <span>${cartSubtotal.toFixed(2)}</span>
+                  <span>₹{cartSubtotal.toFixed(2)}</span>
                 </div>
               </div>
             ) : (
@@ -101,40 +123,34 @@ export function CheckoutModal() {
           {/* Form Input fields */}
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-label-caps text-secondary font-bold">FULL NAME</label>
+              <label className="text-[10px] font-label-caps text-secondary font-bold">SHIPPING ADDRESS</label>
               <input
                 type="text"
                 required
                 value={checkoutName}
                 onChange={(e) => setCheckoutName(e.target.value)}
-                placeholder="Enter your full name"
+                placeholder="Enter your full shipping address"
                 className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-label-caps text-secondary font-bold">EMAIL ADDRESS</label>
+              <label className="text-[10px] font-label-caps text-secondary font-bold">EMAIL ADDRESS (OPTIONAL)</label>
               <input
                 type="email"
-                required
                 value={checkoutEmail}
                 onChange={(e) => setCheckoutEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="you@example.com (for order confirmation)"
                 className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-label-caps text-secondary font-bold">CREDIT CARD DETAILS (SIMULATED)</label>
-              <input
-                type="text"
-                required
-                value={checkoutCard}
-                onChange={(e) => setCheckoutCard(e.target.value)}
-                placeholder="4111 2222 3333 4444"
-                maxLength={19}
-                className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
-              />
+              <label className="text-[10px] font-label-caps text-secondary font-bold">PAYMENT METHOD</label>
+              <div className="border border-outline-variant px-4 py-3 text-sm bg-neutral-50 text-secondary flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">local_shipping</span>
+                Cash on Delivery (COD)
+              </div>
             </div>
           </div>
 

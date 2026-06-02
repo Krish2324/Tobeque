@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { productsData, type Product } from '../../data/products';
 
 export function CartDrawer() {
@@ -15,8 +16,18 @@ export function CartDrawer() {
     updateCartItemQty,
     setIsCheckoutOpen
   } = useCart();
+  const { isAuthenticated, openLoginModal } = useAuth();
   
   const [activeCartTab, setActiveCartTab] = useState<'cart' | 'wishlist'>('cart');
+
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    if (!isAuthenticated) {
+      openLoginModal(() => setIsCheckoutOpen(true));
+    } else {
+      setIsCheckoutOpen(true);
+    }
+  };
 
   // Hardcode cross sell products for now, simulating real data
   const crossSellProducts = [
@@ -210,11 +221,8 @@ export function CartDrawer() {
                 VIEW BAG
               </button>
               <button 
-                onClick={() => {
-                  setIsCartOpen(false);
-                  setIsCheckoutOpen(true);
-                }}
-                className="flex-1 py-4 bg-primary text-on-primary font-label-caps tracking-widest text-xs hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold"
+                onClick={handleCheckout}
+                className="flex-1 py-4 bg-primary text-on-primary font-label-caps tracking-widest text-xs hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold cursor-pointer"
               >
                 CHECKOUT
               </button>

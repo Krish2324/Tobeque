@@ -3,17 +3,22 @@ import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 
 import { useProducts } from "../../hooks/useProducts";
+import { useSeasonCollection, getSeasonItemImage, resolveImageUrl } from "../../hooks/useSeasonCollection";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 
 import heroBanner from '../../assets/images/hero-spring-edit.jpg';
 
+const isVideoUrl = (url: string | null | undefined) => url && /\.(mp4|webm|ogg|mov)$/i.test(url);
+
 export function HomePage() {
   const { setIsCartOpen, addToWishlist, wishlistItems, removeFromWishlist, addToCart } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   // Fetch live featured products from backend
   const { products: featuredProducts, loading: featuredLoading } = useProducts({ status: 'published', featured: true, limit: 10 });
+  // Fetch dynamic Season Collection managed from admin panel
+  const { items: seasonItems, loading: seasonLoading } = useSeasonCollection();
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -57,157 +62,147 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Season Collection Carousel */}
-      <section className="w-full px-1 md:px-2 mb-8 overflow-hidden">
-        <h2 className="text-center font-headline-md text-headline-md text-primary mb-6">
-          Season Collection
-        </h2>
-        <div className="marquee-container w-full">
-          <div className="marquee-content flex gap-1 md:gap-1.5 w-max">
-            {/* Duplicate set for seamless loop */}
-            <div className="flex gap-1 md:gap-1.5 shrink-0">
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Fashion top"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    data-alt="A minimalist studio shot of a high-fashion top on an invisible mannequin. The garment is a structured, asymmetrical black blouse crafted from crisp cotton. The background is a stark, clean white, illuminated by soft, even lighting to highlight the fabric's texture and silhouette without harsh shadows. The aesthetic is extremely clean, editorial, and perfectly aligned with a luxury boutique's light-mode visual identity."
-                    src="/src/assets/images/product-rib-top-2.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Tops
-                </h3>
-              </a>
 
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Elegant dress"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    data-alt="A striking studio photograph of an elegant midi dress displayed flawlessly. The dress is a soft cream silk slip dress with delicate draping. The lighting is high-key and diffused, casting an almost ethereal glow over the garment against a pristine white background. The image feels airy, sophisticated, and expensive, reflecting the minimalist, high-contrast typography style of the brand's lookbook."
-                    src="/src/assets/images/product-slip-dress-1.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Dresses
-                </h3>
-              </a>
+      {/* Season Collection Carousel — Dynamic (Admin-managed) */}
+      {(seasonLoading || seasonItems.length > 0) && (
+        <section className="w-full px-1 md:px-2 mb-8 overflow-hidden">
+          <h2 className="text-center font-headline-md text-headline-md text-primary mb-6">
+            Season Collection
+          </h2>
 
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Shirt and Blouse"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    data-alt="A crisp, editorial style shot of a tailored shirt and blouse pairing. The garment is a pristine white poplin shirt with exaggerated cuffs, styled simply against a light gray background. The lighting is sharp yet soft, emphasizing the clean lines and architectural shape of the shirt. The mood is modern, confident, and inherently feminine, characteristic of high-fashion magazine spreads."
-                    src="/src/assets/images/product-poplin-shirt-1.jpg"
-                  />
+          {/* Loading skeleton */}
+          {seasonLoading && (
+            <div className="flex gap-1 md:gap-1.5 overflow-hidden">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="w-64 md:w-80 flex-shrink-0">
+                  <div className="aspect-[3/4] bg-surface-container animate-pulse rounded" />
+                  <div className="h-4 bg-surface-container animate-pulse rounded mt-3 mx-8" />
                 </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Shirts &amp; Blouses
-                </h3>
-              </a>
-
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="T-Shirt"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    data-alt="A minimal, premium studio image of a luxury essential t-shirt. The tee is a slightly sheer, finely knitted beige linen fabric, draped effortlessly. The background is a soft, tonal cream that complements the garment. Lighting is gentle and ambient, creating a feeling of relaxed sophistication. This fits perfectly within the brand's 'aspirational elegance' narrative and clean, light-mode palette."
-                    src="/src/assets/images/product-slip-dress-2.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  T-Shirts &amp; Vests
-                </h3>
-              </a>
-
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Jeans"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    data-alt="A high-end editorial shot focusing on premium denim jeans. The jeans are a classic straight-leg cut in a vintage mid-blue wash. Shot against a stark white studio backdrop, the lighting is bright and directional to highlight the denim's twill texture. The aesthetic is clean, timeless, and completely stripped of unnecessary visual noise, adhering to the fluid grid layout concept."
-                    src="/src/assets/images/product-denim-1.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Jeans &amp; Pants
-                </h3>
-              </a>
+              ))}
             </div>
+          )}
 
-            {/* Second duplicate set (minimal for performance; keep same order) */}
-            <div className="flex gap-1 md:gap-1.5 shrink-0">
-              {/* Tops */}
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Fashion top"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    src="/src/assets/images/product-silk-blouse-2.jpg"
-                  />
+          {/* Marquee carousel */}
+          {!seasonLoading && seasonItems.length > 0 && (() => {
+            // Pad items so the marquee always has enough to fill the loop smoothly.
+            // Even 1 item should look like a real carousel, not just 2 duplicates.
+            const MIN_VISIBLE = 8;
+            const repeat = Math.ceil(MIN_VISIBLE / seasonItems.length);
+            const paddedItems = Array.from({ length: repeat }, () => seasonItems).flat();
+            return (
+              <div className="marquee-container w-full">
+                <div className="marquee-content flex gap-1 md:gap-1.5 w-max">
+                  {/* First set */}
+                  <div className="flex gap-1 md:gap-1.5 shrink-0">
+                    {paddedItems.map((item, idx) => {
+                      const imgUrl = getSeasonItemImage(item);
+                      const label = item.displayLabel || item.product?.name || '';
+                      
+                      const effectiveVideoSrc = item.videoUrl 
+                        ? resolveImageUrl(item.videoUrl)
+                        : (isVideoUrl(imgUrl) ? imgUrl : null);
+
+                      return (
+                        <button
+                          key={`a-${item.id}-${idx}`}
+                          className="block w-64 md:w-80 group text-left cursor-pointer bg-transparent border-none p-0"
+                          onClick={() => {
+                            if (item.product) {
+                              setQuickViewProduct({
+                                id: String(item.product.id),
+                                name: item.product.name,
+                                price: item.product.discountPrice
+                                  ? `$${parseFloat(String(item.product.discountPrice)).toFixed(2)}`
+                                  : `$${parseFloat(String(item.product.price)).toFixed(2)}`,
+                                originalPrice: item.product.discountPrice
+                                  ? `$${parseFloat(String(item.product.price)).toFixed(2)}`
+                                  : undefined,
+                                imageSrc: imgUrl,
+                                hoverImageSrc: imgUrl,
+                                imageAlt: label,
+                                sizes: ['S', 'M', 'L'],
+                                description: '',
+                                galleryImages: item.product.images && item.product.images.length > 0
+                                  ? item.product.images.map((img) => img.imageUrl)
+                                  : [imgUrl],
+                                fabricCare: '',
+                                shippingReturns: 'Orders are processed within 1-2 business days.',
+                              });
+                            }
+                          }}
+                        >
+                          <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
+                            {effectiveVideoSrc ? (
+                              <video
+                                src={effectiveVideoSrc}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                muted
+                                loop
+                                playsInline
+                                autoPlay
+                              />
+                            ) : (
+                              <img
+                                alt={label}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                src={imgUrl}
+                              />
+                            )}
+                          </div>
+                          <h3 className="text-center font-body-md text-body-md text-primary">
+                            {label}
+                          </h3>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Duplicate set for seamless infinite marquee loop */}
+                  <div className="flex gap-1 md:gap-1.5 shrink-0" aria-hidden="true">
+                    {paddedItems.map((item, idx) => {
+                      const imgUrl = getSeasonItemImage(item);
+                      const label = item.displayLabel || item.product?.name || '';
+                      
+                      const effectiveVideoSrc = item.videoUrl 
+                        ? resolveImageUrl(item.videoUrl)
+                        : (isVideoUrl(imgUrl) ? imgUrl : null);
+
+                      return (
+                        <div
+                          key={`b-${item.id}-${idx}`}
+                          className="block w-64 md:w-80 group text-left"
+                        >
+                          <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
+                            {effectiveVideoSrc ? (
+                              <video
+                                src={effectiveVideoSrc}
+                                className="w-full h-full object-cover"
+                                muted
+                                loop
+                                playsInline
+                                autoPlay
+                              />
+                            ) : (
+                              <img
+                                alt={label}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                src={imgUrl}
+                              />
+                            )}
+                          </div>
+                          <h3 className="text-center font-body-md text-body-md text-primary">
+                            {label}
+                          </h3>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Tops
-                </h3>
-              </a>
-              {/* Dresses */}
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Elegant dress"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    src="/src/assets/images/product-sheer-top-1.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Dresses
-                </h3>
-              </a>
-              {/* Shirts & Blouses */}
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Shirt and Blouse"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    src="/src/assets/images/product-poplin-shirt-2.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Shirts &amp; Blouses
-                </h3>
-              </a>
-              {/* T-Shirts & Vests */}
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="T-Shirt"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    src="/src/assets/images/product-linen-tee-1.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  T-Shirts &amp; Vests
-                </h3>
-              </a>
-              {/* Jeans */}
-              <a className="block w-64 md:w-80 group" href="#">
-                <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                  <img
-                    alt="Jeans"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    src="/src/assets/images/product-denim-2.jpg"
-                  />
-                </div>
-                <h3 className="text-center font-body-md text-body-md text-primary">
-                  Jeans &amp; Pants
-                </h3>
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+              </div>
+            );
+          })()}
+        </section>
+      )}
 
       <div className="w-full px-1 md:px-2 mb-6">
         <div className="flex items-center justify-between border-b border-outline-variant pb-4">

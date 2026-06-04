@@ -13,7 +13,6 @@ export function CheckoutModal() {
 
   const [checkoutName, setCheckoutName] = useState("");
   const [checkoutEmail, setCheckoutEmail] = useState("");
-  const [checkoutCard, setCheckoutCard] = useState("");
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
@@ -53,7 +52,7 @@ export function CheckoutModal() {
         setCheckoutSuccess(false);
         setCheckoutName("");
         setCheckoutEmail("");
-        setCheckoutCard("");
+
       }, 3000);
     }, 1500);
   };

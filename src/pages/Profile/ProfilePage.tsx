@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
-import { getUserOrders, updateUserProfile } from '../../services/userAuthService';
+
 import { Footer } from '../../components/Footer/Footer';
+import { Navbar } from '../../components/Navbar/Navbar';
+import { getUserOrders, updateUserProfile } from '../../services/userAuthService';
+
 
 interface Order {
   id: number;
@@ -35,15 +37,13 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function ProfilePage() {
-  const { user, token, isAuthenticated, logout, openLoginModal, updateUser } = useAuth();
-  const { setIsCartOpen } = useCart();
+  const { user, token, isAuthenticated, logout, updateUser } = useAuth();
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
-  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -134,59 +134,7 @@ export function ProfilePage() {
   return (
     <div className="bg-[#FAFAF8] text-on-background font-body-md antialiased overflow-x-hidden min-h-screen">
       {/* Header */}
-      <header className="bg-white fixed top-0 w-full z-50 border-b border-outline-variant">
-        <div className="flex justify-between items-center w-full px-outer-margin py-4 max-w-full mx-auto">
-          <nav className="hidden md:flex items-center gap-6">
-            <Link className="text-on-surface-variant hover:text-primary transition-colors font-label-caps text-label-caps" to="/">Shop</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-all font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1" to="/">New Arrivals</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-all font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1" to="/collection">Collections</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-all font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1" to="/">Editorial</Link>
-            <Link className="text-on-surface-variant hover:text-primary transition-all font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1" to="/about">About</Link>
-          </nav>
-
-          <div className="flex-1 flex justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
-            <Link className="font-display-lg text-headline-md tracking-widest text-primary uppercase" to="/">TOBEQUE</Link>
-          </div>
-
-          <div className="flex items-center gap-4 text-primary">
-            {isAuthenticated ? (
-              <div className="relative">
-                <button
-                  aria-label="Profile"
-                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="hover:text-primary transition-colors cursor-pointer flex items-center"
-                >
-                  <span className="material-symbols-outlined" style={{ color: '#111' }}>person</span>
-                </button>
-                {isProfileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border border-gray-100 rounded-sm py-2 z-50">
-                    <Link to="/profile" onClick={() => setIsProfileDropdownOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</Link>
-                    <button 
-                      onClick={() => { handleLogout(); setIsProfileDropdownOpen(false); }} 
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 cursor-pointer"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <button
-                onClick={openLoginModal} 
-                className="text-xs font-label-caps uppercase tracking-widest hover:text-primary transition-colors border border-outline-variant px-3 py-1.5"
-              >
-                Login
-              </button>
-            )}
-            <button aria-label="Wishlist" className="hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">favorite</span>
-            </button>
-            <button onClick={() => setIsCartOpen(true)} aria-label="Shopping Bag" className="hover:text-primary transition-colors relative">
-              <span className="material-symbols-outlined">shopping_bag</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Page Content */}
       <div className="pt-[72px] max-w-4xl mx-auto px-6 py-12 md:py-20">

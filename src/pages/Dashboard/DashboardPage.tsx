@@ -54,7 +54,7 @@ export function DashboardPage() {
       <div className="glow-bg-indigo"></div>
       <div className="glow-bg-teal"></div>
 
-      <Navbar theme={theme} onToggleTheme={toggleTheme} />
+      <Navbar />
 
       <main className="container">
         <div className="dashboard-grid">

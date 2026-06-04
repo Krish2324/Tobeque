@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
 import { useProducts } from '../../hooks/useProducts';
 import { QuickViewModal } from '../../components/QuickViewModal/QuickViewModal';
+import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 
 import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
@@ -28,62 +29,7 @@ export function CollectionPage() {
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
       {/* TopNavBar */}
-      <header className="bg-background dark:bg-background fixed top-0 w-full z-50 border-b border-outline-variant flat no shadows">
-        <div className="flex justify-between items-center w-full px-outer-margin py-4 max-w-full">
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              to="/"
-            >
-              Home
-            </Link>
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              to="#"
-            >
-              New Arrivals
-            </Link>
-            <Link
-              className="text-primary dark:text-on-primary-fixed border-b-2 border-primary pb-1 font-label-caps text-label-caps"
-              to="/collection"
-            >
-              Collections
-            </Link>
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
-              to="#"
-            >
-              Editorial
-            </Link>
-          </nav>
-          {/* Brand Logo */}
-          <div className="flex-1 flex justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
-            <Link
-              className="font-display-lg text-headline-md tracking-widest text-primary dark:text-on-primary-fixed uppercase"
-              to="/"
-            >
-              TOBEQUE
-            </Link>
-          </div>
-          {/* Trailing Icons */}
-          <div className="flex items-center gap-4 text-primary dark:text-on-primary-fixed">
-            <button
-              aria-label="person"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
-            >
-              <span className="material-symbols-outlined">person</span>
-            </button>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              aria-label="shopping_bag"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
-            >
-              <span className="material-symbols-outlined">shopping_bag</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar onSearchProductSelect={(product) => setQuickViewProduct(product)} />
 
       <main className="pt-[72px]">
         {/* SECTION 1: PROMOTIONAL HERO BANNER */}

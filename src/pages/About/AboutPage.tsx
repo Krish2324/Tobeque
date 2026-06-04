@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+
 import { Footer } from "../../components/Footer/Footer";
-import { useCart } from "../../context/CartContext";
-import { useAuth } from "../../context/AuthContext";
-import { SearchModal } from "../../components/SearchModal/SearchModal";
-import { Link } from "react-router-dom";
+import { Navbar } from "../../components/Navbar/Navbar";
+
+
 
 import heroBanner from "../../assets/images/hero-spring-edit.jpg";
 import productSheerTop from "../../assets/images/product-sheer-top-1.jpg";
@@ -11,105 +10,11 @@ import productDenim from "../../assets/images/product-denim-1.jpg";
 import campaignBanner from "../../assets/images/campaign-banner.jpg";
 
 export function AboutPage() {
-  const { setIsCartOpen, wishlistItems } = useCart();
-  const { isAuthenticated, openLoginModal } = useAuth();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
       {/* TopNavBar */}
-      <header className="bg-background dark:bg-background fixed top-0 w-full z-50 border-b border-outline-variant flat no shadows">
-        <div className="flex justify-between items-center w-full px-outer-margin py-4 max-w-full mx-auto">
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
-              to="/"
-            >
-              Shop
-            </Link>
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              to="/"
-            >
-              New Arrivals
-            </Link>
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              to="/collection"
-            >
-              Collections
-            </Link>
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
-              to="/"
-            >
-              Editorial
-            </Link>
-            <Link
-              className="text-primary dark:text-on-primary-fixed font-label-caps text-label-caps border-b-2 border-primary pb-1"
-              to="/about"
-            >
-              About
-            </Link>
-          </nav>
-
-          {/* Brand Logo */}
-          <div className="flex-1 flex justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
-            <Link
-              className="font-display-lg text-headline-md tracking-widest text-primary dark:text-on-primary-fixed uppercase"
-              to="/"
-            >
-              TOBEQUE
-            </Link>
-          </div>
-
-          {/* Trailing Icons */}
-          <div className="flex items-center gap-4 text-primary dark:text-on-primary-fixed">
-            <button
-              onClick={() => setIsSearchOpen(true)}
-              aria-label="Search"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
-            >
-              <span className="material-symbols-outlined" data-icon="search">
-                search
-              </span>
-            </button>
-            <button
-              aria-label="Account"
-              onClick={() => isAuthenticated ? window.location.href = '/profile' : openLoginModal()}
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
-            >
-              <span className="material-symbols-outlined" data-icon="person">
-                person
-              </span>
-            </button>
-            <button
-              aria-label="Wishlist"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
-            >
-              <span className="material-symbols-outlined" data-icon="favorite">
-                favorite
-              </span>
-            </button>
-            <button
-              onClick={() => setIsCartOpen(true)}
-              aria-label="Shopping Bag"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative"
-            >
-              <span
-                className="material-symbols-outlined"
-                data-icon="shopping_bag"
-              >
-                shopping_bag
-              </span>
-              <span className="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
-                {wishlistItems.length}
-              </span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center bg-surface-container mt-[72px]">
@@ -207,7 +112,6 @@ export function AboutPage() {
       </section>
 
       <Footer />
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} onProductSelect={() => setIsSearchOpen(false)} />
     </div>
   );
 }

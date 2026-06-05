@@ -14,6 +14,7 @@ export function CheckoutModal() {
 
   const [checkoutName, setCheckoutName] = useState(user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user?.phone || ''));
   const [checkoutEmail, setCheckoutEmail] = useState(user?.email || '');
+  const [checkoutPhone, setCheckoutPhone] = useState(user?.phone || '');
   const [checkoutAddress, setCheckoutAddress] = useState(user?.address || '');
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
@@ -64,6 +65,8 @@ export function CheckoutModal() {
       });
 
       await createOrder(token, {
+        customerName: checkoutName,
+        customerPhone: checkoutPhone,
         shippingAddress: checkoutAddress,
         items
       });
@@ -172,6 +175,18 @@ export function CheckoutModal() {
                 value={checkoutAddress}
                 onChange={(e) => setCheckoutAddress(e.target.value)}
                 placeholder="Enter your full shipping address"
+                className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-label-caps text-secondary font-bold">PHONE NUMBER</label>
+              <input
+                type="text"
+                required
+                value={checkoutPhone}
+                onChange={(e) => setCheckoutPhone(e.target.value)}
+                placeholder="Enter your phone number"
                 className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
               />
             </div>

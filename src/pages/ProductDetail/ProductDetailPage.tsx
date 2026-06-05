@@ -5,6 +5,7 @@ import { useProduct, useProducts } from "../../hooks/useProducts";
 
 import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { SearchModal } from "../../components/SearchModal/SearchModal";
 import { Footer } from "../../components/Footer/Footer";
@@ -27,6 +28,7 @@ export function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<string>("S");
 
   const { cart, addToCart, setIsCartOpen, setIsCheckoutOpen } = useCart();
+  const { user } = useAuth();
   const [isAdding, setIsAdding] = useState(false);
   const [buttonText, setButtonText] = useState("ADD TO BAG");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
@@ -51,7 +53,7 @@ export function ProductDetailPage() {
         setSelectedSize("S");
       }
     }
-  }, [product]);
+  }, [product, user]);
 
   // Add primary product to bag
   const handleAddToBag = () => {

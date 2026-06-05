@@ -12,7 +12,7 @@ export interface UserAuthData {
   state?: string | null;
   zipCode?: string | null;
   gender?: string | null;
-  sizePreference?: string | null;
+  profilePhoto?: string | null;
 }
 
 export interface OtpVerifyResponse {
@@ -72,7 +72,6 @@ export const updateUserProfile = async (
     state?: string;
     zipCode?: string;
     gender?: string;
-    sizePreference?: string;
   }
 ) => {
   const res = await fetch(`${API_BASE}/profile`, {
@@ -88,10 +87,28 @@ export const updateUserProfile = async (
   return data.user;
 };
 
+export const uploadProfilePhoto = async (token: string, file: File): Promise<UserAuthData> => {
+  const formData = new FormData();
+  formData.append('photo', file);
+
+  const res = await fetch(`${API_BASE}/profile/photo`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to upload photo');
+  return data.user;
+};
+
 export const createOrder = async (
   token: string,
   orderData: {
     shippingAddress: string;
+    customerName?: string;
+    customerPhone?: string;
     items: Array<{
       productId: number;
       price: number | string;

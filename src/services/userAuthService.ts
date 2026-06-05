@@ -87,3 +87,28 @@ export const updateUserProfile = async (
   if (!data.success) throw new Error(data.error || 'Failed to update profile');
   return data.user;
 };
+
+export const createOrder = async (
+  token: string,
+  orderData: {
+    shippingAddress: string;
+    items: Array<{
+      productId: number;
+      price: number | string;
+      quantity: number;
+      variantDetails?: any;
+    }>;
+  }
+) => {
+  const res = await fetch(`${API_BASE}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(orderData)
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to create order');
+  return data;
+};

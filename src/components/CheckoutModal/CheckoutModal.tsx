@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { createOrder } from '../../services/userAuthService';
 
 export function CheckoutModal() {
   const { 
@@ -9,12 +10,14 @@ export function CheckoutModal() {
     cart, 
     clearCart 
   } = useCart();
-  const { isAuthenticated, openLoginModal, user } = useAuth();
+  const { isAuthenticated, openLoginModal, user, token } = useAuth();
 
-  const [checkoutName, setCheckoutName] = useState("");
-  const [checkoutEmail, setCheckoutEmail] = useState("");
+  const [checkoutName, setCheckoutName] = useState(user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user?.phone || ''));
+  const [checkoutEmail, setCheckoutEmail] = useState(user?.email || '');
+  const [checkoutAddress, setCheckoutAddress] = useState(user?.address || '');
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Pre-fill from auth user
   const displayName = user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : (user?.phone || '');
@@ -37,24 +40,48 @@ export function CheckoutModal() {
     return total + numericPrice * item.quantity;
   }, 0);
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkoutName) return;
+    if (!checkoutName || !checkoutAddress) {
+      setErrorMessage("Please fill in all required fields.");
+      return;
+    }
+    
+    if (!token) return;
 
     setIsSubmittingOrder(true);
-    setTimeout(() => {
+    setErrorMessage('');
+    
+    try {
+      const items = cart.map(item => {
+        const priceStr = item.price.replace(/[^0-9.-]+/g, "");
+        return {
+          productId: parseInt(item.id, 10),
+          price: parseFloat(priceStr) || 0,
+          quantity: item.quantity,
+          variantDetails: { size: item.selectedSize, color: item.selectedColor }
+        };
+      });
+
+      await createOrder(token, {
+        shippingAddress: checkoutAddress,
+        items
+      });
+
       setIsSubmittingOrder(false);
       setCheckoutSuccess(true);
+      
       setTimeout(() => {
         // Clear global cart, close modal, and reset state
         clearCart();
         setIsCheckoutOpen(false);
         setCheckoutSuccess(false);
-        setCheckoutName("");
-        setCheckoutEmail("");
-
       }, 3000);
-    }, 1500);
+      
+    } catch (error: any) {
+      setIsSubmittingOrder(false);
+      setErrorMessage(error.message || 'An error occurred while placing the order.');
+    }
   };
 
   return (
@@ -121,13 +148,29 @@ export function CheckoutModal() {
 
           {/* Form Input fields */}
           <div className="flex flex-col gap-4">
+            {errorMessage && (
+              <div className="text-red-500 text-xs font-bold bg-red-50 p-2 rounded">{errorMessage}</div>
+            )}
+            
             <div className="flex flex-col gap-1">
-              <label className="text-[10px] font-label-caps text-secondary font-bold">SHIPPING ADDRESS</label>
+              <label className="text-[10px] font-label-caps text-secondary font-bold">FULL NAME *</label>
               <input
                 type="text"
                 required
                 value={checkoutName}
                 onChange={(e) => setCheckoutName(e.target.value)}
+                placeholder="Enter your full name"
+                className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-label-caps text-secondary font-bold">SHIPPING ADDRESS *</label>
+              <input
+                type="text"
+                required
+                value={checkoutAddress}
+                onChange={(e) => setCheckoutAddress(e.target.value)}
                 placeholder="Enter your full shipping address"
                 className="border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary bg-white text-primary rounded-none"
               />

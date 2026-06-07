@@ -291,17 +291,17 @@ export function CartDrawer() {
             <div className="flex flex-col gap-2 mb-2">
               <div className="flex justify-between items-center">
                 <span className="font-label-caps tracking-widest text-secondary text-[11px]">SUBTOTAL:</span>
-                <span className="font-price-lg text-lg font-medium">${cartTotal.toFixed(2)}</span>
+                <span className="font-price-lg text-lg font-medium">₹{cartTotal.toFixed(2)}</span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between items-center text-green-600">
                   <span className="font-label-caps tracking-widest text-[11px]">DISCOUNT:</span>
-                  <span className="font-price-lg text-lg font-medium">-${discountAmount.toFixed(2)}</span>
+                  <span className="font-price-lg text-lg font-medium">-₹{discountAmount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-2 border-t border-outline-variant/30">
                 <span className="font-label-caps tracking-widest text-primary text-xs font-bold">TOTAL DUE:</span>
-                <span className="font-price-lg text-2xl font-bold">${finalTotal.toFixed(2)}</span>
+                <span className="font-price-lg text-2xl font-bold">₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
             <div className="flex gap-4">

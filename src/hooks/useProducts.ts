@@ -68,10 +68,10 @@ function mapBackendProduct(bp: BackendProduct): Product {
   const price = parseFloat(String(bp.price));
   const discountPrice = bp.discountPrice ? parseFloat(String(bp.discountPrice)) : null;
 
-  // Format price as "$XX.XX"
-  const formattedPrice = `$${price.toFixed(2)}`;
-  // If there's a discount, the displayed price is the discount price, original is the full price
-  const displayPrice = discountPrice ? `$${discountPrice.toFixed(2)}` : formattedPrice;
+  // Format price as "₹XX.XX"
+  const formattedPrice = `₹${price.toFixed(2)}`;
+  
+  const displayPrice = discountPrice ? `₹${discountPrice.toFixed(2)}` : formattedPrice;
   const originalPrice = discountPrice ? formattedPrice : undefined;
 
   // Extract sizes from variants JSON, or show a sensible default

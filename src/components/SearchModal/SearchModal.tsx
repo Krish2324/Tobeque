@@ -122,7 +122,7 @@ export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalPro
                       )}
                     </div>
                     <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>
-                    <p className="font-bold text-primary text-sm">${product.price}</p>
+                    <p className="font-bold text-primary text-sm">₹{product.price}</p>
                   </button>
                 ))}
               </div>

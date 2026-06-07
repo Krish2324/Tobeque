@@ -24,7 +24,7 @@ interface Order {
   }>;
 }
 
-type Tab = 'dashboard' | 'orders' | 'addresses' | 'details' | 'wishlist';
+type Tab = 'orders' | 'addresses' | 'details' | 'wishlist';
 
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border border-amber-200',
@@ -41,7 +41,7 @@ export function ProfilePage() {
   const { wishlistItems, removeFromWishlist, addToCart, setIsCartOpen } = useCart();
 
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
@@ -194,13 +194,7 @@ export function ProfilePage() {
             </div>
             
             <nav className="flex flex-col py-4 w-full">
-              <button 
-                onClick={() => setActiveTab('dashboard')} 
-                className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'dashboard' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
-              >
-                <span className="material-symbols-outlined text-xl">dashboard</span>
-                Dashboard
-              </button>
+
               <button 
                 onClick={() => setActiveTab('orders')} 
                 className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'orders' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
@@ -242,19 +236,7 @@ export function ProfilePage() {
           {/* Content Area */}
           <div className="flex-1 p-8 md:p-12 w-full max-w-full overflow-hidden">
             
-            {/* Dashboard */}
-            {activeTab === 'dashboard' && (
-              <div className="animate-in fade-in duration-300">
-                <p className="text-gray-600 mb-4 leading-relaxed">
-                  Hello <strong className="text-[#111]">{displayName}</strong> (not <strong className="text-[#111]">{displayName}</strong>? <button onClick={handleLogout} className="text-primary underline">Log out</button>)
-                </p>
-                <p className="text-gray-600 leading-relaxed">
-                  From your account dashboard you can view your <button onClick={() => setActiveTab('orders')} className="text-[#111] font-medium underline underline-offset-4">recent orders</button>, 
-                  manage your <button onClick={() => setActiveTab('addresses')} className="text-[#111] font-medium underline underline-offset-4">shipping and billing addresses</button>, 
-                  and <button onClick={() => setActiveTab('details')} className="text-[#111] font-medium underline underline-offset-4">edit your account details</button>.
-                </p>
-              </div>
-            )}
+
 
             {/* Orders */}
             {activeTab === 'orders' && (

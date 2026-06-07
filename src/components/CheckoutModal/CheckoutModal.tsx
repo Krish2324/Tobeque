@@ -8,7 +8,8 @@ export function CheckoutModal() {
     isCheckoutOpen, 
     setIsCheckoutOpen, 
     cart, 
-    clearCart 
+    clearCart,
+    appliedCoupon
   } = useCart();
   const { isAuthenticated, openLoginModal, user, token } = useAuth();
 
@@ -41,6 +42,17 @@ export function CheckoutModal() {
     return total + numericPrice * item.quantity;
   }, 0);
 
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discountAmount = (cartSubtotal * parseFloat(appliedCoupon.discountValue as any)) / 100;
+    } else {
+      discountAmount = parseFloat(appliedCoupon.discountValue as any);
+    }
+    if (discountAmount > cartSubtotal) discountAmount = cartSubtotal;
+  }
+  const cartTotal = cartSubtotal - discountAmount;
+
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkoutName || !checkoutAddress) {
@@ -68,7 +80,8 @@ export function CheckoutModal() {
         customerName: checkoutName,
         customerPhone: checkoutPhone,
         shippingAddress: checkoutAddress,
-        items
+        items,
+        couponCode: appliedCoupon?.code
       });
 
       setIsSubmittingOrder(false);
@@ -139,9 +152,19 @@ export function CheckoutModal() {
                   </div>
                 ))}
                 <div className="h-px bg-outline-variant/50 my-2" />
-                <div className="flex justify-between items-center text-sm font-bold text-primary">
-                  <span>Total Due</span>
+                <div className="flex justify-between items-center text-xs text-secondary">
+                  <span>Subtotal</span>
                   <span>₹{cartSubtotal.toFixed(2)}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between items-center text-xs text-green-600">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-sm font-bold text-primary mt-1 pt-1 border-t border-outline-variant/30">
+                  <span>Total Due</span>
+                  <span>₹{cartTotal.toFixed(2)}</span>
                 </div>
               </div>
             ) : (

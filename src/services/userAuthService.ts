@@ -115,6 +115,7 @@ export const createOrder = async (
       quantity: number;
       variantDetails?: any;
     }>;
+    couponCode?: string;
   }
 ) => {
   const res = await fetch(`${API_BASE}/orders`, {
@@ -128,4 +129,17 @@ export const createOrder = async (
   const data = await res.json();
   if (!data.success) throw new Error(data.error || 'Failed to create order');
   return data;
+};
+
+export const validateCouponAPI = async (code: string, cartTotal?: number) => {
+  const res = await fetch(`${API_BASE}/validate-coupon`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code, cartTotal })
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Invalid coupon code');
+  return data.coupon;
 };

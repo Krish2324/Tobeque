@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { productsData, type Product } from '../../data/products';
+import { validateCouponAPI } from '../../services/userAuthService';
 
 export function CartDrawer() {
   const { 
@@ -14,11 +15,17 @@ export function CartDrawer() {
     addToCart,
     updateCartItemSize,
     updateCartItemQty,
-    setIsCheckoutOpen
+    setIsCheckoutOpen,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon
   } = useCart();
   const { isAuthenticated, openLoginModal } = useAuth();
   
   const [activeCartTab, setActiveCartTab] = useState<'cart' | 'wishlist'>('cart');
+  const [couponInput, setCouponInput] = useState('');
+  const [couponError, setCouponError] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -41,6 +48,37 @@ export function CartDrawer() {
     const price = parseFloat(priceStr) || 0;
     return total + (price * item.quantity);
   }, 0);
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    try {
+      const coupon = await validateCouponAPI(couponInput, cartTotal);
+      applyCoupon({
+        code: coupon.code,
+        discountValue: coupon.discountValue,
+        type: coupon.type
+      });
+      setCouponInput('');
+    } catch (err: any) {
+      setCouponError(err.message || 'Invalid coupon');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  let finalTotal = cartTotal;
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'percentage') {
+      discountAmount = (cartTotal * parseFloat(appliedCoupon.discountValue as any)) / 100;
+    } else {
+      discountAmount = parseFloat(appliedCoupon.discountValue as any);
+    }
+    if (discountAmount > cartTotal) discountAmount = cartTotal;
+    finalTotal = cartTotal - discountAmount;
+  }
 
   return (
     <>
@@ -171,6 +209,43 @@ export function CartDrawer() {
                   ))}
                 </div>
               </div>
+
+              {/* Promo Code Section (Moved to scrollable area) */}
+              {cart.length > 0 && (
+                <div className="p-6 border-t border-outline-variant/30 flex flex-col gap-2">
+                  {!appliedCoupon ? (
+                    <>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          placeholder="Enter Promo Code" 
+                          className="flex-1 border border-outline-variant px-3 py-2 text-xs font-body-md focus:outline-none focus:border-primary"
+                        />
+                        <button 
+                          onClick={handleApplyCoupon}
+                          disabled={isApplyingCoupon || !couponInput.trim()}
+                          className="bg-primary text-on-primary px-4 py-2 text-[10px] font-label-caps tracking-widest font-bold disabled:opacity-50"
+                        >
+                          {isApplyingCoupon ? '...' : 'APPLY'}
+                        </button>
+                      </div>
+                      {couponError && <p className="text-red-500 text-[10px]">{couponError}</p>}
+                    </>
+                  ) : (
+                    <div className="flex justify-between items-center bg-green-50 px-3 py-2 border border-green-200">
+                      <div className="flex items-center gap-2 text-green-700">
+                        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                        <span className="text-[11px] font-bold tracking-wide">{appliedCoupon.code} APPLIED</span>
+                      </div>
+                      <button onClick={removeCoupon} className="text-secondary hover:text-red-500">
+                        <span className="material-symbols-outlined text-[16px]">close</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           ) : (
             <div className="p-6">
@@ -211,10 +286,23 @@ export function CartDrawer() {
 
         {/* Footer */}
         {activeCartTab === 'cart' && (
-          <div className="p-6 bg-surface mt-auto border-t-2 border-surface-container">
-            <div className="flex justify-between items-center mb-6">
-              <span className="font-label-caps tracking-widest text-secondary text-xs">TOTAL:</span>
-              <span className="font-price-lg text-2xl font-bold">${cartTotal.toFixed(2)}</span>
+          <div className="p-6 bg-surface mt-auto border-t-2 border-surface-container flex flex-col gap-4">
+            
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex justify-between items-center">
+                <span className="font-label-caps tracking-widest text-secondary text-[11px]">SUBTOTAL:</span>
+                <span className="font-price-lg text-lg font-medium">${cartTotal.toFixed(2)}</span>
+              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="font-label-caps tracking-widest text-[11px]">DISCOUNT:</span>
+                  <span className="font-price-lg text-lg font-medium">-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center pt-2 border-t border-outline-variant/30">
+                <span className="font-label-caps tracking-widest text-primary text-xs font-bold">TOTAL DUE:</span>
+                <span className="font-price-lg text-2xl font-bold">${finalTotal.toFixed(2)}</span>
+              </div>
             </div>
             <div className="flex gap-4">
               <button className="flex-1 py-4 border border-primary text-primary font-label-caps tracking-widest text-xs hover:bg-surface-container transition-colors font-bold">

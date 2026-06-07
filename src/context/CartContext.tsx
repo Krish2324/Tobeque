@@ -8,6 +8,12 @@ export interface CartItem extends Product {
   selectedSize?: string;
 }
 
+export interface AppliedCoupon {
+  code: string;
+  discountValue: number;
+  type: string;
+}
+
 interface CartContextType {
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
@@ -26,6 +32,9 @@ interface CartContextType {
   updateCartItemQty: (cartId: string, qty: number) => void;
   updateCartItemSize: (cartId: string, size: string) => void;
   clearCart: () => void;
+  appliedCoupon: AppliedCoupon | null;
+  applyCoupon: (coupon: AppliedCoupon) => void;
+  removeCoupon: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -36,6 +45,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
   const addToCart = (item: Omit<CartItem, 'cartId'>) => {
     const cartId = `${item.id}-${Date.now()}`;
@@ -73,6 +83,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCart([]);
+    setAppliedCoupon(null);
+  };
+
+  const applyCoupon = (coupon: AppliedCoupon) => {
+    setAppliedCoupon(coupon);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
   };
 
   const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
@@ -96,7 +115,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCheckoutProduct,
         updateCartItemQty,
         updateCartItemSize,
-        clearCart
+        clearCart,
+        appliedCoupon,
+        applyCoupon,
+        removeCoupon
       }}
     >
       {children}

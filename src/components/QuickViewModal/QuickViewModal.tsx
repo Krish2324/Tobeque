@@ -12,20 +12,20 @@ const isVideo = (url: string | undefined) => url && typeof url === 'string' && u
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addToCart, setIsCartOpen } = useCart();
 
-  if (!product) return null;
-
   // 1. Color State
-  const initialColor = product.detailedColors && product.detailedColors.length > 0
+  const initialColor = product?.detailedColors && product.detailedColors.length > 0
     ? product.detailedColors[0].name
     : 'PINK';
   const [selectedColor, setSelectedColor] = useState<string>(initialColor);
 
   // 2. Size State
-  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL'];
+  const sizes = product?.sizes && product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL'];
   const [selectedSize, setSelectedSize] = useState<string>(sizes[0] || 'M');
 
   // 3. Quantity State
   const [quantity, setQuantity] = useState<number>(1);
+
+  if (!product) return null;
 
   const handleDecreaseQty = () => {
     if (quantity > 1) {

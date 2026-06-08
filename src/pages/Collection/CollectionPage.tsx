@@ -13,7 +13,17 @@ import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
 export function CollectionPage() {
   const { setIsCartOpen, addToCart, wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [currentSort, setCurrentSort] = useState('FEATURED');
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const { products: liveProducts, loading, error, total } = useProducts({ status: 'published', limit: 40 });
+
+  const toggleFilter = (filter: string) => {
+    setSelectedFilters(prev => 
+      prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+    );
+  };
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -75,20 +85,77 @@ export function CollectionPage() {
               ({loading ? '...' : total})
             </span>
           </div>
-          <div className="flex items-center gap-6 font-label-caps text-label-caps text-primary">
-            <button className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-              <span className="material-symbols-outlined text-[18px]">tune</span>{" "}
-              FILTER
-            </button>
+          <div className="flex items-center gap-6 font-label-caps text-label-caps text-primary relative">
+            <div className="relative">
+              <button 
+                className="flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
+                onClick={() => { setIsFilterOpen(!isFilterOpen); setIsSortOpen(false); }}
+              >
+                <span className="material-symbols-outlined text-[18px]">tune</span>{" "}
+                FILTER
+                {selectedFilters.length > 0 && (
+                  <span className="bg-primary text-on-primary rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                    {selectedFilters.length}
+                  </span>
+                )}
+              </button>
+              
+              {isFilterOpen && (
+                <div className="absolute top-full left-0 mt-4 bg-surface-container border border-outline-variant shadow-lg z-50 p-6 min-w-[250px] flex flex-col gap-4">
+                  <div className="flex justify-between items-center mb-2 border-b border-outline-variant pb-2">
+                    <h3 className="font-bold tracking-widest text-sm">CATEGORIES</h3>
+                    <button className="text-[10px] underline cursor-pointer" onClick={() => setSelectedFilters([])}>Clear</button>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {['Dresses', 'Tops', 'Pants', 'Outerwear', 'Accessories'].map(cat => (
+                      <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 accent-primary cursor-pointer"
+                          checked={selectedFilters.includes(cat)}
+                          onChange={() => toggleFilter(cat)}
+                        />
+                        <span className="text-sm font-body-md group-hover:text-primary transition-colors">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="w-[1px] h-4 bg-outline-variant hidden md:block"></div>
-            <button className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-              SORT: FEATURED{" "}
-              <span className="material-symbols-outlined text-[18px]">
-                expand_more
-              </span>
-            </button>
+            
+            <div className="relative">
+              <button 
+                className="flex items-center gap-2 hover:opacity-70 transition-opacity cursor-pointer"
+                onClick={() => { setIsSortOpen(!isSortOpen); setIsFilterOpen(false); }}
+              >
+                SORT: {currentSort}{" "}
+                <span className={`material-symbols-outlined text-[18px] transition-transform ${isSortOpen ? 'rotate-180' : ''}`}>
+                  expand_more
+                </span>
+              </button>
+
+              {isSortOpen && (
+                <div className="absolute top-full right-0 mt-4 bg-surface-container border border-outline-variant shadow-lg z-50 min-w-[200px] flex flex-col">
+                  {['FEATURED', 'NEWEST', 'PRICE: LOW TO HIGH', 'PRICE: HIGH TO LOW'].map(sortOption => (
+                    <button
+                      key={sortOption}
+                      className={`text-left px-6 py-3 text-sm font-label-caps tracking-wider transition-colors cursor-pointer ${currentSort === sortOption ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-highest'}`}
+                      onClick={() => {
+                        setCurrentSort(sortOption);
+                        setIsSortOpen(false);
+                      }}
+                    >
+                      {sortOption}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="w-[1px] h-4 bg-outline-variant hidden md:block"></div>
-            <button className="hidden md:flex items-center gap-1 hover:opacity-70 transition-opacity">
+            <button className="hidden md:flex items-center gap-1 hover:opacity-70 transition-opacity cursor-pointer" title="Grid View">
               <span className="material-symbols-outlined text-[20px]">
                 grid_view
               </span>

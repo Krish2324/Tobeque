@@ -17,8 +17,10 @@ export function HomePage() {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   // Fetch live featured products from backend
   const { products: featuredProducts, loading: featuredLoading } = useProducts({ status: 'published', featured: true, limit: 10 });
-  // Fetch dynamic Season Collection managed from admin panel
   const { items: seasonItems, loading: seasonLoading } = useSeasonCollection();
+
+  const [currentCategory, setCurrentCategory] = useState('BEST SELLERS');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -206,13 +208,35 @@ export function HomePage() {
 
       <div className="w-full px-1 md:px-2 mb-6">
         <div className="flex items-center justify-between border-b border-outline-variant pb-4">
-          <div className="flex items-center gap-2 cursor-pointer group">
-            <h2 className="font-label-caps text-label-caps text-primary uppercase tracking-[0.2em]">
-              You are in BEST SELLERS
-            </h2>
-            <span className="material-symbols-outlined text-sm transition-transform group-hover:rotate-180">
-              expand_more
-            </span>
+          <div className="relative">
+            <div 
+              className="flex items-center gap-2 cursor-pointer group"
+              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            >
+              <h2 className="font-label-caps text-label-caps text-primary uppercase tracking-[0.2em]">
+                You are in {currentCategory}
+              </h2>
+              <span className={`material-symbols-outlined text-sm transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : 'group-hover:rotate-180'}`}>
+                expand_more
+              </span>
+            </div>
+            
+            {isCategoryDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 bg-surface-container border border-outline-variant shadow-md z-20 py-2 min-w-[200px]">
+                {['BEST SELLERS', 'NEW ARRIVALS', 'TRENDING'].map(cat => (
+                  <button
+                    key={cat}
+                    className={`block w-full text-left px-4 py-2 text-sm font-label-caps tracking-wider transition-colors cursor-pointer ${currentCategory === cat ? 'bg-primary/10 text-primary font-bold' : 'text-on-surface hover:bg-surface-container-highest'}`}
+                    onClick={() => {
+                      setCurrentCategory(cat);
+                      setIsCategoryDropdownOpen(false);
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

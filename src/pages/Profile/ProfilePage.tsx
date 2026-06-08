@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 
@@ -41,7 +41,8 @@ export function ProfilePage() {
   const { wishlistItems, removeFromWishlist, addToCart, setIsCartOpen } = useCart();
 
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<Tab>('orders');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<Tab>(location.state?.activeTab || 'orders');
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');

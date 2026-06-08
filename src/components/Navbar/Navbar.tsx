@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { SearchModal } from '../SearchModal/SearchModal';
@@ -31,6 +31,7 @@ interface NavbarProps {
 }
 
 export function Navbar({ onSearchProductSelect }: NavbarProps) {
+  const navigate = useNavigate();
   const { setIsCartOpen, wishlistItems } = useCart();
   const { isAuthenticated, openLoginModal, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -206,7 +207,14 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             )}
             <button
               aria-label="Wishlist"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
+              onClick={() => {
+                if (isAuthenticated) {
+                  navigate('/profile', { state: { activeTab: 'wishlist' } });
+                } else {
+                  openLoginModal();
+                }
+              }}
             >
               <span className="material-symbols-outlined" data-icon="favorite">
                 favorite
@@ -215,7 +223,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative cursor-pointer"
             >
               <span
                 className="material-symbols-outlined"

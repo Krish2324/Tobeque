@@ -165,7 +165,7 @@ export function ProfilePage() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 {user.profilePhoto ? (
-                  <img src={`http://localhost:5000${user.profilePhoto}`} alt="Profile" className="w-full h-full object-cover" />
+                  <img src={`${user.profilePhoto}`} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <span className="material-symbols-outlined text-[64px] text-white">person</span>
                 )}

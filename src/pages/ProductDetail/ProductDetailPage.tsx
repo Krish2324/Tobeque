@@ -104,12 +104,6 @@ export function ProductDetailPage() {
     setIsCartOpen(true);
   };
 
-  // Calculate cart total
-  const cartSubtotal = cart.reduce((total, item) => {
-    const numericPrice = parseFloat(item.price.replace(/[^0-9.]/g, ""));
-    return total + (isNaN(numericPrice) ? 0 : numericPrice) * item.quantity;
-  }, 0);
-
   // Handle Buy It Now: Add to cart immediately and open checkout
   const handleBuyItNow = () => {
     if (!product) return;

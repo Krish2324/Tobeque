@@ -139,10 +139,6 @@ export function ProfilePage() {
 
   const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Guest User';
 
-  const initials = user.firstName
-    ? `${user.firstName[0]}${user.lastName ? user.lastName[0] : ''}`.toUpperCase()
-    : 'TQ';
-
   const handleLogout = () => {
     logout();
     navigate('/', { replace: true });

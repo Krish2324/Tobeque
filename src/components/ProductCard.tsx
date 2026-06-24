@@ -11,7 +11,6 @@ export interface ProductCardProps {
   onAddToCartClick?: (e: React.MouseEvent, product: Product) => void;
 }
 
-const sizeOptions = ["XS", "S", "M", "L", "XL"];
 const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
 
 export function ProductCard({
@@ -103,22 +102,24 @@ export function ProductCard({
         </div>
 
         {/* Hover Size UI */}
-        <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-2 z-10 pointer-events-none">
-          <div className="flex justify-center gap-4 text-[10px] font-label-caps bg-surface/90 backdrop-blur-sm py-2 border border-outline-variant shadow-sm pointer-events-auto">
-            {sizeOptions.map((s) => (
-              <button
-                key={s}
-                onClick={(e) => {
-                  // Simulate Add to Bag with size
-                  onAddToCartClick?.(e, product);
-                }}
-                className="hover:text-primary transition-colors cursor-pointer"
-              >
-                {s}
-              </button>
-            ))}
+        {product.sizes && product.sizes.length > 0 && (
+          <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-2 z-10 pointer-events-none">
+            <div className="flex justify-center gap-4 text-[10px] font-label-caps bg-surface/90 backdrop-blur-sm py-2 border border-outline-variant shadow-sm pointer-events-auto">
+              {product.sizes.map((s) => (
+                <button
+                  key={s}
+                  onClick={(e) => {
+                    // Simulate Add to Bag with size
+                    onAddToCartClick?.(e, product);
+                  }}
+                  className="hover:text-primary transition-colors cursor-pointer"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-0.5 px-1 mt-1">

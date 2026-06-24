@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { SearchModal } from "../../components/SearchModal/SearchModal";
 import { Footer } from "../../components/Footer/Footer";
+import logoImage from "../../assets/Tobeque-Logo-290x57.webp";
 
 const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
 
@@ -137,8 +138,8 @@ export function ProductDetailPage() {
     return (
       <div className="bg-surface-container-lowest min-h-screen flex flex-col">
         <nav className="w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-8 py-4">
-          <Link className="text-headline-md font-headline-md font-bold tracking-widest text-primary uppercase" to="/">
-            TOBEQUE
+          <Link to="/">
+            <img src={logoImage} alt="Tobeque Logo" style={{ height: '24px', objectFit: 'contain' }} />
           </Link>
         </nav>
         <div className="flex-grow flex items-center justify-center">
@@ -158,8 +159,8 @@ export function ProductDetailPage() {
     return (
       <div className="bg-surface-container-lowest min-h-screen flex flex-col">
         <nav className="w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-8 py-4">
-          <Link className="text-headline-md font-headline-md font-bold tracking-widest text-primary uppercase" to="/">
-            TOBEQUE
+          <Link to="/">
+            <img src={logoImage} alt="Tobeque Logo" style={{ height: '24px', objectFit: 'contain' }} />
           </Link>
         </nav>
         <div className="flex-grow flex flex-col items-center justify-center gap-4">
@@ -178,8 +179,8 @@ export function ProductDetailPage() {
       {/* TopNavBar */}
       <nav className="w-full z-50 bg-surface/95 backdrop-blur-md border-b border-outline-variant flex justify-between items-center px-8 py-4">
         <div className="flex-shrink-0">
-          <Link className="text-headline-md font-headline-md font-bold tracking-widest text-primary uppercase" to="/">
-            TOBEQUE
+          <Link to="/">
+            <img src={logoImage} alt="Tobeque Logo" style={{ height: '24px', objectFit: 'contain' }} />
           </Link>
         </div>
 
@@ -310,30 +311,32 @@ export function ProductDetailPage() {
             )}
 
             {/* Interactive Size Selection */}
-            <div className="mb-10">
-              <div className="flex justify-between items-end mb-3">
-                <span className="text-label-caps font-label-caps text-secondary tracking-wider">
-                  SIZE: <span className="text-primary font-bold">{selectedSize}</span>
-                </span>
-                <button className="text-label-caps font-label-caps text-primary underline hover:text-secondary transition-colors">
-                  Size Guide
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-3">
-                {(product.sizes || ["XS", "S", "M", "L"]).map((sz) => (
-                  <button
-                    key={sz}
-                    onClick={() => setSelectedSize(sz)}
-                    className={`border py-3 text-label-caps font-label-caps tracking-wider transition-all duration-300 ${selectedSize === sz
-                      ? "border-primary bg-primary text-on-primary font-bold shadow-sm"
-                      : "border-outline-variant text-primary hover:border-primary"
-                      }`}
-                  >
-                    {sz}
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mb-10">
+                <div className="flex justify-between items-end mb-3">
+                  <span className="text-label-caps font-label-caps text-secondary tracking-wider">
+                    SIZE: <span className="text-primary font-bold">{selectedSize}</span>
+                  </span>
+                  <button className="text-label-caps font-label-caps text-primary underline hover:text-secondary transition-colors">
+                    Size Guide
                   </button>
-                ))}
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {product.sizes.map((sz) => (
+                    <button
+                      key={sz}
+                      onClick={() => setSelectedSize(sz)}
+                      className={`border py-3 text-label-caps font-label-caps tracking-wider transition-all duration-300 ${selectedSize === sz
+                        ? "border-primary bg-primary text-on-primary font-bold shadow-sm"
+                        : "border-outline-variant text-primary hover:border-primary"
+                        }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Interactive Actions (Add to Bag / Buy It Now) */}
             <div className="flex flex-col gap-3 mb-10">

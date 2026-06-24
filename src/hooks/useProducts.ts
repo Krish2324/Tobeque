@@ -74,12 +74,32 @@ function mapBackendProduct(bp: BackendProduct): Product {
   const displayPrice = discountPrice ? `₹${discountPrice.toFixed(2)}` : formattedPrice;
   const originalPrice = discountPrice ? formattedPrice : undefined;
 
-  // Extract sizes from variants JSON, or show a sensible default
+  // Extract sizes and colors from variants JSON
   const sizes: string[] = [];
+  const detailedColors: { name: string; class: string; bgStyle: any }[] = [];
+  const colorNames = new Set<string>();
+
   if (bp.variants && Array.isArray(bp.variants)) {
-    bp.variants.forEach((v) => {
-      if (v.size && !sizes.includes(v.size)) {
-        sizes.push(v.size);
+    bp.variants.forEach((v: any) => {
+      // Find size (case-insensitive key check)
+      const sizeKey = Object.keys(v).find(k => k.toLowerCase() === 'size');
+      if (sizeKey && v[sizeKey]) {
+        const sizeVal = String(v[sizeKey]).trim().toUpperCase();
+        if (!sizes.includes(sizeVal)) sizes.push(sizeVal);
+      }
+
+      // Find color (case-insensitive key check)
+      const colorKey = Object.keys(v).find(k => k.toLowerCase() === 'color');
+      if (colorKey && v[colorKey]) {
+        const colorVal = String(v[colorKey]).trim();
+        if (!colorNames.has(colorVal.toLowerCase())) {
+          colorNames.add(colorVal.toLowerCase());
+          detailedColors.push({
+            name: colorVal.toUpperCase(),
+            class: '',
+            bgStyle: { backgroundColor: colorVal.toLowerCase() }
+          });
+        }
       }
     });
   }
@@ -108,7 +128,8 @@ function mapBackendProduct(bp: BackendProduct): Product {
     imageAlt: bp.name,
     badge,
     badgeClass,
-    sizes: sizes.length > 0 ? sizes : ['S', 'M', 'L'],
+    detailedColors: detailedColors.length > 0 ? detailedColors : undefined,
+    sizes: sizes.length > 0 ? sizes : undefined,
     description: bp.fullDescription ?? bp.shortDescription ?? '',
     galleryImages: galleryImages.length > 0 ? galleryImages : [resolveImageUrl(bp.thumbnail)],
     fabricCare: '',

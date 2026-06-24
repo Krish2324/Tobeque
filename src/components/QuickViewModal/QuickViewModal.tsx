@@ -15,12 +15,13 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   // 1. Color State
   const initialColor = product?.detailedColors && product.detailedColors.length > 0
     ? product.detailedColors[0].name
-    : 'PINK';
+    : 'DEFAULT';
   const [selectedColor, setSelectedColor] = useState<string>(initialColor);
 
   // 2. Size State
-  const sizes = product?.sizes && product.sizes.length > 0 ? product.sizes : ['XS', 'S', 'M', 'L', 'XL'];
-  const [selectedSize, setSelectedSize] = useState<string>(sizes[0] || 'M');
+  const [selectedSize, setSelectedSize] = useState<string>(
+    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : ''
+  );
 
   // 3. Quantity State
   const [quantity, setQuantity] = useState<number>(1);
@@ -94,7 +95,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           </div>
 
           {/* Color Selection */}
-          {product.detailedColors && product.detailedColors.length > 0 ? (
+          {product.detailedColors && product.detailedColors.length > 0 && (
             <div className="mt-8">
               <p className="font-label-caps text-xs tracking-widest text-primary mb-3 font-bold">
                 COLOR : <span className="font-bold">{selectedColor}</span>
@@ -113,54 +114,37 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                 ))}
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* Size Selection */}
+          {product.sizes && product.sizes.length > 0 && (
             <div className="mt-8">
-              <p className="font-label-caps text-xs tracking-widest text-primary mb-3 font-bold">
-                COLOR : <span className="font-bold">{selectedColor}</span>
-              </p>
-              <div className="flex gap-3">
-                {['PINK', 'BROWN'].map((cName, idx) => (
+              <div className="flex justify-between items-center mb-3">
+                <p className="font-label-caps text-xs tracking-widest text-primary font-bold">
+                  SIZE : <span className="font-bold">{selectedSize}</span>
+                </p>
+                <a href="#" className="font-body-md text-sm text-secondary flex items-center gap-1 hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[16px]">straighten</span>
+                  Size Guide
+                </a>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                {product.sizes.map((sz) => (
                   <button
-                    key={cName}
-                    onClick={() => setSelectedColor(cName)}
-                    className={`w-8 h-8 rounded-full border p-0.5 flex items-center justify-center transition-all ${
-                      selectedColor === cName ? 'border-primary border-2' : 'border-outline-variant hover:border-secondary'
+                    key={sz}
+                    onClick={() => setSelectedSize(sz)}
+                    className={`border py-3 font-label-caps text-xs transition-colors ${
+                      selectedSize === sz
+                        ? 'border-primary bg-primary text-on-primary font-bold'
+                        : 'border-outline-variant text-primary hover:border-primary'
                     }`}
                   >
-                    <span className={`block w-full h-full rounded-full ${idx === 0 ? 'bg-[#e8c3c8]' : 'bg-[#8c6239]'}`}></span>
+                    {sz}
                   </button>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Size Selection */}
-          <div className="mt-8">
-            <div className="flex justify-between items-center mb-3">
-              <p className="font-label-caps text-xs tracking-widest text-primary font-bold">
-                SIZE : <span className="font-bold">{selectedSize}</span>
-              </p>
-              <a href="#" className="font-body-md text-sm text-secondary flex items-center gap-1 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-[16px]">straighten</span>
-                Size Guide
-              </a>
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {sizes.map((sz) => (
-                <button
-                  key={sz}
-                  onClick={() => setSelectedSize(sz)}
-                  className={`border py-3 font-label-caps text-xs transition-colors ${
-                    selectedSize === sz
-                      ? 'border-primary bg-primary text-on-primary font-bold'
-                      : 'border-outline-variant text-primary hover:border-primary'
-                  }`}
-                >
-                  {sz}
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Actions */}
           <div className="mt-8 flex flex-col md:flex-row gap-4">

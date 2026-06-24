@@ -7,12 +7,12 @@ import type { Product } from '../ProductCard';
 import logoImage from '../../assets/Tobeque-Logo-290x57.webp';
 
 const CATEGORIES = [
-  { name: 'Tops', path: '/collection' },
-  { name: 'Dresses', path: '/collection' },
-  { name: 'Shirts and Blouses', path: '/collection' },
-  { name: 'T-Shirts and Vests', path: '/collection' },
-  { name: 'Jeans and Pants', path: '/collection' },
-  { name: 'Skirts and Shorts', path: '/collection' },
+  { name: 'Tops', path: '/collection?category=Tops' },
+  { name: 'Dresses', path: '/collection?category=Dresses' },
+  { name: 'Shirts and Blouses', path: '/collection?category=Shirts and Blouses' },
+  { name: 'T-Shirts and Vests', path: '/collection?category=T-Shirts and Vests' },
+  { name: 'Jeans and Pants', path: '/collection?category=Jeans and Pants' },
+  { name: 'Skirts and Shorts', path: '/collection?category=Skirts and Shorts' },
 ];
 
 const NEW_COLLECTION = [

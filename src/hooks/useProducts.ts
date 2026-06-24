@@ -28,7 +28,7 @@ interface UseProductsOptions {
   featured?: boolean;
   limit?: number;
   page?: number;
-  category?: number;
+  category?: string | number;
 }
 
 interface UseProductsResult {

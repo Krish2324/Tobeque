@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
@@ -17,7 +18,20 @@ export function CollectionPage() {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [currentSort, setCurrentSort] = useState('FEATURED');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const { products: liveProducts, loading, error, total } = useProducts({ status: 'published', limit: 40 });
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get('category');
+  const { products: liveProducts, loading, error, total } = useProducts({ 
+    status: 'published', 
+    limit: 40,
+    category: categoryParam || undefined
+  });
+
+  // If a category param is present and not already selected in UI, auto-select it
+  useEffect(() => {
+    if (categoryParam && !selectedFilters.includes(categoryParam)) {
+      setSelectedFilters([categoryParam]);
+    }
+  }, [categoryParam]);
 
   const toggleFilter = (filter: string) => {
     setSelectedFilters(prev => 

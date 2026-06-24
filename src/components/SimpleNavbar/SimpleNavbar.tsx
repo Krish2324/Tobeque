@@ -29,12 +29,12 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
 
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex flex-1 justify-center space-x-8">
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="#">NEW ARRIVAL</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection">TOPS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="#">DRESSES</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="#">CO-ORD SET</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="#">BODYSUIT</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="#">BEST SELLERS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection">NEW ARRIVAL</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Tops">TOPS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Dresses">DRESSES</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Jeans and Pants">JEANS AND PANTS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Skirts and Shorts">SKIRTS AND SHORTS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection">BEST SELLERS</Link>
         </div>
 
         {/* Trailing Actions */}

@@ -7,6 +7,7 @@ import { CollectionPage } from "../pages/Collection/CollectionPage";
 import { ProductDetailPage } from "../pages/ProductDetail/ProductDetailPage";
 import { AboutPage } from "../pages/About/AboutPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
+import { TermsAndConditionsPage } from "../pages/TermsAndConditions/TermsAndConditionsPage";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
 import { CartDrawer } from "../components/CartDrawer/CartDrawer";
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
           </Routes>
           <CartDrawer />
           <CheckoutModal />

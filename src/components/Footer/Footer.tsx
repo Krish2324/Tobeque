@@ -35,7 +35,7 @@ export function Footer() {
           {/* Column 3: Policies */}
           <div className="flex flex-col gap-3">
             <h3 className="font-bold text-[13px] tracking-wide mb-2 text-black">Policies</h3>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Terms and conditions</Link>
+            <Link to="/terms-and-conditions" className="text-[13px] text-[#555] hover:text-primary transition-colors">Terms and conditions</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Privacy policy</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookies policy</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookie settings</Link>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { sendOtp, verifyOtp } from '../../services/userAuthService';
 
@@ -212,7 +213,13 @@ export function OtpLoginModal() {
 
               <p className="text-center text-xs text-gray-400 leading-relaxed">
                 By continuing, you agree to our{' '}
-                <a href="#" className="text-[#111] underline underline-offset-2">Terms of Service</a>
+                <Link
+                  to="/terms-and-conditions"
+                  onClick={closeLoginModal}
+                  className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity"
+                >
+                  Terms of Service
+                </Link>
                 {' '}and{' '}
                 <a href="#" className="text-[#111] underline underline-offset-2">Privacy Policy</a>.
               </p>

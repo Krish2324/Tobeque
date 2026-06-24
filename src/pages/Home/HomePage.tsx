@@ -50,17 +50,7 @@ export function HomePage() {
 
           {/* Simulated Video Overlay for contrast */}
           <div className="absolute inset-0 bg-primary/20 mix-blend-multiply" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10">
-            <h1 className="font-display-lg text-display-lg text-on-primary mb-6 drop-shadow-sm">
-              THE SPRING EDIT
-            </h1>
-            <a
-              className="inline-flex items-center justify-center px-8 py-4 border border-on-primary text-on-primary font-label-caps text-label-caps hover:bg-on-primary hover:text-primary transition-colors duration-300 backdrop-blur-sm bg-primary/10"
-              href="#"
-            >
-              Shop Now
-            </a>
-          </div>
+          {/* Text and Button removed per user request */}
         </div>
       </section>
 

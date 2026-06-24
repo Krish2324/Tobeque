@@ -221,7 +221,13 @@ export function OtpLoginModal() {
                   Terms of Service
                 </Link>
                 {' '}and{' '}
-                <a href="#" className="text-[#111] underline underline-offset-2">Privacy Policy</a>.
+                <Link
+                  to="/privacy-policy"
+                  onClick={closeLoginModal}
+                  className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity"
+                >
+                  Privacy Policy
+                </Link>.
               </p>
             </form>
           ) : (

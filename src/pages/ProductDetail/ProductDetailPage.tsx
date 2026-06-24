@@ -27,7 +27,7 @@ export function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });
   const [selectedSize, setSelectedSize] = useState<string>("S");
 
-  const { cart, addToCart, setIsCartOpen, setIsCheckoutOpen } = useCart();
+  const { addToCart, setIsCartOpen, setIsCheckoutOpen } = useCart();
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -54,6 +54,38 @@ export function ProductDetailPage() {
       }
     }
   }, [product, user]);
+
+  // Derived state for gallery images based on selected color
+  const displayedImages = React.useMemo(() => {
+    if (!product) return [];
+    if (!product.galleryImageObjects || product.galleryImageObjects.length === 0) {
+      return product.galleryImages && product.galleryImages.length > 0
+        ? product.galleryImages
+        : [product.imageSrc, product.hoverImageSrc || product.imageSrc];
+    }
+
+    const currentSelectedColorName = selectedColor.name.toLowerCase();
+    
+    const colorMatches: string[] = [];
+    const others: string[] = [];
+    
+    product.galleryImageObjects.forEach((imgObj) => {
+      const imgColor = (imgObj.color || "").toLowerCase();
+      if (imgColor && (imgColor === currentSelectedColorName || currentSelectedColorName.includes(imgColor))) {
+        colorMatches.push(imgObj.url);
+      } else {
+        others.push(imgObj.url);
+      }
+    });
+
+    if (colorMatches.length > 0) {
+      return [...colorMatches, ...others];
+    } else {
+      return product.galleryImages && product.galleryImages.length > 0
+        ? product.galleryImages
+        : [product.imageSrc, product.hoverImageSrc || product.imageSrc];
+    }
+  }, [product, selectedColor]);
 
   // Add primary product to bag
   const handleAddToBag = () => {
@@ -181,12 +213,9 @@ export function ProductDetailPage() {
             ref={galleryScrollRef}
             className="w-full lg:w-3/4 flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[60vh] lg:h-auto scroll-smooth"
           >
-            {(product.galleryImages && product.galleryImages.length > 0
-              ? product.galleryImages
-              : [product.imageSrc, product.hoverImageSrc || product.imageSrc]
-            ).map((img, index) => (
+            {displayedImages.map((img, index) => (
               <div
-                key={index}
+                key={`${img}-${index}`}
                 className="snap-center shrink-0 w-[90%] sm:w-[50%] lg:w-full aspect-[2/3] relative overflow-hidden bg-surface-container"
               >
                 {isVideo(img) ? (

@@ -21,6 +21,7 @@ export type Product = {
   fabricCare?: string;
   shippingReturns?: string;
   galleryImages?: string[];
+  galleryImageObjects?: { url: string; color?: string }[];
 };
 
 export const productsData: Product[] = [

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { SearchModal } from "../SearchModal/SearchModal";
@@ -11,7 +11,7 @@ interface SimpleNavbarProps {
 }
 
 export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const { cart, setIsCartOpen } = useCart();
   const { isAuthenticated, openLoginModal, logout } = useAuth();
   

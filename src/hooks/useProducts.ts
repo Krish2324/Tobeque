@@ -106,8 +106,13 @@ function mapBackendProduct(bp: BackendProduct): Product {
 
   // Extract gallery images
   const galleryImages: string[] = [];
+  const galleryImageObjects: { url: string; color?: string }[] = [];
   if (bp.images && bp.images.length > 0) {
-    bp.images.forEach((img) => galleryImages.push(resolveImageUrl(img.imageUrl)));
+    bp.images.forEach((img) => {
+      const url = resolveImageUrl(img.imageUrl);
+      galleryImages.push(url);
+      galleryImageObjects.push({ url, color: (img as any).color });
+    });
   }
 
   // Badge logic
@@ -132,6 +137,7 @@ function mapBackendProduct(bp: BackendProduct): Product {
     sizes: sizes.length > 0 ? sizes : undefined,
     description: bp.fullDescription ?? bp.shortDescription ?? '',
     galleryImages: galleryImages.length > 0 ? galleryImages : [resolveImageUrl(bp.thumbnail)],
+    galleryImageObjects: galleryImageObjects.length > 0 ? galleryImageObjects : [{ url: resolveImageUrl(bp.thumbnail) }],
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
   };

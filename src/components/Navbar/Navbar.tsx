@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { SearchModal } from '../SearchModal/SearchModal';
 import type { Product } from '../ProductCard';
+import logoImage from '../../assets/Tobeque-Logo-290x57.webp';
 
 const CATEGORIES = [
   { name: 'Tops', path: '/collection' },
@@ -155,11 +156,8 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
           {/* Brand Logo */}
           <div className="flex-1 flex justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
-            <Link
-              className="font-display-lg text-headline-md tracking-widest text-primary dark:text-on-primary-fixed uppercase"
-              to="/"
-            >
-              TOBEQUE
+            <Link to="/" className="flex items-center justify-center">
+              <img src={logoImage} alt="Tobeque Logo" style={{ height: '32px', width: '145px', objectFit: 'contain' }} />
             </Link>
           </div>
 
@@ -199,10 +197,13 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
               </div>
             ) : (
               <button
+                aria-label="Login"
                 onClick={() => openLoginModal()}
-                className="text-[10px] font-label-caps uppercase tracking-widest hover:text-primary transition-colors border border-outline-variant px-3 py-1.5 cursor-pointer"
+                className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
               >
-                Login
+                <span className="material-symbols-outlined" data-icon="person">
+                  person
+                </span>
               </button>
             )}
             <button

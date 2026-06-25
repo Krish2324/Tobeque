@@ -22,6 +22,7 @@ export type Product = {
   shippingReturns?: string;
   galleryImages?: string[];
   galleryImageObjects?: { url: string; color?: string }[];
+  sku?: string; // Product SKU from admin panel
 };
 
 export const productsData: Product[] = [

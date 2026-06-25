@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 
@@ -12,12 +12,51 @@ import heroBanner from '../../assets/images/hero-spring-edit.jpg';
 
 const isVideoUrl = (url: string | null | undefined) => url && /\.(mp4|webm|ogg|mov)$/i.test(url);
 
+// Number of cards visible at once in the season collection carousel
+const SEASON_VISIBLE = 6;
+
 export function HomePage() {
   const { setIsCartOpen, addToWishlist, wishlistItems, removeFromWishlist, addToCart } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   // Fetch live featured products from backend
   const { products: featuredProducts, loading: featuredLoading } = useProducts({ status: 'published', featured: true, limit: 10 });
   const { items: seasonItems, loading: seasonLoading } = useSeasonCollection();
+
+  // Season collection carousel state
+  const [seasonIndex, setSeasonIndex] = useState(0);
+  const seasonTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const seasonNext = useCallback(() => {
+    setSeasonIndex(i => (seasonItems.length > 0 ? (i + 1) % seasonItems.length : 0));
+  }, [seasonItems.length]);
+
+  const seasonPrev = useCallback(() => {
+    setSeasonIndex(i => (seasonItems.length > 0 ? (i - 1 + seasonItems.length) % seasonItems.length : 0));
+  }, [seasonItems.length]);
+
+  // Auto-slide every 3 seconds
+  useEffect(() => {
+    if (seasonItems.length <= 1) return;
+    seasonTimer.current = setInterval(seasonNext, 3000);
+    return () => { if (seasonTimer.current) clearInterval(seasonTimer.current); };
+  }, [seasonNext, seasonItems.length]);
+
+  const resetTimer = useCallback(() => {
+    if (seasonTimer.current) clearInterval(seasonTimer.current);
+    if (seasonItems.length > 1) {
+      seasonTimer.current = setInterval(seasonNext, 3000);
+    }
+  }, [seasonNext, seasonItems.length]);
+
+  const pauseTimer = useCallback(() => {
+    if (seasonTimer.current) clearInterval(seasonTimer.current);
+  }, []);
+
+  const resumeTimer = useCallback(() => {
+    if (seasonItems.length > 1) {
+      seasonTimer.current = setInterval(seasonNext, 3000);
+    }
+  }, [seasonNext, seasonItems.length]);
 
   const [currentCategory, setCurrentCategory] = useState('BEST SELLERS');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -57,144 +96,165 @@ export function HomePage() {
 
       {/* Season Collection Carousel — Dynamic (Admin-managed) */}
       {(seasonLoading || seasonItems.length > 0) && (
-        <section className="w-full px-1 md:px-2 mb-8 overflow-hidden">
-          <h2 className="text-center font-headline-md text-headline-md text-primary mb-6">
-            Season Collection
-          </h2>
+        <section className="w-full px-1 md:px-2 mb-8">
+          {/* Editorial Fashion Heading */}
+          <div className="flex items-center justify-center gap-5 mb-6">
+            <span className="flex-1 h-px bg-gradient-to-r from-transparent to-outline-variant max-w-[120px]" />
+            <div className="text-center">
+              <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-0.5">Curated For You</p>
+              <h2 className="text-[13px] tracking-[0.3em] font-light text-primary uppercase">
+                Season Collection
+              </h2>
+            </div>
+            <span className="flex-1 h-px bg-gradient-to-l from-transparent to-outline-variant max-w-[120px]" />
+          </div>
 
           {/* Loading skeleton */}
           {seasonLoading && (
-            <div className="flex gap-1 md:gap-1.5 overflow-hidden">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="w-64 md:w-80 flex-shrink-0">
-                  <div className="aspect-[3/4] bg-surface-container animate-pulse rounded" />
-                  <div className="h-4 bg-surface-container animate-pulse rounded mt-3 mx-8" />
+            <div className="flex gap-2 overflow-hidden">
+              {Array.from({ length: SEASON_VISIBLE }).map((_, i) => (
+                <div key={i} className="flex-1">
+                  <div className="aspect-[3/4] bg-surface-container animate-pulse" />
+                  <div className="h-3 bg-surface-container animate-pulse rounded mt-2 mx-4" />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Marquee carousel */}
+          {/* One-by-one slide carousel */}
           {!seasonLoading && seasonItems.length > 0 && (() => {
-            // Pad items so the marquee always has enough to fill the loop smoothly.
-            // Even 1 item should look like a real carousel, not just 2 duplicates.
-            const MIN_VISIBLE = 8;
-            const repeat = Math.ceil(MIN_VISIBLE / seasonItems.length);
-            const paddedItems = Array.from({ length: repeat }, () => seasonItems).flat();
+            // Always display exactly SEASON_VISIBLE slots.
+            // Fill from seasonIndex wrapping around; ghost cards fill empty slots.
+            const n = seasonItems.length;
+            const slots = Array.from({ length: SEASON_VISIBLE }, (_, k) => {
+              if (k < n) {
+                const idx = (seasonIndex + k) % n;
+                return { item: seasonItems[idx], ghost: false, key: `${seasonItems[idx].id}-${idx}-${k}` };
+              }
+              return { item: null, ghost: true, key: `ghost-${k}` };
+            });
+
             return (
-              <div className="marquee-container w-full">
-                <div className="marquee-content flex gap-1 md:gap-1.5 w-max">
-                  {/* First set */}
-                  <div className="flex gap-1 md:gap-1.5 shrink-0">
-                    {paddedItems.map((item, idx) => {
-                      const imgUrl = getSeasonItemImage(item);
-                      const label = item.displayLabel || item.product?.name || '';
-                      
-                      const effectiveVideoSrc = item.videoUrl 
-                        ? resolveImageUrl(item.videoUrl)
-                        : (isVideoUrl(imgUrl) ? imgUrl : null);
+              <div className="relative">
+                {/* Arrow — Prev */}
+                {seasonItems.length > 1 && (
+                  <button
+                    aria-label="Previous"
+                    className="absolute left-0 top-[40%] -translate-y-1/2 z-10 -translate-x-4 w-8 h-8 flex items-center justify-center bg-white border border-outline-variant shadow-sm hover:bg-surface-container transition-colors"
+                    onClick={() => { seasonPrev(); resetTimer(); }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
 
+                {/* Cards — always exactly SEASON_VISIBLE slots */}
+                <div
+                  className="grid gap-1"
+                  style={{ gridTemplateColumns: `repeat(${SEASON_VISIBLE}, 1fr)` }}
+                  onMouseEnter={pauseTimer}
+                  onMouseLeave={resumeTimer}
+                >
+                  {slots.map(({ item, ghost, key }) => {
+                    if (ghost || !item) {
                       return (
-                        <button
-                          key={`a-${item.id}-${idx}`}
-                          className="block w-64 md:w-80 group text-left cursor-pointer bg-transparent border-none p-0"
-                          onClick={() => {
-                            if (item.product) {
-                              setQuickViewProduct({
-                                id: String(item.product.id),
-                                name: item.product.name,
-                                price: item.product.discountPrice
-                                  ? `$${parseFloat(String(item.product.discountPrice)).toFixed(2)}`
-                                  : `$${parseFloat(String(item.product.price)).toFixed(2)}`,
-                                originalPrice: item.product.discountPrice
-                                  ? `$${parseFloat(String(item.product.price)).toFixed(2)}`
-                                  : undefined,
-                                imageSrc: imgUrl,
-                                hoverImageSrc: imgUrl,
-                                imageAlt: label,
-                                sizes: ['S', 'M', 'L'],
-                                description: '',
-                                galleryImages: item.product.images && item.product.images.length > 0
-                                  ? item.product.images.map((img) => img.imageUrl)
-                                  : [imgUrl],
-                                fabricCare: '',
-                                shippingReturns: 'Orders are processed within 1-2 business days.',
-                              });
-                            }
-                          }}
-                        >
-                          <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                            {effectiveVideoSrc ? (
-                              <video
-                                src={effectiveVideoSrc}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                muted
-                                loop
-                                playsInline
-                                autoPlay
-                              />
-                            ) : (
-                              <img
-                                alt={label}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                src={imgUrl}
-                              />
-                            )}
-                          </div>
-                          <h3 className="text-center font-body-md text-body-md text-primary">
-                            {label}
-                          </h3>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Duplicate set for seamless infinite marquee loop */}
-                  <div className="flex gap-1 md:gap-1.5 shrink-0" aria-hidden="true">
-                    {paddedItems.map((item, idx) => {
-                      const imgUrl = getSeasonItemImage(item);
-                      const label = item.displayLabel || item.product?.name || '';
-                      
-                      const effectiveVideoSrc = item.videoUrl 
-                        ? resolveImageUrl(item.videoUrl)
-                        : (isVideoUrl(imgUrl) ? imgUrl : null);
-
-                      return (
-                        <div
-                          key={`b-${item.id}-${idx}`}
-                          className="block w-64 md:w-80 group text-left"
-                        >
-                          <div className="aspect-[3/4] relative overflow-hidden bg-surface-container mb-4">
-                            {effectiveVideoSrc ? (
-                              <video
-                                src={effectiveVideoSrc}
-                                className="w-full h-full object-cover"
-                                muted
-                                loop
-                                playsInline
-                                autoPlay
-                              />
-                            ) : (
-                              <img
-                                alt={label}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                                src={imgUrl}
-                              />
-                            )}
-                          </div>
-                          <h3 className="text-center font-body-md text-body-md text-primary">
-                            {label}
-                          </h3>
+                        <div key={key} className="opacity-0 pointer-events-none">
+                          <div className="aspect-[3/4] bg-[#f0f0f0]" />
+                          <div className="h-4 mt-2" />
                         </div>
                       );
-                    })}
-                  </div>
+                    }
+
+                    const imgUrl = getSeasonItemImage(item);
+                    const label = item.displayLabel || item.product?.name || '';
+                    const effectiveVideoSrc = item.videoUrl
+                      ? resolveImageUrl(item.videoUrl)
+                      : (isVideoUrl(imgUrl) ? imgUrl : null);
+
+                    return (
+                      <button
+                        key={key}
+                        className="group text-left cursor-pointer bg-transparent border-none p-0 min-w-0"
+                        onClick={() => {
+                          if (item.product) {
+                            setQuickViewProduct({
+                              id: String(item.product.id),
+                              name: item.product.name,
+                              price: item.product.discountPrice
+                                ? `₹${parseFloat(String(item.product.discountPrice)).toFixed(0)}`
+                                : `₹${parseFloat(String(item.product.price)).toFixed(0)}`,
+                              originalPrice: item.product.discountPrice
+                                ? `₹${parseFloat(String(item.product.price)).toFixed(0)}`
+                                : undefined,
+                              imageSrc: imgUrl,
+                              hoverImageSrc: imgUrl,
+                              imageAlt: label,
+                              sizes: ['S', 'M', 'L'],
+                              description: '',
+                              galleryImages: item.product.images && item.product.images.length > 0
+                                ? item.product.images.map((img) => img.imageUrl)
+                                : [imgUrl],
+                              fabricCare: '',
+                              shippingReturns: 'Orders are processed within 1-2 business days.',
+                            });
+                          }
+                        }}
+                      >
+                        <div className="aspect-[3/4] relative overflow-hidden bg-[#f0f0f0] mb-2">
+                          {effectiveVideoSrc ? (
+                            <video
+                              src={effectiveVideoSrc}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                              muted
+                              loop
+                              playsInline
+                              autoPlay
+                            />
+                          ) : (
+                            <img
+                              alt={label}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                              src={imgUrl}
+                            />
+                          )}
+                        </div>
+                        <h3 className="text-center text-[11px] font-medium text-primary tracking-wide uppercase truncate px-1">
+                          {label}
+                        </h3>
+                      </button>
+                    );
+                  })}
                 </div>
+
+                {/* Arrow — Next */}
+                {seasonItems.length > 1 && (
+                  <button
+                    aria-label="Next"
+                    className="absolute right-0 top-[40%] -translate-y-1/2 z-10 translate-x-4 w-8 h-8 flex items-center justify-center bg-white border border-outline-variant shadow-sm hover:bg-surface-container transition-colors"
+                    onClick={() => { seasonNext(); resetTimer(); }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 2L10 7L5 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </button>
+                )}
+
+                {/* Dot indicators */}
+                {seasonItems.length > 1 && (
+                  <div className="flex justify-center gap-1.5 mt-4">
+                    {seasonItems.map((_, i) => (
+                      <button
+                        key={i}
+                        aria-label={`Go to slide ${i + 1}`}
+                        className={`h-1.5 rounded-full transition-all duration-300 ${i === seasonIndex ? 'bg-primary w-4' : 'bg-outline-variant w-1.5'}`}
+                        onClick={() => { setSeasonIndex(i); resetTimer(); }}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })()}
         </section>
       )}
+
 
       <div className="w-full px-1 md:px-2 mb-6">
         <div className="flex items-center justify-between border-b border-outline-variant pb-4">
@@ -233,9 +293,6 @@ export function HomePage() {
 
       {/* Featured Products Grid */}
       <section className="w-full px-1 md:px-2 mb-section-padding-mobile md:mb-section-padding-desktop">
-        <h2 className="text-center font-headline-md text-headline-md text-primary mb-6 hidden">
-          Featured Products
-        </h2>
         {featuredLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 md:gap-1.5">
             {Array.from({ length: 10 }).map((_, i) => (

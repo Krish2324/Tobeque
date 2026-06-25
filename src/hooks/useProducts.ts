@@ -140,6 +140,7 @@ function mapBackendProduct(bp: BackendProduct): Product {
     galleryImageObjects: galleryImageObjects.length > 0 ? galleryImageObjects : [{ url: resolveImageUrl(bp.thumbnail) }],
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
+    sku: bp.sku || undefined,
   };
 }
 

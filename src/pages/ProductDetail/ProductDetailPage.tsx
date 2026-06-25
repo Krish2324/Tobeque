@@ -303,51 +303,55 @@ export function ProductDetailPage() {
             ))}
           </div>
 
-          {/* Right: Compact Product Info — narrow, editorial, visually secondary */}
-          <div className="w-full lg:w-1/4 flex flex-col py-4 lg:py-8 px-5 lg:px-8 lg:sticky top-0 self-start">
+          {/* Right: Minimal editorial product info — quiet, refined, secondary to imagery */}
+          <div className="w-full lg:w-1/4 flex flex-col py-6 lg:py-10 px-5 lg:px-7 lg:sticky top-0 self-start gap-0">
 
-            {/* Product Name */}
-            <h1 className="text-[22px] font-normal text-primary mb-1 leading-snug tracking-wide">
+            {/* Brand label / category hint */}
+            {product.badge && (
+              <span className="text-[9px] tracking-[0.2em] uppercase text-secondary font-medium mb-3 block">
+                {product.badge}
+              </span>
+            )}
+
+            {/* Product Name — refined, light weight */}
+            <h1 className="text-[17px] font-light text-primary mb-2 leading-snug tracking-[0.01em]">
               {product.name}
             </h1>
 
-            {/* Price Row */}
-            <div className="flex items-baseline gap-3 mb-5">
-              <span className="text-base font-semibold text-primary">{product.price}</span>
+            {/* Price Row — compact */}
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-sm font-medium text-primary">{product.price}</span>
               {product.originalPrice && (
-                <span className="text-sm text-secondary line-through">{product.originalPrice}</span>
-              )}
-              {product.badge && (
-                <span className="bg-primary text-on-primary text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-                  {product.badge}
-                </span>
+                <span className="text-xs text-secondary/60 line-through">{product.originalPrice}</span>
               )}
             </div>
 
-            {/* Size Selection */}
+            {/* Thin divider */}
+            <div className="w-8 h-px bg-outline-variant mb-6" />
+
+            {/* Size Selection — compact, minimal */}
             {product.sizes && product.sizes.length > 0 && (
               <div className="mb-5">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm text-primary">
-                    Size: <span className="font-medium">{selectedSize}</span>
+                <div className="flex justify-between items-center mb-2.5">
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-secondary font-medium">
+                    Size — <span className="text-primary">{selectedSize}</span>
                   </span>
                   <button
-                    className="flex items-center gap-1 text-[11px] text-secondary underline hover:text-primary transition-colors"
+                    className="text-[10px] text-secondary/60 hover:text-primary transition-colors underline underline-offset-2"
                     onClick={() => setIsSizeGuideOpen(true)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                    Size Guide
+                    Guide
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {product.sizes.map((sz) => (
                     <button
                       key={sz}
                       onClick={() => setSelectedSize(sz)}
-                      className={`w-10 h-10 text-xs tracking-wider uppercase font-medium border rounded-full transition-all duration-200 ${
+                      className={`w-8 h-8 text-[10px] tracking-wider uppercase font-medium border transition-all duration-200 ${
                         selectedSize === sz
                           ? 'border-primary bg-primary text-on-primary'
-                          : 'border-outline-variant text-secondary hover:border-primary hover:text-primary'
+                          : 'border-outline-variant text-secondary/70 hover:border-primary/50 hover:text-primary'
                       }`}
                     >
                       {sz}
@@ -357,11 +361,11 @@ export function ProductDetailPage() {
               </div>
             )}
 
-            {/* Color Selection */}
+            {/* Color Selection — minimal dots */}
             {product.detailedColors && product.detailedColors.length > 0 && (
-              <div className="mb-5">
-                <span className="text-sm text-primary block mb-2">
-                  Color: <span className="font-medium">{selectedColor.name}</span>
+              <div className="mb-6">
+                <span className="text-[10px] tracking-[0.15em] uppercase text-secondary font-medium block mb-2.5">
+                  Colour — <span className="text-primary">{selectedColor.name}</span>
                 </span>
                 <div className="flex gap-2">
                   {product.detailedColors.map((color) => (
@@ -369,54 +373,50 @@ export function ProductDetailPage() {
                       key={color.name}
                       onClick={() => setSelectedColor(color)}
                       aria-label={`Select Color ${color.name}`}
-                      className={`w-7 h-7 rounded-full border-2 p-[2px] focus:outline-none transition-all duration-200 ${
+                      className={`w-5 h-5 rounded-full border transition-all duration-200 ${
                         selectedColor.name === color.name
-                          ? 'border-primary scale-110'
-                          : 'border-outline-variant hover:border-secondary'
+                          ? 'ring-1 ring-offset-1 ring-primary scale-110'
+                          : 'hover:scale-105 border-outline-variant'
                       }`}
-                    >
-                      <span
-                        className={`block w-full h-full rounded-full ${color.class}`}
-                        style={color.bgStyle}
-                      />
-                    </button>
+                      style={color.bgStyle}
+                    />
                   ))}
                 </div>
               </div>
             )}
 
             {/* Quantity + Add to Cart */}
-            <div className="flex flex-col gap-2 mb-4">
+            <div className="flex flex-col gap-2 mb-5">
               <div className="flex gap-2 items-stretch">
-                <div className="flex items-center border border-outline-variant h-11 shrink-0">
+                <div className="flex items-center border border-outline-variant h-10 shrink-0">
                   <button
                     id="quantity-decrease"
                     aria-label="Decrease quantity"
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-9 h-full flex items-center justify-center text-primary hover:bg-neutral-100 transition-colors cursor-pointer select-none"
+                    className="w-8 h-full flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer select-none"
                   >
-                    <span style={{ fontSize: '16px', lineHeight: 1 }}>&#8722;</span>
+                    <span style={{ fontSize: '13px', lineHeight: 1 }}>&#8722;</span>
                   </button>
-                  <span id="quantity-display" className="w-8 text-center text-primary text-xs font-bold select-none">
+                  <span id="quantity-display" className="w-7 text-center text-primary text-[11px] font-medium select-none">
                     {quantity}
                   </span>
                   <button
                     id="quantity-increase"
                     aria-label="Increase quantity"
                     onClick={() => setQuantity(q => q + 1)}
-                    className="w-9 h-full flex items-center justify-center text-primary hover:bg-neutral-100 transition-colors cursor-pointer select-none"
+                    className="w-8 h-full flex items-center justify-center text-secondary hover:text-primary transition-colors cursor-pointer select-none"
                   >
-                    <span style={{ fontSize: '16px', lineHeight: 1 }}>&#43;</span>
+                    <span style={{ fontSize: '13px', lineHeight: 1 }}>&#43;</span>
                   </button>
                 </div>
                 <button
                   id="add-to-cart-btn"
                   onClick={handleAddToBag}
                   disabled={isAdding}
-                  className="flex-1 border border-primary text-primary h-11 text-[11px] font-semibold tracking-widest uppercase hover:bg-neutral-50 transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="flex-1 border border-primary text-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-50 transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-40"
                 >
                   {isAdding && (
-                    <svg className="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -427,88 +427,86 @@ export function ProductDetailPage() {
               <button
                 id="buy-now-btn"
                 onClick={handleBuyItNow}
-                className="w-full bg-primary text-on-primary h-11 text-[11px] font-semibold tracking-widest uppercase hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="w-full bg-primary text-on-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-800 transition-colors cursor-pointer"
               >
-                BUY NOW
+                Buy Now
               </button>
             </div>
 
-            {/* Ask a Question + Share */}
-            <div className="flex items-center gap-4 mb-5 text-[12px] text-secondary">
+            {/* Ask a Question + Share — whisper quiet */}
+            <div className="flex items-center gap-5 mb-6 text-[10px] text-secondary/60 tracking-wide">
               <button
-                className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                className="flex items-center gap-1 hover:text-primary transition-colors"
                 onClick={() => { setAskSubmitted(false); setIsAskQuestionOpen(true); }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Ask a Question
               </button>
               <button
-                className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                className="flex items-center gap-1 hover:text-primary transition-colors"
                 onClick={() => navigator.share?.({ title: product.name, url: window.location.href })}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 Share
               </button>
             </div>
 
-            {/* Estimated Delivery + SKU */}
-            <div className="border-t border-outline-variant pt-4 mb-5 space-y-3">
-              <div className="flex items-center gap-3 text-[12px]">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-secondary shrink-0"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                <div className="flex items-center gap-2">
-                  <span className="text-secondary font-medium">Estimated Delivery:</span>
-                  <span className="text-primary">{deliveryEstimate}</span>
-                </div>
+            {/* Estimated Delivery + SKU — ultra-light meta info */}
+            <div className="border-t border-outline-variant/50 pt-4 mb-5 space-y-2">
+              <div className="flex items-center gap-2 text-[10px] text-secondary/70">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-secondary/50"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                <span>Delivery:</span>
+                <span className="text-primary/80">{deliveryEstimate}</span>
               </div>
               {product.sku && (
-                <div className="flex items-center gap-2 text-[12px]">
-                  <span className="text-secondary font-medium w-16">Sku:</span>
-                  <span className="text-primary tracking-wider">{product.sku}</span>
+                <div className="flex items-center gap-2 text-[10px] text-secondary/70">
+                  <span className="w-14 shrink-0">Sku:</span>
+                  <span className="text-primary/70 tracking-wider font-light">{product.sku}</span>
                 </div>
               )}
             </div>
 
-            {/* Payment Trust Badge */}
-            <div className="bg-surface-container rounded px-4 py-3 mb-5">
-              <div className="flex items-center gap-2 justify-center mb-1.5">
+            {/* Payment Trust Badge — very subtle */}
+            <div className="border border-outline-variant/40 rounded px-3 py-2.5 mb-5">
+              <div className="flex items-center gap-2 justify-center mb-1">
                 {/* Visa */}
-                <svg viewBox="0 0 48 32" width="36" height="24" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#1a1f71"/><path d="M20 22L22.5 10H26L23.5 22H20ZM35 10.4C34.2 10.1 33 9.8 31.5 9.8C28.5 9.8 26.4 11.3 26.4 13.4C26.4 15 27.8 15.9 28.9 16.4C30 16.9 30.4 17.3 30.4 17.8C30.4 18.6 29.3 19 28.3 19C27 19 26.3 18.8 25.2 18.4L24.8 18.2L24.3 21.1C25.3 21.5 27 21.9 28.8 21.9C32 21.9 34 20.4 34 18.1C34 16.9 33.2 16 31.6 15.2C30.6 14.7 29.9 14.4 29.9 13.8C29.9 13.3 30.5 12.7 31.8 12.7C32.9 12.7 33.7 12.9 34.3 13.2L34.6 13.3L35 10.4ZM40.5 10H38.1C37.3 10 36.7 10.2 36.4 11L32 22H35.2L35.9 20H39.7L40.1 22H43L40.5 10ZM36.8 17.5L38.2 13.6L39 17.5H36.8ZM17.5 10L14.5 18.3L14.2 16.9C13.6 15 11.8 12.9 9.8 11.8L12.5 22H15.8L21 10H17.5Z" fill="white"/><path d="M11.4 10H6L5.9 10.3C10.1 11.4 13 13.9 14.2 16.9L13 11C12.7 10.2 12.1 10 11.4 10Z" fill="#f9a51a"/></svg>
+                <svg viewBox="0 0 48 32" width="30" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#1a1f71"/><path d="M20 22L22.5 10H26L23.5 22H20ZM35 10.4C34.2 10.1 33 9.8 31.5 9.8C28.5 9.8 26.4 11.3 26.4 13.4C26.4 15 27.8 15.9 28.9 16.4C30 16.9 30.4 17.3 30.4 17.8C30.4 18.6 29.3 19 28.3 19C27 19 26.3 18.8 25.2 18.4L24.8 18.2L24.3 21.1C25.3 21.5 27 21.9 28.8 21.9C32 21.9 34 20.4 34 18.1C34 16.9 33.2 16 31.6 15.2C30.6 14.7 29.9 14.4 29.9 13.8C29.9 13.3 30.5 12.7 31.8 12.7C32.9 12.7 33.7 12.9 34.3 13.2L34.6 13.3L35 10.4ZM40.5 10H38.1C37.3 10 36.7 10.2 36.4 11L32 22H35.2L35.9 20H39.7L40.1 22H43L40.5 10ZM36.8 17.5L38.2 13.6L39 17.5H36.8ZM17.5 10L14.5 18.3L14.2 16.9C13.6 15 11.8 12.9 9.8 11.8L12.5 22H15.8L21 10H17.5Z" fill="white"/><path d="M11.4 10H6L5.9 10.3C10.1 11.4 13 13.9 14.2 16.9L13 11C12.7 10.2 12.1 10 11.4 10Z" fill="#f9a51a"/></svg>
                 {/* Mastercard */}
-                <svg viewBox="0 0 48 32" width="36" height="24" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="9" fill="#eb001b"/><circle cx="29" cy="16" r="9" fill="#f79e1b"/><path d="M24 9.57A9 9 0 0 1 28.43 16 9 9 0 0 1 24 22.43 9 9 0 0 1 19.57 16 9 9 0 0 1 24 9.57Z" fill="#ff5f00"/></svg>
+                <svg viewBox="0 0 48 32" width="30" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="9" fill="#eb001b"/><circle cx="29" cy="16" r="9" fill="#f79e1b"/><path d="M24 9.57A9 9 0 0 1 28.43 16 9 9 0 0 1 24 22.43 9 9 0 0 1 19.57 16 9 9 0 0 1 24 9.57Z" fill="#ff5f00"/></svg>
                 {/* UPI */}
-                <div className="bg-white rounded px-1.5 py-0.5 text-[9px] font-bold text-[#097939]">UPI</div>
+                <div className="bg-neutral-100 rounded px-1 py-0.5 text-[8px] font-bold text-[#097939]">UPI</div>
                 {/* COD */}
-                <div className="bg-white rounded px-1.5 py-0.5 text-[9px] font-bold text-gray-700">COD</div>
+                <div className="bg-neutral-100 rounded px-1 py-0.5 text-[8px] font-bold text-gray-600">COD</div>
               </div>
-              <p className="text-center text-[10px] text-secondary tracking-wide">Guaranteed safe &amp; secure checkout</p>
+              <p className="text-center text-[9px] text-secondary/50 tracking-wide">Guaranteed safe &amp; secure checkout</p>
             </div>
 
-            {/* Expandable Accordions */}
-            <div className="flex flex-col border-t border-outline-variant">
-              <details className="group py-3 border-b border-outline-variant cursor-pointer" open>
-                <summary className="flex justify-between items-center text-[12px] text-primary list-none font-medium">
+            {/* Expandable Accordions — ultra-minimal */}
+            <div className="flex flex-col border-t border-outline-variant/50">
+              <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer" open>
+                <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
                   Description
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform" style={{ fontSize: '16px' }}>expand_more</span>
+                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                 </summary>
-                <div className="pt-2 pb-1 text-[12px] text-secondary leading-relaxed pr-2">
+                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
                   {product.description || 'A striking fitted top crafted from luxury materials.'}
                 </div>
               </details>
-              <details className="group py-3 border-b border-outline-variant cursor-pointer">
-                <summary className="flex justify-between items-center text-[12px] text-primary list-none font-medium">
+              <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer">
+                <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
                   Fabric &amp; Care
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform" style={{ fontSize: '16px' }}>expand_more</span>
+                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                 </summary>
-                <div className="pt-2 pb-1 text-[12px] text-secondary leading-relaxed pr-2">
+                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
                   {product.fabricCare || '92% Polyamide, 8% Elastane. Hand wash cold.'}
                 </div>
               </details>
-              <details className="group py-3 border-b border-outline-variant cursor-pointer">
-                <summary className="flex justify-between items-center text-[12px] text-primary list-none font-medium">
-                  Shipping and Returns
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform" style={{ fontSize: '16px' }}>expand_more</span>
+              <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer">
+                <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
+                  Shipping &amp; Returns
+                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                 </summary>
-                <div className="pt-2 pb-1 text-[12px] text-secondary leading-relaxed pr-2">
+                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
                   {product.shippingReturns || 'Orders processed in 1-2 days. Returns accepted within 14 days.'}
                 </div>
               </details>

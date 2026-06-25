@@ -51,6 +51,8 @@ export function ProductDetailPage() {
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
   const [askSubmitted, setAskSubmitted] = useState(false);
+  const [isSubmittingAsk, setIsSubmittingAsk] = useState(false);
+  const [askError, setAskError] = useState('');
 
   const deliveryEstimate = getDeliveryEstimate();
 
@@ -182,6 +184,42 @@ export function ProductDetailPage() {
         left: direction === "left" ? -scrollAmt : scrollAmt,
         behavior: "smooth"
       });
+    }
+  };
+
+  const handleAskQuestionSubmit = async () => {
+    if (!askName || !askEmail || !askMessage) {
+      setAskError('Please fill in all fields.');
+      return;
+    }
+    setAskError('');
+    setIsSubmittingAsk(true);
+    try {
+      const response = await fetch('http://localhost:5000/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productId: product?.id,
+          productName: product?.name,
+          name: askName,
+          email: askEmail,
+          message: askMessage
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAskSubmitted(true);
+        setAskName('');
+        setAskEmail('');
+        setAskMessage('');
+      } else {
+        setAskError(data.message || 'Failed to submit inquiry.');
+      }
+    } catch (err) {
+      console.error(err);
+      setAskError('An error occurred. Please try again later.');
+    } finally {
+      setIsSubmittingAsk(false);
     }
   };
 
@@ -531,27 +569,38 @@ export function ProductDetailPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
+                  {askError && <div className="text-red-500 text-xs text-center">{askError}</div>}
                   <input
                     type="text" placeholder="Your Name"
                     value={askName} onChange={e => setAskName(e.target.value)}
                     className="w-full border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
+                    disabled={isSubmittingAsk}
                   />
                   <input
                     type="email" placeholder="Your Email"
                     value={askEmail} onChange={e => setAskEmail(e.target.value)}
                     className="w-full border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors"
+                    disabled={isSubmittingAsk}
                   />
                   <textarea
                     placeholder="Your Message"
                     rows={5}
                     value={askMessage} onChange={e => setAskMessage(e.target.value)}
                     className="w-full border border-outline-variant px-4 py-3 text-sm focus:outline-none focus:border-primary transition-colors resize-none"
+                    disabled={isSubmittingAsk}
                   />
                   <button
-                    onClick={() => { if (askName && askEmail && askMessage) setAskSubmitted(true); }}
-                    className="w-full bg-primary text-on-primary py-3 text-[11px] font-bold tracking-widest uppercase hover:bg-neutral-800 transition-colors"
+                    onClick={handleAskQuestionSubmit}
+                    disabled={isSubmittingAsk}
+                    className="w-full bg-primary text-on-primary py-3 text-[11px] font-bold tracking-widest uppercase hover:bg-neutral-800 transition-colors flex justify-center items-center gap-2"
                   >
-                    Submit Now
+                    {isSubmittingAsk && (
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {isSubmittingAsk ? 'SUBMITTING...' : 'Submit Now'}
                   </button>
                 </div>
               )}

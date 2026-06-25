@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
 import { useProduct, useProducts } from "../../hooks/useProducts";
+import api from "../../services/api";
 
 import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
@@ -12,15 +13,7 @@ import { Footer } from "../../components/Footer/Footer";
 
 const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
 
-// Compute estimated delivery window (+3 to +5 days from today)
-function getDeliveryEstimate(): string {
-  const now = new Date();
-  const from = new Date(now); from.setDate(now.getDate() + 3);
-  const to = new Date(now); to.setDate(now.getDate() + 5);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
-  return `${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`;
-}
+// Delivery estimate will be fetched from settings
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,8 +46,29 @@ export function ProductDetailPage() {
   const [askSubmitted, setAskSubmitted] = useState(false);
   const [isSubmittingAsk, setIsSubmittingAsk] = useState(false);
   const [askError, setAskError] = useState('');
+  const [deliveryEstimate, setDeliveryEstimate] = useState<string>('');
 
-  const deliveryEstimate = getDeliveryEstimate();
+  useEffect(() => {
+    api.get('/api/settings/public')
+      .then(res => {
+        const min = parseInt(res.data.settings?.deliveryEstimateMin || '3', 10);
+        const max = parseInt(res.data.settings?.deliveryEstimateMax || '5', 10);
+        const now = new Date();
+        const from = new Date(now); from.setDate(now.getDate() + min);
+        const to = new Date(now); to.setDate(now.getDate() + max);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
+        setDeliveryEstimate(`${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`);
+      })
+      .catch(() => {
+        const now = new Date();
+        const from = new Date(now); from.setDate(now.getDate() + 3);
+        const to = new Date(now); to.setDate(now.getDate() + 5);
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
+        setDeliveryEstimate(`${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`);
+      });
+  }, []);
 
   // Carousel scroll refs
   const styleItCarouselRef = useRef<HTMLDivElement>(null);
@@ -195,18 +209,14 @@ export function ProductDetailPage() {
     setAskError('');
     setIsSubmittingAsk(true);
     try {
-      const response = await fetch('http://localhost:5000/api/inquiries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product?.id,
-          productName: product?.name,
-          name: askName,
-          email: askEmail,
-          message: askMessage
-        })
+      const response = await api.post('/api/inquiries', {
+        productId: product?.id,
+        productName: product?.name,
+        name: askName,
+        email: askEmail,
+        message: askMessage
       });
-      const data = await response.json();
+      const data = response.data;
       if (data.success) {
         setAskSubmitted(true);
         setAskName('');

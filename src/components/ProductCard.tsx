@@ -11,7 +11,7 @@ export interface ProductCardProps {
   onAddToCartClick?: (e: React.MouseEvent, product: Product) => void;
 }
 
-const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
+const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
 
 export function ProductCard({
   product,

@@ -10,7 +10,7 @@ import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
 
-const isVideo = (url: string | undefined) => url && url.match(/\.(mp4|webm|ogg|mov)$/i);
+const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();

@@ -274,7 +274,7 @@ export function ProductDetailPage() {
       <main className="flex-grow w-full">
 
         {/* Product Detail Section (Split Frame) */}
-        <section className="flex flex-col lg:flex-row w-full mb-12">
+        <section className="flex flex-col lg:flex-row w-full mb-6 md:mb-8">
 
           {/* Left: Split Image Gallery — wider, images first */}
           <div
@@ -618,11 +618,11 @@ export function ProductDetailPage() {
 
         <div className="px-8 max-w-[1600px] mx-auto w-full">
           {/* Divider */}
-          <div className="w-full h-px bg-outline-variant my-12" />
+          <div className="w-full h-px bg-outline-variant my-6" />
 
           {/* STYLE IT WITH Carousel */}
-          <section className="mb-16 relative">
-            <div className="flex flex-col items-center mb-8">
+          <section className="mb-8 md:mb-10 relative">
+            <div className="flex flex-col items-center mb-4">
               <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">STYLE IT WITH</h2>
             </div>
 
@@ -665,8 +665,8 @@ export function ProductDetailPage() {
           </section>
 
           {/* YOU MIGHT ALSO LIKE Carousel */}
-          <section className="mb-16 relative">
-            <div className="flex flex-col items-center mb-8">
+          <section className="mb-8 md:mb-10 relative">
+            <div className="flex flex-col items-center mb-4">
               <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">YOU MIGHT ALSO LIKE</h2>
             </div>
 

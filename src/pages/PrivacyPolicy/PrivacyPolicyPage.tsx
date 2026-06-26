@@ -132,7 +132,7 @@ export function PrivacyPolicyPage() {
       <main className="pt-16 bg-white min-h-screen">
         {/* Page Header */}
         <div className="border-b border-gray-100 bg-[#fafafa]">
-          <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+          <div className="max-w-3xl mx-auto px-6 py-8 md:py-12">
             <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400 font-medium mb-3">
               Legal
             </p>
@@ -144,7 +144,7 @@ export function PrivacyPolicyPage() {
         </div>
 
         {/* Intro */}
-        <div className="max-w-3xl mx-auto px-6 pt-12 pb-2">
+        <div className="max-w-3xl mx-auto px-6 pt-8 pb-1">
           <p className="text-sm text-gray-500 leading-relaxed border-l-2 border-[#111] pl-5">
             Welcome to Tobeque. We are committed to protecting your privacy and ensuring a safe
             shopping experience. This Privacy Policy explains how we collect, use, share, and
@@ -158,10 +158,10 @@ export function PrivacyPolicyPage() {
         </div>
 
         {/* Sections */}
-        <div className="max-w-3xl mx-auto px-6 py-10">
+        <div className="max-w-3xl mx-auto px-6 py-6">
           <div className="flex flex-col divide-y divide-gray-100">
             {SECTIONS.map((section) => (
-              <section key={section.number} className="py-9">
+              <section key={section.number} className="py-6">
                 <div className="flex items-start gap-6">
                   {/* Section number */}
                   <span className="text-[11px] text-gray-300 font-mono mt-1 select-none w-5 shrink-0">

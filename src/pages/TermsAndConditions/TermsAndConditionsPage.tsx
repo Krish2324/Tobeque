@@ -82,7 +82,7 @@ export function TermsAndConditionsPage() {
       <main className="pt-16 bg-white min-h-screen">
         {/* Page Header */}
         <div className="border-b border-gray-100 bg-[#fafafa]">
-          <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+          <div className="max-w-3xl mx-auto px-6 py-8 md:py-12">
             <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400 font-medium mb-3">
               Legal
             </p>
@@ -96,7 +96,7 @@ export function TermsAndConditionsPage() {
         </div>
 
         {/* Content */}
-        <div className="max-w-3xl mx-auto px-6 py-14 md:py-20">
+        <div className="max-w-3xl mx-auto px-6 py-8 md:py-12">
           <p className="text-sm text-gray-500 leading-relaxed mb-12 border-l-2 border-[#111] pl-5">
             Please read these Terms &amp; Conditions carefully before using our website. By accessing or using Tobeque, you agree to be bound by the terms described below.
           </p>
@@ -134,7 +134,7 @@ export function TermsAndConditionsPage() {
           </div>
 
           {/* Contact Section */}
-          <div className="mt-12 pt-10 border-t border-gray-100">
+          <div className="mt-8 pt-6 border-t border-gray-100">
             <h2 className="text-sm font-semibold tracking-[0.15em] uppercase text-[#111] mb-4">
               Communication
             </h2>

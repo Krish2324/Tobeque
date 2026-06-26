@@ -2,9 +2,9 @@ import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-[#f4f4f4] text-[#333] pt-16 pb-8 border-t border-outline-variant font-body-md relative overflow-hidden">
+    <footer className="w-full bg-[#f4f4f4] text-[#333] pt-10 pb-6 border-t border-outline-variant font-body-md relative overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-[#e5e5e5] pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-[#e5e5e5] pb-10">
           
           {/* Column 1: About */}
           <div className="flex flex-col gap-4">

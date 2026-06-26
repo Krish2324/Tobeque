@@ -154,14 +154,14 @@ export function ProfilePage() {
     <div className="bg-[#FAFAF8] text-on-background font-body-md antialiased min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow pt-[72px] max-w-7xl mx-auto px-6 py-12 md:py-16 w-full">
+      <main className="flex-grow pt-[72px] max-w-7xl mx-auto px-6 py-6 md:py-8 w-full">
         <div className="flex flex-col md:flex-row gap-8 bg-white border border-outline-variant/60 shadow-sm min-h-[600px]">
           
           {/* Sidebar */}
           <aside className="w-full md:w-64 border-r border-outline-variant/60 flex flex-col shrink-0">
-            <div className="p-8 flex flex-col items-center border-b border-outline-variant/60 relative">
+            <div className="p-6 flex flex-col items-center border-b border-outline-variant/60 relative">
               <div 
-                className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mb-4 overflow-hidden relative group cursor-pointer"
+                className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mb-3 overflow-hidden relative group cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {user.profilePhoto ? (
@@ -190,46 +190,46 @@ export function ProfilePage() {
               <h2 className="font-serif text-xl text-[#111] text-center break-words">{displayName}</h2>
             </div>
             
-            <nav className="flex flex-col py-4 w-full">
-
+            <nav className="flex flex-col py-2 w-full">
+ 
               <button 
                 onClick={() => setActiveTab('orders')} 
-                className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'orders' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
+                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'orders' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
               >
                 <span className="material-symbols-outlined text-xl">shopping_cart</span>
                 Orders
               </button>
               <button 
                 onClick={() => setActiveTab('addresses')} 
-                className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'addresses' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
+                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'addresses' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
               >
                 <span className="material-symbols-outlined text-xl">location_on</span>
                 Addresses
               </button>
               <button 
                 onClick={() => setActiveTab('details')} 
-                className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'details' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
+                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'details' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
               >
                 <span className="material-symbols-outlined text-xl">person</span>
                 Account details
               </button>
               <button 
                 onClick={() => setActiveTab('wishlist')} 
-                className={`flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left ${activeTab === 'wishlist' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
+                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'wishlist' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
               >
                 <span className="material-symbols-outlined text-xl">favorite</span>
                 Wishlist
               </button>
               <button 
                 onClick={handleLogout} 
-                className="flex items-center gap-3 px-8 py-4 text-sm font-medium transition-colors w-full text-left text-gray-500 hover:bg-red-50 hover:text-red-600 border-l-4 border-transparent"
+                className="flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left text-gray-500 hover:bg-red-50 hover:text-red-600 border-l-4 border-transparent"
               >
                 <span className="material-symbols-outlined text-xl">logout</span>
                 Log out
               </button>
             </nav>
           </aside>
-
+ 
           {/* Content Area */}
           <div className="flex-1 p-8 md:p-12 w-full max-w-full overflow-hidden">
             

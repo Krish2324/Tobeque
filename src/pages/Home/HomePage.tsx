@@ -49,6 +49,11 @@ export function HomePage() {
   const [collectionItems, setCollectionItems] = useState<SeasonCollectionItem[]>([]);
   const [collectionLoading, setCollectionLoading] = useState(true);
 
+  // Slider state
+  const [sliderIndex, setSliderIndex] = useState(0);
+  const [sliderTransition, setSliderTransition] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(6);
+
   useEffect(() => {
     api.get('/api/season-collection')
       .then(res => {
@@ -59,6 +64,49 @@ export function HomePage() {
       .catch(() => {})
       .finally(() => setCollectionLoading(false));
   }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setVisibleCount(6);
+      } else if (window.innerWidth >= 768) {
+        setVisibleCount(4);
+      } else {
+        setVisibleCount(2);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (collectionItems.length <= visibleCount) return;
+    const interval = setInterval(() => {
+      setSliderTransition(true);
+      setSliderIndex((prev) => prev + 1);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [collectionItems.length, visibleCount]);
+
+  useEffect(() => {
+    if (collectionItems.length === 0) return;
+    if (sliderIndex >= collectionItems.length) {
+      const timeout = setTimeout(() => {
+        setSliderTransition(false);
+        setSliderIndex(0);
+      }, 500); // matches slide duration (500ms)
+      return () => clearTimeout(timeout);
+    }
+  }, [sliderIndex, collectionItems.length]);
+
+  const extendedCollectionItems = React.useMemo(() => {
+    if (collectionItems.length === 0) return [];
+    if (collectionItems.length <= visibleCount) return collectionItems;
+    return [...collectionItems, ...collectionItems.slice(0, visibleCount)];
+  }, [collectionItems, visibleCount]);
+
+  const showSlider = collectionItems.length > visibleCount;
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -73,7 +121,7 @@ export function HomePage() {
       <Navbar onSearchProductSelect={(product) => setQuickViewProduct(product)} />
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="relative w-full h-[80vh] md:h-[90vh] mb-8">
+      <section className="relative w-full h-[80vh] md:h-[90vh] mb-4">
         <div className="w-full h-full relative overflow-hidden bg-surface-container">
           <img
             alt="Cinematic fashion campaign showing a model in spring collection."
@@ -85,9 +133,9 @@ export function HomePage() {
       </section>
 
       {/* ── Season Collection — Category Cards ────────────────────────────── */}
-      <section className="w-full px-4 md:px-8 mb-16">
+      <section className="w-full px-1 md:px-2 mb-8">
         {/* Editorial heading */}
-        <div className="flex items-center justify-center gap-5 mb-10">
+        <div className="flex items-center justify-center gap-5 mb-5">
           <span className="flex-1 h-px bg-gradient-to-r from-transparent to-outline-variant max-w-[120px]" />
           <div className="text-center">
             <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-0.5">
@@ -100,64 +148,119 @@ export function HomePage() {
           <span className="flex-1 h-px bg-gradient-to-l from-transparent to-outline-variant max-w-[120px]" />
         </div>
 
-        {/* Category Cards grid */}
+        {/* Category Cards slider / grid */}
         {collectionLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-1 md:gap-1.5 animate-pulse">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-surface-container animate-pulse" />
+              <div key={i} className="aspect-[3/4] bg-surface-container rounded" />
             ))}
           </div>
         ) : collectionItems.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {collectionItems.map((item, idx) => {
-              const displayName = item.displayLabel || item.category?.name || 'Category';
-              const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
-              const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+          !showSlider ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-1 md:gap-1.5">
+              {collectionItems.map((item, idx) => {
+                const displayName = item.displayLabel || item.category?.name || 'Category';
+                const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
+                const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
 
-              return (
-                <button
-                  key={item.id}
-                  className="group relative aspect-[3/4] overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left"
-                  onClick={() =>
-                    navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
-                  }
-                >
-                  {/* Background image */}
-                  <img
-                    src={imageUrl || fallbackUrl}
-                    alt={displayName}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
+                return (
+                  <button
+                    key={item.id}
+                    className="group relative aspect-[3/4] overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left w-full block"
+                    onClick={() =>
+                      navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
+                    }
+                  >
+                    {/* Background image */}
+                    <img
+                      src={imageUrl || fallbackUrl}
+                      alt={displayName}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
 
-                  {/* Dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    {/* Dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  {/* Category name at bottom */}
-                  <div className="absolute bottom-0 inset-x-0 p-3">
-                    <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate">
-                      {displayName}
-                    </p>
-                    <p className="text-[9px] tracking-widest text-white/60 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      Shop Now
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-10">
-            <p className="text-secondary text-sm">Season Collection is empty. Configure it from the Admin Panel.</p>
-          </div>
-        )}
+                    {/* Category name at bottom */}
+                    <div className="absolute bottom-0 inset-x-0 p-3">
+                      <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate">
+                        {displayName}
+                      </p>
+                      <p className="text-[9px] tracking-widest text-white/60 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        Shop Now
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                          <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="overflow-hidden w-full relative">
+              <div 
+                className="flex"
+                style={{
+                  transform: `translateX(-${sliderIndex * (100 / visibleCount)}%)`,
+                  transition: sliderTransition ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+                }}
+              >
+                {extendedCollectionItems.map((item, idx) => {
+                  const displayName = item.displayLabel || item.category?.name || 'Category';
+                  const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
+                  const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+
+                  return (
+                    <div 
+                      key={`${item.id}-${idx}`}
+                      className="px-0.5 md:px-0.75 shrink-0"
+                      style={{ width: `${100 / visibleCount}%` }}
+                    >
+                      <button
+                        className="group relative w-full aspect-[3/4] overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block"
+                        onClick={() =>
+                          navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
+                        }
+                      >
+                        {/* Background image */}
+                        <img
+                          src={imageUrl || fallbackUrl}
+                          alt={displayName}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        />
+
+                        {/* Dark gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                        {/* Category name at bottom */}
+                        <div className="absolute bottom-0 inset-x-0 p-3">
+                          <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate">
+                            {displayName}
+                          </p>
+                          <p className="text-[9px] tracking-widest text-white/60 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            Shop Now
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) ) : (
+            <div className="text-center py-10">
+              <p className="text-secondary text-sm">Season Collection is empty. Configure it from the Admin Panel.</p>
+            </div>
+          )}
       </section>
 
       {/* ── Featured Products ─────────────────────────────────────────────── */}
-      <section className="w-full px-1 md:px-2 mb-section-padding-mobile md:mb-section-padding-desktop">
-        <div className="flex items-center justify-center gap-5 mb-6">
+      <section className="w-full px-1 md:px-2 mb-6 md:mb-8">
+        <div className="flex items-center justify-center gap-5 mb-4">
           <span className="flex-1 h-px bg-gradient-to-r from-transparent to-outline-variant max-w-[120px]" />
           <div className="text-center">
             <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-0.5">Hand-picked</p>

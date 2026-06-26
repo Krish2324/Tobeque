@@ -9,6 +9,7 @@ export interface ProductCardProps {
   onWishlistClick?: (e: React.MouseEvent, product: Product) => void;
   onQuickViewClick?: (product: Product) => void;
   onAddToCartClick?: (e: React.MouseEvent, product: Product) => void;
+  viewMode?: 'grid' | 'list';
 }
 
 const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
@@ -19,7 +20,88 @@ export function ProductCard({
   onWishlistClick,
   onQuickViewClick,
   onAddToCartClick,
+  viewMode = 'grid',
 }: ProductCardProps) {
+  if (viewMode === 'list') {
+    return (
+      <div className="group relative flex items-center gap-4 border-b border-outline-variant/20 py-2.5 w-full text-left">
+        {/* Left Side: Compact Image Container */}
+        <div className="relative w-14 sm:w-16 shrink-0 aspect-[2/3] bg-surface-container overflow-hidden">
+          <Link 
+            to={`/product/${product.id || ""}`}
+            className="absolute inset-0 z-0 block cursor-pointer"
+          >
+            <img
+              alt={product.imageAlt || product.name}
+              className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
+              src={product.imageSrc}
+            />
+          </Link>
+        </div>
+
+        {/* Right Side: Sleek Info & Actions Row */}
+        <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          {/* Main Info */}
+          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+            <Link to={`/product/${product.id || ""}`} className="hover:underline cursor-pointer truncate block">
+              <h3 className="font-body-md text-[11px] sm:text-xs text-primary uppercase tracking-wider font-semibold truncate">
+                {product.name}
+              </h3>
+            </Link>
+            <p className="font-body-md text-[11px] sm:text-xs font-bold text-secondary">
+              {product.price}
+            </p>
+            {/* Sizes & Colors in one inline row */}
+            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[9px] font-label-caps text-secondary/80">
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <span className="font-bold">SIZES:</span>
+                  <span className="text-primary">{product.sizes.join(', ')}</span>
+                </div>
+              )}
+              {product.detailedColors && product.detailedColors.length > 0 && (
+                <div className="flex items-center gap-1">
+                  {product.sizes && product.sizes.length > 0 && <span className="text-outline-variant/60">•</span>}
+                  <span className="font-bold">COLORS:</span>
+                  <span className="text-primary">{product.detailedColors.map(c => c.name).join(', ')}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <button
+              onClick={() => onQuickViewClick?.(product)}
+              className="w-7 h-7 rounded-full border border-outline-variant hover:border-primary flex items-center justify-center text-primary transition-colors cursor-pointer"
+              title="Quick View"
+            >
+              <span className="material-symbols-outlined text-[15px]">visibility</span>
+            </button>
+            <button
+              onClick={(e) => onWishlistClick?.(e, product)}
+              className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                isWishlisted
+                  ? "bg-primary border-primary text-on-primary"
+                  : "bg-transparent border-outline-variant hover:border-primary text-primary"
+              }`}
+              title="Wishlist"
+            >
+              <span className="material-symbols-outlined text-[15px]">favorite</span>
+            </button>
+            <button
+              onClick={(e) => onAddToCartClick?.(e, product)}
+              className="px-3.5 py-1.5 bg-primary text-on-primary hover:bg-neutral-800 transition-colors text-[9px] font-label-caps tracking-wider uppercase font-bold flex items-center gap-1 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[12px]">shopping_bag</span>
+              ADD
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="group relative flex flex-col">
       {/* Image Container with Separated Link & Button Layers */}

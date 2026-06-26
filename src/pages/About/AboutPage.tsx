@@ -31,7 +31,7 @@ export function AboutPage() {
       </section>
 
       {/* Intro section */}
-      <section className="w-full max-w-4xl mx-auto px-6 pt-12 pb-16 md:pt-16 md:pb-24 text-center">
+      <section className="w-full max-w-4xl mx-auto px-6 pt-8 pb-10 md:pt-10 md:pb-14 text-center">
         <h2 className="font-display-md text-display-md text-primary mb-6">
           We Are Tobeque
         </h2>
@@ -49,7 +49,7 @@ export function AboutPage() {
         <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[70vh] relative overflow-hidden">
           <img src={productSheerTop} className="w-full h-full object-cover" alt="Our Craft - Premium Comfort" />
         </div>
-        <div className="w-full md:w-1/2 p-12 md:p-24 lg:p-32 flex flex-col justify-center">
+        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
           <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">Our Craft</span>
           <h2 className="font-display-sm text-display-sm text-primary mb-8">Premium Comfort, Everyday Wear</h2>
           <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">
@@ -69,7 +69,7 @@ export function AboutPage() {
 
       {/* 2. The TOBEQUE Woman */}
       <section className="w-full flex flex-col-reverse md:flex-row items-stretch bg-white">
-        <div className="w-full md:w-1/2 p-12 md:p-24 lg:p-32 flex flex-col justify-center">
+        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
           <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">The TOBEQUE Woman</span>
           <h2 className="font-display-sm text-display-sm text-primary mb-8">Trend-Forward Designs for Growing Confidence</h2>
           <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">
@@ -102,7 +102,7 @@ export function AboutPage() {
         <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[70vh] relative overflow-hidden">
           <img src={campaignBanner} className="w-full h-full object-cover" alt="Sustainability - Made to grow with you" />
         </div>
-        <div className="w-full md:w-1/2 p-12 md:p-24 lg:p-32 flex flex-col justify-center">
+        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
           <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">Sustainability</span>
           <h2 className="font-display-sm text-display-sm text-primary mb-8">Made to grow with you, styled to shine with confidence.</h2>
           <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">

@@ -151,31 +151,35 @@ export function ProfilePage() {
   };
 
   return (
-    <div className="bg-[#FAFAF8] text-on-background font-body-md antialiased min-h-screen flex flex-col">
+    <div className="bg-surface-container-lowest text-on-surface font-body-md antialiased min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-grow pt-[72px] max-w-7xl mx-auto px-6 py-6 md:py-8 w-full">
-        <div className="flex flex-col md:flex-row gap-8 bg-white border border-outline-variant/60 shadow-sm min-h-[600px]">
+      <main className="flex-grow pt-[88px] max-w-7xl mx-auto px-6 py-12 md:py-16 w-full">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-12 items-start">
           
-          {/* Sidebar */}
-          <aside className="w-full md:w-64 border-r border-outline-variant/60 flex flex-col shrink-0">
-            <div className="p-6 flex flex-col items-center border-b border-outline-variant/60 relative">
+          {/* Enhanced Floating Sidebar */}
+          <aside className="w-full flex flex-col shrink-0 lg:sticky lg:top-[120px]">
+            {/* Profile Header Card */}
+            <div className="bg-surface rounded-3xl p-8 mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-outline-variant/30 flex flex-col items-center relative overflow-hidden group">
+              {/* Subtle background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50 pointer-events-none" />
+              
               <div 
-                className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mb-3 overflow-hidden relative group cursor-pointer"
+                className="w-28 h-28 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0 mb-5 overflow-hidden relative cursor-pointer shadow-inner ring-4 ring-white"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {user.profilePhoto ? (
                   <img src={`${user.profilePhoto}`} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="material-symbols-outlined text-[64px] text-white">person</span>
+                  <span className="material-symbols-outlined text-[64px] text-primary/20">person</span>
                 )}
                 
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity text-white">
-                  <span className="material-symbols-outlined text-xl">photo_camera</span>
-                  <span className="text-[10px] uppercase font-medium mt-1">Upload</span>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 text-white backdrop-blur-[2px]">
+                  <span className="material-symbols-outlined text-2xl">photo_camera</span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold mt-2">Upload</span>
                 </div>
                 {isUploadingPhoto && (
-                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10 backdrop-blur-sm">
                     <span className="material-symbols-outlined animate-spin text-primary">progress_activity</span>
                   </div>
                 )}
@@ -187,295 +191,357 @@ export function ProfilePage() {
                 accept="image/*" 
                 className="hidden" 
               />
-              <h2 className="font-serif text-xl text-[#111] text-center break-words">{displayName}</h2>
+              <h2 className="font-headline-md text-2xl text-primary text-center tracking-tight">{displayName}</h2>
+              <p className="text-xs text-secondary/60 mt-1">{user.email}</p>
             </div>
             
-            <nav className="flex flex-col py-2 w-full">
- 
-              <button 
-                onClick={() => setActiveTab('orders')} 
-                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'orders' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
-              >
-                <span className="material-symbols-outlined text-xl">shopping_cart</span>
-                Orders
-              </button>
-              <button 
-                onClick={() => setActiveTab('addresses')} 
-                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'addresses' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
-              >
-                <span className="material-symbols-outlined text-xl">location_on</span>
-                Addresses
-              </button>
-              <button 
-                onClick={() => setActiveTab('details')} 
-                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'details' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
-              >
-                <span className="material-symbols-outlined text-xl">person</span>
-                Account details
-              </button>
-              <button 
-                onClick={() => setActiveTab('wishlist')} 
-                className={`flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left ${activeTab === 'wishlist' ? 'bg-gray-100 text-[#111] border-l-4 border-[#111]' : 'text-gray-500 hover:bg-gray-50 border-l-4 border-transparent'}`}
-              >
-                <span className="material-symbols-outlined text-xl">favorite</span>
-                Wishlist
-              </button>
+            {/* Pill Navigation */}
+            <nav className="flex flex-col gap-2 w-full">
+              {[
+                { id: 'orders', icon: 'shopping_bag', label: 'Order History' },
+                { id: 'addresses', icon: 'location_on', label: 'Saved Addresses' },
+                { id: 'details', icon: 'person', label: 'Account Details' },
+                { id: 'wishlist', icon: 'favorite', label: 'My Wishlist' }
+              ].map((tab) => (
+                <button 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as Tab)} 
+                  className={`flex items-center gap-4 px-6 py-4 text-sm font-medium rounded-2xl transition-all duration-300 w-full text-left ${activeTab === tab.id ? 'bg-primary text-on-primary shadow-md translate-x-1' : 'text-secondary/70 hover:bg-surface-container hover:text-primary'}`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+                  {tab.label}
+                </button>
+              ))}
+              
+              <div className="h-px w-full bg-outline-variant/50 my-4" />
+              
               <button 
                 onClick={handleLogout} 
-                className="flex items-center gap-3 px-8 py-3 text-sm font-medium transition-colors w-full text-left text-gray-500 hover:bg-red-50 hover:text-red-600 border-l-4 border-transparent"
+                className="flex items-center gap-4 px-6 py-4 text-sm font-medium rounded-2xl transition-all duration-300 w-full text-left text-red-500 hover:bg-red-50 hover:translate-x-1"
               >
-                <span className="material-symbols-outlined text-xl">logout</span>
-                Log out
+                <span className="material-symbols-outlined text-[20px]">logout</span>
+                Sign Out
               </button>
             </nav>
           </aside>
  
           {/* Content Area */}
-          <div className="flex-1 p-8 md:p-12 w-full max-w-full overflow-hidden">
-            
-
-
-            {/* Orders */}
+          <div className="flex-1 w-full max-w-full">
+             
+            {/* Orders Tab */}
             {activeTab === 'orders' && (
-              <div className="animate-in fade-in duration-300 w-full">
+              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
+                <h1 className="text-3xl font-headline-md text-primary mb-8">Order History</h1>
+                
                 {ordersLoading ? (
-                  <div className="flex flex-col gap-4">
-                    {[1, 2].map((i) => (
-                      <div key={i} className="bg-gray-50 border border-outline-variant/60 p-6 animate-pulse h-28" />
+                  <div className="flex flex-col gap-6">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-surface rounded-3xl border border-outline-variant/30 p-8 animate-pulse h-40 shadow-[0_4px_20px_rgb(0,0,0,0.02)]" />
                     ))}
                   </div>
                 ) : ordersError ? (
-                  <div className="bg-red-50 p-6 border border-red-200 text-red-600">{ordersError}</div>
+                  <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-red-600 flex items-center gap-3">
+                    <span className="material-symbols-outlined">error</span>
+                    {ordersError}
+                  </div>
                 ) : orders.length === 0 ? (
-                  <div className="bg-gray-50 border border-outline-variant/60 p-12 text-center">
-                    <div className="inline-flex w-16 h-16 bg-white items-center justify-center rounded-full mb-4 shadow-sm border border-gray-200">
-                      <span className="material-symbols-outlined text-gray-400 text-3xl">shopping_bag</span>
+                  <div className="bg-surface rounded-3xl border border-outline-variant/30 p-16 text-center shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center">
+                    <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-6 text-secondary/30">
+                      <span className="material-symbols-outlined text-4xl">shopping_basket</span>
                     </div>
-                    <h3 className="font-serif text-xl text-[#111] mb-2">No orders has been made yet.</h3>
-                    <Link to="/collection" className="inline-block mt-4 bg-[#111] text-white px-8 py-3 text-xs tracking-widest uppercase hover:bg-gray-800 transition-colors">
-                      Browse Products
+                    <h3 className="font-headline-md text-2xl text-primary mb-3">No orders yet</h3>
+                    <p className="text-secondary/60 mb-8 max-w-sm">When you place an order, it will appear here so you can track its status.</p>
+                    <Link to="/collection" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+                      Start Shopping
                     </Link>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead>
-                        <tr className="border-b border-outline-variant/60 text-gray-500 font-medium">
-                          <th className="pb-4 pr-6">Order</th>
-                          <th className="pb-4 pr-6">Date</th>
-                          <th className="pb-4 pr-6">Status</th>
-                          <th className="pb-4">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orders.map((order) => (
-                          <tr key={order.id} className="border-b border-outline-variant/60 hover:bg-gray-50 transition-colors">
-                            <td className="py-4 pr-6 font-medium text-[#111]">#{order.orderNumber}</td>
-                            <td className="py-4 pr-6 text-gray-600">
-                              {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            </td>
-                            <td className="py-4 pr-6">
-                              <span className={`px-2 py-1 text-[10px] uppercase tracking-wider font-medium rounded-sm ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
-                                {order.orderStatus}
-                              </span>
-                            </td>
-                            <td className="py-4 text-gray-600">
-                              ₹{Number(order.totalAmount).toLocaleString('en-IN')} for {order.items?.length || 0} items
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="flex flex-col gap-6">
+                    {orders.map((order) => (
+                      <div key={order.id} className="bg-surface rounded-3xl border border-outline-variant/30 p-6 sm:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-shadow duration-300">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-outline-variant/40">
+                          <div>
+                            <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-1">Order #{order.orderNumber}</p>
+                            <p className="text-sm text-primary font-medium">Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
+                              {order.orderStatus}
+                            </div>
+                            <span className="text-lg font-headline-md text-primary">₹{Number(order.totalAmount).toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-4">
+                          {order.items?.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-4 bg-surface-container-lowest rounded-2xl p-3 pr-6 border border-outline-variant/30">
+                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container">
+                                {item.product?.thumbnail ? (
+                                  <img src={item.product.thumbnail} alt={item.productName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-secondary/30">
+                                    <span className="material-symbols-outlined">inventory_2</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-primary line-clamp-1">{item.productName}</p>
+                                <p className="text-xs text-secondary/70 mt-1">Qty: {item.quantity}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             )}
 
-            {/* Addresses */}
+            {/* Addresses Tab */}
             {activeTab === 'addresses' && (
-              <div className="animate-in fade-in duration-300">
-                <p className="text-gray-600 mb-8">The following addresses will be used on the checkout page by default.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="font-serif text-lg text-[#111] border-b border-outline-variant/60 pb-2 mb-4">Billing address</h3>
-                    <button onClick={() => setActiveTab('details')} className="text-xs font-medium text-[#111] uppercase tracking-wider underline underline-offset-4 hover:text-gray-600 mb-4 block">Edit</button>
-                    <address className="not-italic text-sm text-gray-600 leading-relaxed">
-                      {formData.firstName || formData.lastName ? <strong className="text-[#111] block mb-1">{formData.firstName} {formData.lastName}</strong> : <span className="italic">No name provided</span>}
-                      {formData.address ? (
-                        <>
-                          {formData.address}<br />
-                          {formData.city && <>{formData.city}<br /></>}
-                          {formData.state && <>{formData.state} {formData.zipCode}<br /></>}
-                        </>
-                      ) : (
-                        <span className="italic block mt-2 text-gray-400">You have not set up this type of address yet.</span>
-                      )}
-                    </address>
-                  </div>
-                  <div>
-                    <h3 className="font-serif text-lg text-[#111] border-b border-outline-variant/60 pb-2 mb-4">Shipping address</h3>
-                    <button onClick={() => setActiveTab('details')} className="text-xs font-medium text-[#111] uppercase tracking-wider underline underline-offset-4 hover:text-gray-600 mb-4 block">Edit</button>
-                    <address className="not-italic text-sm text-gray-600 leading-relaxed">
-                      {formData.firstName || formData.lastName ? <strong className="text-[#111] block mb-1">{formData.firstName} {formData.lastName}</strong> : <span className="italic">No name provided</span>}
-                      {formData.address ? (
-                        <>
-                          {formData.address}<br />
-                          {formData.city && <>{formData.city}<br /></>}
-                          {formData.state && <>{formData.state} {formData.zipCode}<br /></>}
-                        </>
-                      ) : (
-                        <span className="italic block mt-2 text-gray-400">You have not set up this type of address yet.</span>
-                      )}
-                    </address>
-                  </div>
+              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
+                <div className="flex justify-between items-end mb-8">
+                  <h1 className="text-3xl font-headline-md text-primary">Saved Addresses</h1>
+                  <button onClick={() => setActiveTab('details')} className="text-xs font-bold text-primary uppercase tracking-widest hover:text-secondary transition-colors underline underline-offset-4">
+                    Edit Addresses
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {['Billing', 'Shipping'].map((type) => (
+                    <div key={type} className="bg-surface rounded-3xl border border-outline-variant/30 p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-bl-[100px] -z-10 group-hover:scale-110 transition-transform duration-500" />
+                      <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                        {type} Address
+                      </h3>
+                      
+                      <address className="not-italic text-sm text-primary leading-relaxed flex flex-col gap-1">
+                        {formData.firstName || formData.lastName ? (
+                          <strong className="text-lg font-headline-md block mb-2">{formData.firstName} {formData.lastName}</strong>
+                        ) : (
+                          <span className="italic text-secondary/50">No name provided</span>
+                        )}
+                        
+                        {formData.address ? (
+                          <>
+                            <span className="text-secondary">{formData.address}</span>
+                            {formData.city && <span className="text-secondary">{formData.city}</span>}
+                            {formData.state && <span className="text-secondary">{formData.state}, {formData.zipCode}</span>}
+                          </>
+                        ) : (
+                          <span className="italic block mt-4 text-secondary/40">This address hasn't been set up yet.</span>
+                        )}
+                      </address>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Account Details */}
+            {/* Account Details Tab */}
             {activeTab === 'details' && (
-              <div className="animate-in fade-in duration-300 max-w-2xl">
+              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-3xl">
+                <h1 className="text-3xl font-headline-md text-primary mb-2">Account Details</h1>
+                <p className="text-sm text-secondary/70 mb-8">Update your personal information and address details here.</p>
+
                 {saveSuccess && (
-                  <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm">
-                    Account details changed successfully.
+                  <div className="mb-8 p-4 bg-green-50 rounded-2xl border border-green-100 text-green-700 text-sm flex items-center gap-3 animate-in fade-in">
+                    <span className="material-symbols-outlined">check_circle</span>
+                    Your account details were saved successfully.
                   </div>
                 )}
                 {saveError && (
-                  <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm">
+                  <div className="mb-8 p-4 bg-red-50 rounded-2xl border border-red-100 text-red-700 text-sm flex items-center gap-3 animate-in fade-in">
+                    <span className="material-symbols-outlined">error</span>
                     {saveError}
                   </div>
                 )}
-                <form onSubmit={handleSave} className="flex flex-col gap-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-medium text-[#111]">First name *</label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        required
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-medium text-[#111]">Last name *</label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        required
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="text-xs font-medium text-[#111]">Email address *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        required
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2 md:col-span-2">
-                      <label className="text-xs font-medium text-[#111]">Mobile number <span className="text-gray-400 font-normal">(Read Only)</span></label>
-                      <input
-                        type="text"
-                        value={user.phone}
-                        disabled
-                        className="px-4 py-3 border border-gray-100 bg-gray-50 text-gray-500 text-sm cursor-not-allowed"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2 md:col-span-2 pt-4 border-t border-outline-variant/60">
-                      <label className="text-xs font-medium text-[#111]">Street Address</label>
-                      <input
-                        type="text"
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-medium text-[#111]">City</label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-medium text-[#111]">State</label>
-                      <input
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-medium text-[#111]">ZIP / Postal Code</label>
-                      <input
-                        type="text"
-                        name="zipCode"
-                        value={formData.zipCode}
-                        onChange={handleInputChange}
-                        className="px-4 py-3 border border-outline-variant focus:border-[#111] focus:outline-none text-sm transition-colors"
-                      />
+
+                <form onSubmit={handleSave} className="bg-surface rounded-3xl border border-outline-variant/30 p-8 md:p-10 shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col gap-8">
+                  
+                  {/* Personal Info Section */}
+                  <div>
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6">Personal Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="firstName"
+                          id="firstName"
+                          required
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="First name"
+                        />
+                        <label htmlFor="firstName" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">First name *</label>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="lastName"
+                          id="lastName"
+                          required
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="Last name"
+                        />
+                        <label htmlFor="lastName" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">Last name *</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="email"
+                          name="email"
+                          id="email"
+                          required
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="Email address"
+                        />
+                        <label htmlFor="email" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">Email address *</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="text"
+                          value={user.phone || ''}
+                          disabled
+                          className="w-full bg-surface-container border border-outline-variant/50 rounded-xl px-4 py-3 text-secondary/60 text-sm cursor-not-allowed"
+                        />
+                        <label className="absolute left-4 -top-2 bg-surface px-1 text-[10px] font-bold tracking-widest uppercase text-secondary/50">Mobile number</label>
+                      </div>
                     </div>
                   </div>
-                  <div className="pt-4">
+
+                  <div className="h-px w-full bg-outline-variant/40" />
+
+                  {/* Address Section */}
+                  <div>
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6">Address Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 gap-y-8">
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="text"
+                          name="address"
+                          id="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="Street Address"
+                        />
+                        <label htmlFor="address" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">Street Address</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="city"
+                          id="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="City"
+                        />
+                        <label htmlFor="city" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">City</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="state"
+                          id="state"
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="State / Province"
+                        />
+                        <label htmlFor="state" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">State / Province</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="text"
+                          name="zipCode"
+                          id="zipCode"
+                          value={formData.zipCode}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="ZIP / Postal Code"
+                        />
+                        <label htmlFor="zipCode" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">ZIP / Postal Code</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 flex justify-end">
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="bg-[#111] text-white px-8 py-4 text-xs tracking-widest uppercase font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+                      className="bg-primary text-on-primary px-10 py-4 rounded-full text-xs tracking-widest uppercase font-bold hover:scale-105 transition-transform shadow-lg shadow-primary/20 disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      {isSaving ? 'Saving...' : 'Save changes'}
+                      {isSaving ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
               </div>
             )}
 
-            {/* Wishlist */}
+            {/* Wishlist Tab */}
             {activeTab === 'wishlist' && (
-              <div className="animate-in fade-in duration-300">
+              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
+                <div className="flex justify-between items-end mb-8">
+                  <h1 className="text-3xl font-headline-md text-primary">My Wishlist</h1>
+                  <span className="text-xs font-bold text-secondary/50 uppercase tracking-widest">{wishlistItems.length} Items</span>
+                </div>
+
                 {wishlistItems.length === 0 ? (
-                  <div className="bg-gray-50 border border-outline-variant/60 p-12 text-center">
-                    <div className="inline-flex w-16 h-16 bg-white items-center justify-center rounded-full mb-4 shadow-sm border border-gray-200">
-                      <span className="material-symbols-outlined text-gray-400 text-3xl">favorite_border</span>
+                  <div className="bg-surface rounded-3xl border border-outline-variant/30 p-16 text-center shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center">
+                    <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-6 text-secondary/30">
+                      <span className="material-symbols-outlined text-4xl">favorite_border</span>
                     </div>
-                    <h3 className="font-serif text-xl text-[#111] mb-2">Your wishlist is currently empty.</h3>
-                    <Link to="/collection" className="inline-block mt-4 bg-[#111] text-white px-8 py-3 text-xs tracking-widest uppercase hover:bg-gray-800 transition-colors">
-                      Browse Products
+                    <h3 className="font-headline-md text-2xl text-primary mb-3">Your wishlist is empty</h3>
+                    <p className="text-secondary/60 mb-8 max-w-sm">Save your favorite pieces here to easily find them later or add them to your cart.</p>
+                    <Link to="/collection" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+                      Discover Pieces
                     </Link>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                     {wishlistItems.map((item) => (
-                      <div key={item.id} className="group flex flex-col border border-outline-variant/60 bg-white hover:border-[#111] transition-all overflow-hidden relative">
+                      <div key={item.id} className="group flex flex-col relative overflow-hidden rounded-3xl bg-surface border border-outline-variant/30 shadow-sm hover:shadow-xl transition-all duration-500">
+                        {/* Remove Button */}
                         <button 
                           onClick={() => removeFromWishlist(item.name)}
-                          className="absolute top-2 right-2 w-8 h-8 bg-white/80 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-white z-10"
+                          className="absolute top-4 right-4 w-10 h-10 bg-surface/80 backdrop-blur-md rounded-full flex items-center justify-center text-secondary/70 hover:text-red-500 hover:bg-white z-10 shadow-sm transition-colors opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
                         >
                           <span className="material-symbols-outlined text-sm">close</span>
                         </button>
-                        <div className="aspect-[3/4] overflow-hidden bg-gray-50">
-                          <img src={item.imageSrc} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        </div>
-                        <div className="p-4 flex flex-col gap-2">
-                          <h3 className="text-sm font-medium text-[#111] truncate">{item.name}</h3>
-                          <p className="text-sm text-gray-600">{item.price}</p>
+                        
+                        {/* Image */}
+                        <Link to={`/product/${item.id}`} className="aspect-[3/4] overflow-hidden bg-surface-container block">
+                          <img 
+                            src={item.imageSrc} 
+                            alt={item.name} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                          />
+                        </Link>
+                        
+                        {/* Content */}
+                        <div className="p-6 flex flex-col items-center text-center gap-2 relative bg-surface">
+                          <h3 className="text-sm font-medium text-primary line-clamp-1">{item.name}</h3>
+                          <p className="text-sm text-secondary/80 mb-2">{item.price}</p>
+                          
                           <button 
                             onClick={() => handleWishlistToCart(item)}
-                            className="mt-2 w-full py-2 border border-[#111] text-[#111] text-xs uppercase tracking-wider font-medium hover:bg-[#111] hover:text-white transition-colors"
+                            className="w-full py-3 rounded-xl bg-primary text-on-primary text-[10px] uppercase tracking-widest font-bold hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
                           >
+                            <span className="material-symbols-outlined text-[16px]">shopping_bag</span>
                             Add to Cart
                           </button>
                         </div>

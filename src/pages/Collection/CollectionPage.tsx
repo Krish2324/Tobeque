@@ -52,28 +52,25 @@ export function CollectionPage() {
   }, []);
 
   // Compute what tabs to show based on the tree and current categoryParam
-  const { currentContext, siblings } = useMemo(() => {
+  const { currentContext, siblings } = useMemo<{ currentContext: Category | null, siblings: Category[] }>(() => {
     if (!categoryParam) return { currentContext: null, siblings: categoriesTree };
 
-    let foundNode: Category | null = null;
-    let foundParent: Category | null = null;
-
-    const dfs = (nodes: Category[], parent: Category | null) => {
+    const dfs = (nodes: Category[], parent: Category | null): { node: Category, parent: Category | null } | null => {
       for (const n of nodes) {
         if (String(n.id || n._id) === categoryParam) {
-          foundNode = n;
-          foundParent = parent;
-          return true;
+          return { node: n, parent };
         }
         if (n.subcategories && n.subcategories.length > 0) {
-          if (dfs(n.subcategories, n)) return true;
+          const res = dfs(n.subcategories, n);
+          if (res) return res;
         }
       }
-      return false;
+      return null;
     };
-    dfs(categoriesTree, null);
+    const result = dfs(categoriesTree, null);
 
-    if (foundNode) {
+    if (result) {
+      const { node: foundNode, parent: foundParent } = result;
       if (foundNode.subcategories && foundNode.subcategories.length > 0) {
         // Node has children -> It's a parent category, show its children as tabs
         return { currentContext: foundNode, siblings: foundNode.subcategories };
@@ -97,7 +94,7 @@ export function CollectionPage() {
   });
 
   // Extract all unique sizes and colors from loaded products dynamically
-  const { allSizes, allColors } = useMemo(() => {
+  const { allSizes } = useMemo(() => {
     const sizesSet = new Set<string>();
     const colorsSet = new Set<string>();
     
@@ -247,7 +244,7 @@ export function CollectionPage() {
                 </button>
 
                 {/* Subcategories / Siblings tabs */}
-                {siblings.map(cat => {
+                {siblings.map((cat: Category) => {
                   const catId = String(cat.id || cat._id);
                   return (
                     <button
@@ -493,7 +490,7 @@ export function CollectionPage() {
             <div>
               <h3 className="font-label-caps text-[10px] tracking-widest text-secondary uppercase font-bold mb-3">Categories</h3>
               <div className="flex flex-col gap-2">
-                {siblings.map(cat => {
+                {siblings.map((cat: Category) => {
                   const catId = String(cat.id || cat._id);
                   const isActive = categoryParam === catId;
                   return (

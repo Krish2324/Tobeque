@@ -2,6 +2,7 @@ export type ProductColor = {
   name: string;
   class: string;
   bgStyle?: React.CSSProperties;
+  inStock?: boolean;
 };
 
 export type Product = {
@@ -23,6 +24,7 @@ export type Product = {
   galleryImages?: string[];
   galleryImageObjects?: { url: string; color?: string }[];
   sku?: string; // Product SKU from admin panel
+  rawVariants?: any[]; // For frontend price/stock logic based on selections
 };
 
 export const productsData: Product[] = [

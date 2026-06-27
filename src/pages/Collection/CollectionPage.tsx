@@ -327,7 +327,7 @@ export function CollectionPage() {
         </div>
 
         {/* ── Product Display Section ──────────────────────────────────────── */}
-        <section className="w-full px-1 md:px-2 py-4">
+        <section className="w-full px-1 md:px-2 pt-0 pb-4">
           {loading && (
             <div className="w-full flex flex-col items-center justify-center py-24 gap-4">
               <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />

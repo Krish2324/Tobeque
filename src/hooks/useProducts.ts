@@ -17,6 +17,7 @@ interface BackendProduct {
   status: 'draft' | 'published';
   isFeatured: boolean;
   thumbnail: string | null;
+  colors?: string[];
   variants: Array<{ size?: string; color?: string; stock?: number; price?: number; sku?: string }> | null;
   images?: Array<{ id: number; imageUrl: string }>;
   category?: { id: number; name: string } | null;
@@ -76,8 +77,48 @@ function mapBackendProduct(bp: BackendProduct): Product {
 
   // Extract sizes and colors from variants JSON
   const sizes: string[] = [];
-  const detailedColors: { name: string; class: string; bgStyle: any }[] = [];
+  const detailedColors: { name: string; class: string; bgStyle: any; inStock?: boolean }[] = [];
   const colorNames = new Set<string>();
+  
+  // Aggregate stock per color from variants
+  const colorStockMap = new Map<string, number>();
+  if (bp.variants && Array.isArray(bp.variants)) {
+    bp.variants.forEach((v: any) => {
+      const colorKey = Object.keys(v).find(k => k.toLowerCase() === 'color');
+      if (colorKey && v[colorKey]) {
+        const colorVal = String(v[colorKey]).trim().toLowerCase();
+        const stockKey = Object.keys(v).find(k => k.toLowerCase() === 'stock');
+        const stockVal = (stockKey && v[stockKey] !== undefined && v[stockKey] !== '') ? Number(v[stockKey]) : 0;
+        
+        colorStockMap.set(colorVal, (colorStockMap.get(colorVal) || 0) + stockVal);
+      }
+    });
+  }
+
+  // Helper to add color if not present
+  const addColor = (colorStr: string) => {
+    const cleanColor = String(colorStr).trim();
+    if (cleanColor && !colorNames.has(cleanColor.toLowerCase())) {
+      colorNames.add(cleanColor.toLowerCase());
+      
+      let hasStock = true;
+      if (bp.variants && Array.isArray(bp.variants) && bp.variants.length > 0) {
+        // If they use variants, enforce stock check. If a color has 0 variants with stock > 0, disable it.
+        hasStock = colorStockMap.has(cleanColor.toLowerCase()) ? colorStockMap.get(cleanColor.toLowerCase())! > 0 : false;
+      }
+      
+      detailedColors.push({
+        name: cleanColor.toUpperCase(),
+        class: '',
+        bgStyle: { backgroundColor: cleanColor.toLowerCase() },
+        inStock: hasStock
+      });
+    }
+  };
+
+  if (bp.colors && Array.isArray(bp.colors)) {
+    bp.colors.forEach(addColor);
+  }
 
   if (bp.variants && Array.isArray(bp.variants)) {
     bp.variants.forEach((v: any) => {
@@ -91,15 +132,7 @@ function mapBackendProduct(bp: BackendProduct): Product {
       // Find color (case-insensitive key check)
       const colorKey = Object.keys(v).find(k => k.toLowerCase() === 'color');
       if (colorKey && v[colorKey]) {
-        const colorVal = String(v[colorKey]).trim();
-        if (!colorNames.has(colorVal.toLowerCase())) {
-          colorNames.add(colorVal.toLowerCase());
-          detailedColors.push({
-            name: colorVal.toUpperCase(),
-            class: '',
-            bgStyle: { backgroundColor: colorVal.toLowerCase() }
-          });
-        }
+        addColor(v[colorKey]);
       }
     });
   }
@@ -138,6 +171,7 @@ function mapBackendProduct(bp: BackendProduct): Product {
     description: bp.fullDescription ?? bp.shortDescription ?? '',
     galleryImages: galleryImages.length > 0 ? galleryImages : [resolveImageUrl(bp.thumbnail)],
     galleryImageObjects: galleryImageObjects.length > 0 ? galleryImageObjects : [{ url: resolveImageUrl(bp.thumbnail) }],
+    rawVariants: (bp.variants && Array.isArray(bp.variants)) ? bp.variants : undefined,
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
     sku: bp.sku || undefined,

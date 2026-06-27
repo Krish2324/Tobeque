@@ -8,6 +8,7 @@ import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
+import { SocialLinks } from '../../components/SocialLinks/SocialLinks';
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
 
@@ -36,6 +37,28 @@ export function ProductDetailPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [buttonText, setButtonText] = useState("ADD TO CART");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+
+  const currentVariant = React.useMemo(() => {
+    if (!product?.rawVariants) return null;
+    return product.rawVariants.find(v => {
+      const vColorKey = Object.keys(v).find(k => k.toLowerCase() === 'color');
+      const vSizeKey = Object.keys(v).find(k => k.toLowerCase() === 'size');
+      
+      const matchesColor = !vColorKey || !selectedColor || selectedColor.name === "DEFAULT" || 
+        String(v[vColorKey]).trim().toLowerCase() === selectedColor.name.toLowerCase();
+        
+      const matchesSize = !vSizeKey || !selectedSize || 
+        String(v[vSizeKey]).trim().toLowerCase() === selectedSize.toLowerCase();
+        
+      return matchesColor && matchesSize;
+    });
+  }, [product, selectedColor, selectedSize]);
+
+  const displayPrice = currentVariant && currentVariant.price !== undefined && currentVariant.price !== null && currentVariant.price !== ''
+    ? `₹${Number(currentVariant.price).toFixed(2)}` 
+    : product?.price;
+
+  const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
 
   // Modal states
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
@@ -133,7 +156,7 @@ export function ProductDetailPage() {
       const newItem = {
         id: product.id as string,
         name: product.name,
-        price: product.price,
+        price: displayPrice || product.price,
         imageSrc: product.imageSrc,
         selectedSize: selectedSize,
         selectedColor: selectedColor.name,
@@ -179,7 +202,7 @@ export function ProductDetailPage() {
     const newItem = {
       id: product.id as string,
       name: product.name,
-      price: product.price,
+      price: displayPrice || product.price,
       imageSrc: product.imageSrc,
       selectedSize: selectedSize,
       selectedColor: selectedColor.name,
@@ -320,7 +343,7 @@ export function ProductDetailPage() {
 
             {/* Price Row — compact */}
             <div className="flex items-baseline gap-2 mb-6">
-              <span className="text-sm font-medium text-primary">{product.price}</span>
+              <span className="text-sm font-medium text-primary">{displayPrice}</span>
               {product.originalPrice && (
                 <span className="text-xs text-secondary/60 line-through">{product.originalPrice}</span>
               )}
@@ -368,19 +391,30 @@ export function ProductDetailPage() {
                   Colour — <span className="text-primary">{selectedColor.name}</span>
                 </span>
                 <div className="flex gap-2">
-                  {product.detailedColors.map((color) => (
-                    <button
-                      key={color.name}
-                      onClick={() => setSelectedColor(color)}
-                      aria-label={`Select Color ${color.name}`}
-                      className={`w-5 h-5 rounded-full border transition-all duration-200 ${
-                        selectedColor.name === color.name
-                          ? 'ring-1 ring-offset-1 ring-primary scale-110'
-                          : 'hover:scale-105 border-outline-variant'
-                      }`}
-                      style={color.bgStyle}
-                    />
-                  ))}
+                  {product.detailedColors.map((color) => {
+                    const isOutOfStock = color.inStock === false;
+                    return (
+                      <button
+                        key={color.name}
+                        disabled={isOutOfStock}
+                        onClick={() => setSelectedColor(color)}
+                        aria-label={`Select Color ${color.name}`}
+                        className={`relative w-5 h-5 rounded-full border transition-all duration-200 ${
+                          isOutOfStock ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:scale-105'
+                        } ${
+                          selectedColor.name === color.name && !isOutOfStock
+                            ? 'ring-1 ring-offset-1 ring-primary scale-110'
+                            : 'border-outline-variant'
+                        }`}
+                        style={color.bgStyle}
+                        title={isOutOfStock ? 'Out of Stock' : color.name}
+                      >
+                        {isOutOfStock && (
+                          <div className="absolute inset-0 m-auto w-full h-[1px] bg-red-500 rotate-45 transform origin-center" />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -412,8 +446,8 @@ export function ProductDetailPage() {
                 <button
                   id="add-to-cart-btn"
                   onClick={handleAddToBag}
-                  disabled={isAdding}
-                  className="flex-1 border border-primary text-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-50 transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-40"
+                  disabled={isAdding || isOutOfStock}
+                  className="flex-1 border border-primary text-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-50 transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {isAdding && (
                     <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -421,34 +455,33 @@ export function ProductDetailPage() {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   )}
-                  {buttonText}
+                  {isOutOfStock ? "OUT OF STOCK" : buttonText}
                 </button>
               </div>
               <button
                 id="buy-now-btn"
                 onClick={handleBuyItNow}
-                className="w-full bg-primary text-on-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-800 transition-colors cursor-pointer"
+                disabled={isOutOfStock}
+                className="w-full bg-primary text-on-primary h-10 text-[10px] font-medium tracking-[0.15em] uppercase hover:bg-neutral-800 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Buy Now
               </button>
             </div>
 
-            {/* Ask a Question + Share — whisper quiet */}
-            <div className="flex items-center gap-5 mb-6 text-[10px] text-secondary/60 tracking-wide">
+            {/* Ask a Question + Share */}
+            <div className="flex flex-col gap-4 mb-6">
               <button
-                className="flex items-center gap-1 hover:text-primary transition-colors"
+                className="flex items-center gap-1 hover:text-primary transition-colors text-[10px] text-secondary/60 tracking-wide w-fit"
                 onClick={() => { setAskSubmitted(false); setIsAskQuestionOpen(true); }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Ask a Question
               </button>
-              <button
-                className="flex items-center gap-1 hover:text-primary transition-colors"
-                onClick={() => navigator.share?.({ title: product.name, url: window.location.href })}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Share
-              </button>
+              
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] text-secondary/60 tracking-wide font-bold uppercase">Share:</span>
+                <SocialLinks className="flex items-center gap-3" />
+              </div>
             </div>
 
             {/* Estimated Delivery + SKU — ultra-light meta info */}

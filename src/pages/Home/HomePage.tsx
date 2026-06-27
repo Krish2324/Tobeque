@@ -53,6 +53,7 @@ export function HomePage() {
   const [sliderIndex, setSliderIndex] = useState(0);
   const [sliderTransition, setSliderTransition] = useState(true);
   const [visibleCount, setVisibleCount] = useState(6);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     api.get('/api/season-collection')
@@ -82,12 +83,13 @@ export function HomePage() {
 
   useEffect(() => {
     if (collectionItems.length <= visibleCount) return;
+    if (isPaused) return;
     const interval = setInterval(() => {
       setSliderTransition(true);
       setSliderIndex((prev) => prev + 1);
     }, 3000);
     return () => clearInterval(interval);
-  }, [collectionItems.length, visibleCount]);
+  }, [collectionItems.length, visibleCount, isPaused]);
 
   useEffect(() => {
     if (collectionItems.length === 0) return;
@@ -198,7 +200,11 @@ export function HomePage() {
               })}
             </div>
           ) : (
-            <div className="overflow-hidden w-full relative">
+            <div 
+              className="overflow-hidden w-full relative"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+            >
               <div 
                 className="flex"
                 style={{

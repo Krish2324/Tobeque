@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
 import { type Product } from '../../data/products';
 
@@ -12,16 +12,30 @@ const isVideo = (url: string | undefined) => url && typeof url === 'string' && u
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addToCart, setIsCartOpen } = useCart();
 
-  // 1. Color State
-  const initialColor = product?.detailedColors && product.detailedColors.length > 0
-    ? product.detailedColors[0].name
-    : 'DEFAULT';
-  const [selectedColor, setSelectedColor] = useState<string>(initialColor);
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(product?.detailedColors && product.detailedColors.length > 0 ? product.detailedColors[0].name : undefined);
+  const [selectedSize, setSelectedSize] = useState<string | undefined>(product?.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined);
 
-  // 2. Size State
-  const [selectedSize, setSelectedSize] = useState<string>(
-    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : ''
-  );
+  const currentVariant = useMemo(() => {
+    if (!product?.rawVariants) return null;
+    return product.rawVariants.find(v => {
+      const vColorKey = Object.keys(v).find(k => k.toLowerCase() === 'color');
+      const vSizeKey = Object.keys(v).find(k => k.toLowerCase() === 'size');
+      
+      const matchesColor = !vColorKey || !selectedColor || 
+        String(v[vColorKey]).trim().toLowerCase() === selectedColor.toLowerCase();
+        
+      const matchesSize = !vSizeKey || !selectedSize || 
+        String(v[vSizeKey]).trim().toLowerCase() === selectedSize.toLowerCase();
+        
+      return matchesColor && matchesSize;
+    });
+  }, [product, selectedColor, selectedSize]);
+
+  const displayPrice = currentVariant && currentVariant.price !== undefined && currentVariant.price !== null && currentVariant.price !== ''
+    ? `₹${Number(currentVariant.price).toFixed(2)}` 
+    : product?.price;
+
+  const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
 
   // 3. Quantity State
   const [quantity, setQuantity] = useState<number>(1);
@@ -86,7 +100,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             {product.name}
           </h2>
           <p className="font-body-md font-semibold text-xl text-primary mt-3">
-            {product.price}
+            {displayPrice}
           </p>
 
           <div className="bg-surface-container/50 px-4 py-3 mt-6 flex items-center gap-2 text-sm text-secondary font-body-md border border-outline-variant/50">
@@ -101,17 +115,27 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                 COLOR : <span className="font-bold">{selectedColor}</span>
               </p>
               <div className="flex gap-3">
-                {product.detailedColors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    className={`w-8 h-8 rounded-full border p-0.5 flex items-center justify-center transition-all ${
-                      selectedColor === color.name ? 'border-primary border-2' : 'border-outline-variant hover:border-secondary'
-                    }`}
-                  >
-                    <span className={`block w-full h-full rounded-full ${color.class}`} style={color.bgStyle}></span>
-                  </button>
-                ))}
+                {product.detailedColors.map((color) => {
+                  const isOutOfStock = color.inStock === false;
+                  return (
+                    <button
+                      key={color.name}
+                      disabled={isOutOfStock}
+                      title={isOutOfStock ? 'Out of Stock' : color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`relative w-8 h-8 rounded-full border p-0.5 flex items-center justify-center transition-all ${
+                        isOutOfStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-secondary'
+                      } ${
+                        selectedColor === color.name && !isOutOfStock ? 'border-primary border-2' : 'border-outline-variant'
+                      }`}
+                    >
+                      <span className={`block w-full h-full rounded-full ${color.class}`} style={color.bgStyle}></span>
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 m-auto w-[120%] h-[1.5px] bg-red-500 -rotate-45 transform origin-center" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -165,9 +189,10 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             </div>
             <button
               onClick={handleAddToCart}
-              className="flex-1 bg-primary text-on-primary font-label-caps text-xs tracking-widest h-14 hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold"
+              disabled={isOutOfStock}
+              className="flex-1 bg-primary text-on-primary font-label-caps text-xs tracking-widest h-14 hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              ADD TO CART
+              {isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
             </button>
           </div>
 

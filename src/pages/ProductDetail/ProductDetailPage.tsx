@@ -8,7 +8,7 @@ import { ProductCard } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
-import { SocialLinks } from '../../components/SocialLinks/SocialLinks';
+import { ShareModal } from '../../components/ShareModal/ShareModal';
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
 
@@ -63,6 +63,7 @@ export function ProductDetailPage() {
   // Modal states
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isAskQuestionOpen, setIsAskQuestionOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [askName, setAskName] = useState('');
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
@@ -70,6 +71,9 @@ export function ProductDetailPage() {
   const [isSubmittingAsk, setIsSubmittingAsk] = useState(false);
   const [askError, setAskError] = useState('');
   const [deliveryEstimate, setDeliveryEstimate] = useState<string>('');
+  
+  // Random Viewer Count
+  const [viewers] = useState(() => Math.floor(Math.random() * 40) + 10);
 
   useEffect(() => {
     api.get('/api/settings/public')
@@ -302,12 +306,12 @@ export function ProductDetailPage() {
           {/* Left: Split Image Gallery — wider, images first */}
           <div
             ref={galleryScrollRef}
-            className="w-full lg:w-3/4 flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[60vh] lg:h-auto scroll-smooth"
+            className="w-full lg:w-3/4 flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[calc(100svh-64px)] lg:h-auto scroll-smooth"
           >
             {displayedImages.map((img, index) => (
               <div
                 key={`${img}-${index}`}
-                className="snap-center shrink-0 w-[90%] sm:w-[50%] lg:w-full aspect-[2/3] relative overflow-hidden bg-surface-container"
+                className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container"
               >
                 {isVideo(img) ? (
                   <video
@@ -349,6 +353,17 @@ export function ProductDetailPage() {
               )}
             </div>
 
+            {/* Live Viewer Count */}
+            <div className="flex items-center gap-1.5 mb-6 text-[10px] text-secondary/70 tracking-wide">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span>
+                <span className="font-medium">{viewers}</span> people are viewing this right now
+              </span>
+            </div>
+
             {/* Thin divider */}
             <div className="w-8 h-px bg-outline-variant mb-6" />
 
@@ -357,7 +372,7 @@ export function ProductDetailPage() {
               <div className="mb-5">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-[10px] tracking-[0.15em] uppercase text-secondary font-medium">
-                    Size — <span className="text-primary">{selectedSize}</span>
+                    Size
                   </span>
                   <button
                     className="text-[10px] text-secondary/60 hover:text-primary transition-colors underline underline-offset-2"
@@ -469,19 +484,22 @@ export function ProductDetailPage() {
             </div>
 
             {/* Ask a Question + Share */}
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex items-center gap-6 mb-6">
               <button
-                className="flex items-center gap-1 hover:text-primary transition-colors text-[10px] text-secondary/60 tracking-wide w-fit"
+                className="flex items-center gap-1.5 hover:text-primary transition-colors text-[10px] text-secondary/60 tracking-wide w-fit font-bold uppercase"
                 onClick={() => { setAskSubmitted(false); setIsAskQuestionOpen(true); }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Ask a Question
               </button>
               
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] text-secondary/60 tracking-wide font-bold uppercase">Share:</span>
-                <SocialLinks className="flex items-center gap-3" />
-              </div>
+              <button
+                className="flex items-center gap-1.5 hover:text-primary transition-colors text-[10px] text-secondary/60 tracking-wide w-fit font-bold uppercase"
+                onClick={() => setIsShareModalOpen(true)}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Share
+              </button>
             </div>
 
             {/* Estimated Delivery + SKU — ultra-light meta info */}
@@ -746,10 +764,18 @@ export function ProductDetailPage() {
 
       {/* Footer */}
       <Footer />
+
       {/* Quick View Modal */}
       <QuickViewModal
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
+      />
+
+      <ShareModal 
+        isOpen={isShareModalOpen} 
+        onClose={() => setIsShareModalOpen(false)} 
+        productName={product.name}
+        url={window.location.href}
       />
 
     </div>

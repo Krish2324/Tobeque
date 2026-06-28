@@ -40,16 +40,17 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
   return (
     <>
-      <header className="bg-background dark:bg-background fixed top-0 w-full z-50 border-b border-outline-variant flat no shadows">
-        <div className="flex justify-between items-center w-full px-outer-margin py-4 max-w-full mx-auto">
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8">
+      <header className="bg-background dark:bg-background sticky top-0 w-full z-50 border-b border-outline-variant flat no shadows">
+        <div className="flex justify-between items-center w-full px-outer-margin py-1.5 max-w-full mx-auto">
+
+          {/* Navigation Links - Left */}
+          <nav className="hidden md:flex flex-1 items-center justify-start gap-8">
 
             {/* Shop — Mega Menu trigger */}
             <div className="relative group py-4">
-              <button className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps flex items-center gap-1 cursor-default">
+              <button className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-default">
                 Shop
-                <span className="material-symbols-outlined text-[15px] transition-transform duration-300 group-hover:rotate-180">keyboard_arrow_down</span>
+                <span className="material-symbols-outlined !text-[13px] transition-transform duration-300 group-hover:rotate-180">keyboard_arrow_down</span>
               </button>
 
               {/* Mega Menu Dropdown */}
@@ -68,7 +69,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                         <Link
                           key={item.name}
                           to={item.path}
-                          className="text-[11px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase"
+                          className="text-[10px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase"
                         >
                           {item.name}
                         </Link>
@@ -86,7 +87,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                         <Link
                           key={item.name}
                           to={item.path}
-                          className="text-[11px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase flex items-center gap-2"
+                          className="text-[10px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase flex items-center gap-2"
                         >
                           {item.name}
                           {i === 0 && (
@@ -109,7 +110,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                         <Link
                           key={item.name}
                           to={item.path}
-                          className="text-[11px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase"
+                          className="text-[10px] tracking-wider font-label-caps text-secondary dark:text-gray-400 hover:text-primary dark:hover:text-white transition-colors uppercase"
                         >
                           {item.name}
                         </Link>
@@ -120,10 +121,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                     <div className="mt-auto pt-6 border-t border-outline-variant">
                       <Link
                         to="/collection"
-                        className="text-[10px] font-label-caps tracking-widest uppercase text-primary hover:opacity-70 transition-opacity flex items-center gap-1"
+                        className="text-[9px] font-label-caps tracking-widest uppercase text-primary hover:opacity-70 transition-opacity flex items-center gap-1"
                       >
                         View All
-                        <span className="material-symbols-outlined text-sm">arrow_right_alt</span>
+                        <span className="material-symbols-outlined text-[13px]">arrow_right_alt</span>
                       </Link>
                     </div>
                   </div>
@@ -134,41 +135,41 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
             {/* New Arrivals */}
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-label-caps"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
               to="/"
             >
               New Arrivals
             </Link>
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
               to="/collection"
             >
               Collections
             </Link>
 
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 font-label-caps text-label-caps border-b-2 border-transparent hover:border-primary pb-1"
+              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
               to="/about"
             >
               About
             </Link>
           </nav>
 
-          {/* Brand Logo */}
-          <div className="flex-1 flex justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
+          {/* Brand Logo - Centered */}
+          <div className="flex shrink-0 justify-center md:absolute md:left-1/2 md:-translate-x-1/2">
             <Link to="/" className="flex items-center justify-center">
-              <img src={logoImage} alt="Tobeque Logo" style={{ height: '32px', width: '145px', objectFit: 'contain' }} />
+              <img src={logoImage} alt="Tobeque Logo" style={{ height: '28px', width: 'auto', objectFit: 'contain' }} />
             </Link>
           </div>
 
-          {/* Trailing Icons */}
-          <div className="flex items-center gap-4 text-primary dark:text-on-primary-fixed">
+          {/* Trailing Icons - Right */}
+          <div className="flex flex-1 shrink-0 items-center justify-end gap-3 text-primary dark:text-on-primary-fixed">
             <button
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
             >
-              <span className="material-symbols-outlined" data-icon="search">
+              <span className="material-symbols-outlined !text-[18px]" data-icon="search">
                 search
               </span>
             </button>
@@ -179,16 +180,16 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
                 >
-                  <span className="material-symbols-outlined" data-icon="person">
+                  <span className="material-symbols-outlined !text-[18px]" data-icon="person">
                     person
                   </span>
                 </button>
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border border-outline-variant py-2 z-50">
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-on-background hover:bg-surface-container transition-colors">My Profile</Link>
-                    <button 
-                      onClick={() => { logout?.(); setIsProfileDropdownOpen(false); }} 
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-surface-container transition-colors cursor-pointer"
+                    <Link to="/profile" className="block px-4 py-2 text-[11px] tracking-wider uppercase text-on-background hover:bg-surface-container transition-colors">My Profile</Link>
+                    <button
+                      onClick={() => { logout?.(); setIsProfileDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-[11px] tracking-wider uppercase text-red-600 hover:bg-surface-container transition-colors cursor-pointer"
                     >
                       Logout
                     </button>
@@ -201,14 +202,14 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                 onClick={() => openLoginModal()}
                 className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
               >
-                <span className="material-symbols-outlined" data-icon="person">
+                <span className="material-symbols-outlined !text-[18px]" data-icon="person">
                   person
                 </span>
               </button>
             )}
             <button
               aria-label="Wishlist"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
               onClick={() => {
                 if (isAuthenticated) {
                   navigate('/profile', { state: { activeTab: 'wishlist' } });
@@ -217,22 +218,22 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                 }
               }}
             >
-              <span className="material-symbols-outlined" data-icon="favorite">
+              <span className="material-symbols-outlined !text-[18px]" data-icon="favorite">
                 favorite
               </span>
             </button>
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative cursor-pointer"
+              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative cursor-pointer flex items-center"
             >
               <span
-                className="material-symbols-outlined"
+                className="material-symbols-outlined !text-[18px]"
                 data-icon="shopping_bag"
               >
                 shopping_bag
               </span>
-              <span className="absolute -top-1 -right-1 bg-primary text-on-primary text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-on-primary text-[8px] w-3 h-3 rounded-full flex items-center justify-center font-bold">
                 {wishlistItems?.length || 0}
               </span>
             </button>

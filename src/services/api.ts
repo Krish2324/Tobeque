@@ -7,7 +7,7 @@ import axios from 'axios';
  * No auth token is attached here since product GET routes are public.
  */
 const api = axios.create({
-  baseURL: '',       // Empty — Vite dev proxy handles /api routing
+  baseURL: import.meta.env.VITE_API_URL || '', // Uses ENV in prod, Vite proxy in dev
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

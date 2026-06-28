@@ -47,7 +47,7 @@ export function CollectionPage() {
           setCategoriesTree(res.data.categories);
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setCategoriesLoading(false));
   }, []);
 
@@ -97,7 +97,7 @@ export function CollectionPage() {
   const { allSizes } = useMemo(() => {
     const sizesSet = new Set<string>();
     const colorsSet = new Set<string>();
-    
+
     liveProducts.forEach(p => {
       if (p.sizes) {
         p.sizes.forEach(s => sizesSet.add(s));
@@ -129,7 +129,7 @@ export function CollectionPage() {
 
     // Filter by selected sizes
     if (selectedSizes.length > 0) {
-      result = result.filter(p => 
+      result = result.filter(p =>
         p.sizes && p.sizes.some(s => selectedSizes.includes(s))
       );
     }
@@ -193,9 +193,9 @@ export function CollectionPage() {
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
       <Navbar onSearchProductSelect={(product) => setQuickViewProduct(product)} />
 
-      <main className="pt-[72px]">
+      <main className="pt-[50px]">
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
-        <section className="w-full bg-[#F5F5F0] py-6 md:py-8 px-outer-margin relative overflow-hidden flex items-center justify-center">
+        <section className="w-full bg-[#F5F5F0] py-12 md:py-20 min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center">
           <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
             <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-1">
               Season Collection
@@ -234,11 +234,10 @@ export function CollectionPage() {
                       navigate('/collection');
                     }
                   }}
-                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${
-                    (!categoryParam || (currentContext && categoryParam === String(currentContext.id || currentContext._id)))
+                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || (currentContext && categoryParam === String(currentContext.id || currentContext._id)))
                       ? 'border-primary text-primary'
                       : 'border-transparent text-secondary hover:text-primary'
-                  }`}
+                    }`}
                 >
                   {currentContext ? `All ${currentContext.name}` : 'All Products'}
                 </button>
@@ -252,11 +251,10 @@ export function CollectionPage() {
                       onClick={() =>
                         navigate(`/collection?category=${catId}&name=${encodeURIComponent(cat.name)}`)
                       }
-                      className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${
-                        categoryParam === catId
+                      className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${categoryParam === catId
                           ? 'border-primary text-primary'
                           : 'border-transparent text-secondary hover:text-primary'
-                      }`}
+                        }`}
                     >
                       {cat.name}
                     </button>
@@ -278,49 +276,70 @@ export function CollectionPage() {
               onClick={() => setIsFilterOpen(true)}
               className="flex items-center gap-1 hover:text-secondary transition-colors cursor-pointer text-[9px] tracking-[0.2em] font-bold text-primary uppercase"
             >
-              <span className="material-symbols-outlined text-[15px] font-light">tune</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
               Filter
             </button>
 
             <span className="text-outline-variant/60 text-xs">•</span>
 
             {/* Grid / List Layout Switcher */}
-            <div className="flex items-center bg-outline-variant/10 p-0.5 rounded-full">
+            <div className="flex items-center gap-1.5">
               {/* List View */}
-              <button 
+              <button
                 onClick={() => setViewMode('list')}
-                className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all duration-300 ${
-                  viewMode === 'list' 
-                    ? 'bg-primary text-on-primary shadow-sm scale-105' 
-                    : 'text-secondary/70 hover:text-primary hover:bg-outline-variant/20'
-                }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'list'
+                    ? 'bg-outline-variant/30 text-primary'
+                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  }`}
                 title="List View"
               >
-                <span className="material-symbols-outlined text-[16px]">view_list</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1" y="1.75" width="12" height="1.5" rx="0.5" />
+                  <rect x="1" y="4.75" width="12" height="1.5" rx="0.5" />
+                  <rect x="1" y="7.75" width="12" height="1.5" rx="0.5" />
+                  <rect x="1" y="10.75" width="12" height="1.5" rx="0.5" />
+                </svg>
               </button>
               {/* 3 Column Grid */}
-              <button 
+              <button
                 onClick={() => setViewMode('grid-3')}
-                className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all duration-300 ${
-                  viewMode === 'grid-3' 
-                    ? 'bg-primary text-on-primary shadow-sm scale-105' 
-                    : 'text-secondary/70 hover:text-primary hover:bg-outline-variant/20'
-                }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'grid-3'
+                    ? 'bg-outline-variant/30 text-primary'
+                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  }`}
                 title="3 Columns Grid"
               >
-                <span className="material-symbols-outlined text-[16px]">view_module</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2.75" y="2" width="1.5" height="10" rx="0.5" />
+                  <rect x="6.25" y="2" width="1.5" height="10" rx="0.5" />
+                  <rect x="9.75" y="2" width="1.5" height="10" rx="0.5" />
+                </svg>
               </button>
               {/* 4 Column Grid */}
-              <button 
+              <button
                 onClick={() => setViewMode('grid-4')}
-                className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all duration-300 ${
-                  viewMode === 'grid-4' 
-                    ? 'bg-primary text-on-primary shadow-sm scale-105' 
-                    : 'text-secondary/70 hover:text-primary hover:bg-outline-variant/20'
-                }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'grid-4'
+                    ? 'bg-outline-variant/30 text-primary'
+                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  }`}
                 title="4 Columns Grid"
               >
-                <span className="material-symbols-outlined text-[16px]">grid_view</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1.75" y="2" width="1.5" height="10" rx="0.5" />
+                  <rect x="4.75" y="2" width="1.5" height="10" rx="0.5" />
+                  <rect x="7.75" y="2" width="1.5" height="10" rx="0.5" />
+                  <rect x="10.75" y="2" width="1.5" height="10" rx="0.5" />
+                </svg>
               </button>
             </div>
           </div>
@@ -416,7 +435,7 @@ export function CollectionPage() {
 
           {!loading && !error && filteredAndSortedProducts.length > 0 && (
             <div className="w-full flex justify-center mt-6 mb-2">
-               <button className="border border-primary text-primary font-label-caps text-label-caps px-6 py-3 uppercase hover:bg-primary hover:text-on-primary transition-colors duration-300">
+              <button className="border border-primary text-primary font-label-caps text-label-caps px-6 py-3 uppercase hover:bg-primary hover:text-on-primary transition-colors duration-300">
                 Load More Products
               </button>
             </div>
@@ -438,7 +457,7 @@ export function CollectionPage() {
           </div>
           <div className="flex items-center gap-4">
             {(selectedSizes.length > 0 || minPrice || maxPrice || currentSort !== 'FEATURED') && (
-              <button 
+              <button
                 onClick={() => {
                   setSelectedSizes([]);
                   setMinPrice('');
@@ -450,8 +469,8 @@ export function CollectionPage() {
                 CLEAR ALL
               </button>
             )}
-            <button 
-              onClick={() => setIsFilterOpen(false)} 
+            <button
+              onClick={() => setIsFilterOpen(false)}
               className="w-8 h-8 flex items-center justify-center border border-outline-variant border-dashed text-primary hover:border-primary transition-colors cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
@@ -470,11 +489,10 @@ export function CollectionPage() {
                   <button
                     key={opt}
                     onClick={() => setCurrentSort(opt)}
-                    className={`text-left text-xs uppercase tracking-wider py-1.5 px-3 border transition-colors flex items-center justify-between cursor-pointer ${
-                      isSelected 
-                        ? 'border-primary bg-primary text-on-primary font-bold' 
+                    className={`text-left text-xs uppercase tracking-wider py-1.5 px-3 border transition-colors flex items-center justify-between cursor-pointer ${isSelected
+                        ? 'border-primary bg-primary text-on-primary font-bold'
                         : 'border-outline-variant text-secondary hover:border-primary hover:text-primary'
-                    }`}
+                      }`}
                   >
                     {opt}
                     {isSelected && (
@@ -525,11 +543,10 @@ export function CollectionPage() {
                         setSelectedSizes([...selectedSizes, size]);
                       }
                     }}
-                    className={`min-w-[40px] h-10 px-3 border text-[10px] font-label-caps font-bold transition-all flex items-center justify-center cursor-pointer ${
-                      isSelected 
-                        ? 'border-primary bg-primary text-on-primary' 
+                    className={`min-w-[40px] h-10 px-3 border text-[10px] font-label-caps font-bold transition-all flex items-center justify-center cursor-pointer ${isSelected
+                        ? 'border-primary bg-primary text-on-primary'
                         : 'border-outline-variant bg-surface text-secondary hover:border-primary hover:text-primary'
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>
@@ -543,9 +560,9 @@ export function CollectionPage() {
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">₹</span>
-                <input 
-                  type="number" 
-                  placeholder="Min" 
+                <input
+                  type="number"
+                  placeholder="Min"
                   value={minPrice}
                   onChange={(e) => setMinPrice(e.target.value)}
                   className="w-full border border-outline-variant bg-surface pl-6 pr-3 py-2 text-xs focus:outline-none focus:border-primary"
@@ -554,9 +571,9 @@ export function CollectionPage() {
               <span className="text-secondary text-xs">-</span>
               <div className="flex-1 relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">₹</span>
-                <input 
-                  type="number" 
-                  placeholder="Max" 
+                <input
+                  type="number"
+                  placeholder="Max"
                   value={maxPrice}
                   onChange={(e) => setMaxPrice(e.target.value)}
                   className="w-full border border-outline-variant bg-surface pl-6 pr-3 py-2 text-xs focus:outline-none focus:border-primary"
@@ -567,7 +584,7 @@ export function CollectionPage() {
         </div>
 
         <div className="p-6 border-t border-outline-variant bg-surface mt-auto">
-          <button 
+          <button
             onClick={() => setIsFilterOpen(false)}
             className="w-full py-4 bg-primary text-on-primary text-[10px] tracking-widest font-bold hover:bg-neutral-800 transition-colors uppercase font-label-caps cursor-pointer"
           >

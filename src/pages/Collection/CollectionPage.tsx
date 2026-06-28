@@ -510,7 +510,6 @@ export function CollectionPage() {
               <div className="flex flex-col gap-2">
                 {siblings.map((cat: Category) => {
                   const catId = String(cat.id || cat._id);
-                  const isActive = categoryParam === catId;
                   return (
                     <button
                       key={catId}

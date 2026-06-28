@@ -57,7 +57,7 @@ export function CollectionPage() {
 
     const dfs = (nodes: Category[], parent: Category | null): { node: Category, parent: Category | null } | null => {
       for (const n of nodes) {
-        if (String(n.id || n._id) === categoryParam) {
+        if (String(n.id || n._id) === categoryParam || String(n.name).toLowerCase() === String(categoryParam).toLowerCase()) {
           return { node: n, parent };
         }
         if (n.subcategories && n.subcategories.length > 0) {
@@ -193,7 +193,7 @@ export function CollectionPage() {
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
       <Navbar onSearchProductSelect={(product) => setQuickViewProduct(product)} />
 
-      <main className="pt-[50px]">
+      <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
         <section className="w-full bg-[#F5F5F0] py-12 md:py-20 min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center">
           <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
@@ -234,7 +234,7 @@ export function CollectionPage() {
                       navigate('/collection');
                     }
                   }}
-                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || (currentContext && categoryParam === String(currentContext.id || currentContext._id)))
+                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || (currentContext && (categoryParam === String(currentContext.id || currentContext._id) || String(currentContext.name).toLowerCase() === String(categoryParam).toLowerCase())))
                       ? 'border-primary text-primary'
                       : 'border-transparent text-secondary hover:text-primary'
                     }`}
@@ -251,7 +251,7 @@ export function CollectionPage() {
                       onClick={() =>
                         navigate(`/collection?category=${catId}&name=${encodeURIComponent(cat.name)}`)
                       }
-                      className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${categoryParam === catId
+                      className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase())
                           ? 'border-primary text-primary'
                           : 'border-transparent text-secondary hover:text-primary'
                         }`}
@@ -518,7 +518,7 @@ export function CollectionPage() {
                         navigate(`/collection?category=${catId}&name=${encodeURIComponent(cat.name)}`);
                         setIsFilterOpen(false);
                       }}
-                      className={`text-left text-xs uppercase tracking-wider py-1 hover:text-primary transition-colors cursor-pointer ${isActive ? 'text-primary font-bold border-l-2 border-primary pl-2' : 'text-secondary pl-2'}`}
+                      className={`text-left text-xs uppercase tracking-wider py-1 hover:text-primary transition-colors cursor-pointer ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase()) ? 'text-primary font-bold border-l-2 border-primary pl-2' : 'text-secondary pl-2'}`}
                     >
                       {cat.name}
                     </button>

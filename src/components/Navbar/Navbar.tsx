@@ -7,24 +7,24 @@ import type { Product } from '../ProductCard';
 import logoImage from '../../assets/Tobeque-Logo-290x57.webp';
 
 const CATEGORIES = [
-  { name: 'Tops', path: '/collection?category=Tops' },
-  { name: 'Dresses', path: '/collection?category=Dresses' },
-  { name: 'Shirts and Blouses', path: '/collection?category=Shirts and Blouses' },
-  { name: 'T-Shirts and Vests', path: '/collection?category=T-Shirts and Vests' },
-  { name: 'Jeans and Pants', path: '/collection?category=Jeans and Pants' },
-  { name: 'Skirts and Shorts', path: '/collection?category=Skirts and Shorts' },
+  { name: 'Tops', path: '/collection?category=Tops&name=Tops' },
+  { name: 'Dresses', path: '/collection?category=Dresses&name=Dresses' },
+  { name: 'Shirts and Blouses', path: '/collection?category=Shirts and Blouses&name=Shirts and Blouses' },
+  { name: 'T-Shirts and Vests', path: '/collection?category=T-Shirts and Vests&name=T-Shirts and Vests' },
+  { name: 'Jeans and Pants', path: '/collection?category=Jeans and Pants&name=Jeans and Pants' },
+  { name: 'Skirts and Shorts', path: '/collection?category=Skirts and Shorts&name=Skirts and Shorts' },
 ];
 
 const NEW_COLLECTION = [
-  { name: 'New In', path: '/collection' },
-  { name: 'Summer-26', path: '/collection' },
-  { name: 'Customisable', path: '/collection' },
-  { name: 'Collaboration', path: '/collection' },
+  { name: 'New In', path: '/collection?category=New In&name=New In' },
+  { name: 'Summer-26', path: '/collection?category=Summer-26&name=Summer-26' },
+  { name: 'Customisable', path: '/collection?category=Customisable&name=Customisable' },
+  { name: 'Collaboration', path: '/collection?category=Collaboration&name=Collaboration' },
 ];
 
 const RECOMMENDED = [
-  { name: 'Style Journal', path: '/' },
-  { name: 'Steal The Style', path: '/' },
+  { name: 'Style Journal', path: '/collection?category=Style Journal&name=Style Journal' },
+  { name: 'Steal The Style', path: '/collection?category=Steal The Style&name=Steal The Style' },
 ];
 
 interface NavbarProps {
@@ -48,7 +48,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
             {/* Shop — Mega Menu trigger */}
             <div className="relative group py-4">
-              <button className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-default">
+              <button 
+                onClick={() => navigate('/collection')}
+                className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-pointer"
+              >
                 Shop
                 <span className="material-symbols-outlined !text-[13px] transition-transform duration-300 group-hover:rotate-180">keyboard_arrow_down</span>
               </button>

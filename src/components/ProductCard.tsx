@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { type Product } from "../data/products";
 export type { Product };
@@ -102,6 +102,19 @@ export function ProductCard({
     );
   }
 
+  // ── Color-image swap state ───────────────────────────────────────────────
+  const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
+
+  // Find image URL for the active color, falling back to default thumbnail
+  const displayImage = React.useMemo(() => {
+    if (!selectedColorName) return product.imageSrc;
+    // Match against galleryImageObjects which carry a `color` tag from backend
+    const match = product.galleryImageObjects?.find(
+      (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
+    );
+    return match?.url ?? product.imageSrc;
+  }, [selectedColorName, product.imageSrc, product.galleryImageObjects]);
+
   return (
     <div className="group relative flex flex-col">
       {/* Image Container with Separated Link & Button Layers */}
@@ -112,21 +125,21 @@ export function ProductCard({
           className="absolute inset-0 z-0 block cursor-pointer hover:opacity-100"
         >
           {/* Primary Image */}
-          {isVideo(product.imageSrc) ? (
+          {isVideo(displayImage) ? (
             <video
-              className={`w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out ${product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
-              src={product.imageSrc}
+              className={`w-full h-full object-cover object-center absolute inset-0 transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+              src={displayImage}
               autoPlay loop muted playsInline
             />
           ) : (
             <img
               alt={product.imageAlt || product.name}
-              className={`w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out ${product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
-              src={product.imageSrc}
+              className={`w-full h-full object-cover object-center absolute inset-0 transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+              src={displayImage}
             />
           )}
-          {/* Alternate Image on Hover */}
-          {product.hoverImageSrc && (
+          {/* Alternate hover image — only shown if no color is actively selected */}
+          {!selectedColorName && product.hoverImageSrc && (
             isVideo(product.hoverImageSrc) ? (
               <video
                 className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
@@ -204,33 +217,73 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-0.5 px-1 mt-1">
+      <div className="flex flex-col gap-0 px-0.5 mt-1.5">
         {/* Clickable Title */}
         <Link 
           to={`/product/${product.id || ""}`} 
           className="hover:underline cursor-pointer block text-left"
         >
-          <h3 className="font-body-md text-[11px] text-secondary truncate tracking-wide">
+          <h3 className="font-body-md text-[10px] text-secondary truncate tracking-wide leading-tight">
             {product.name}
           </h3>
         </Link>
-        <p className="font-body-md text-[12px] font-semibold text-primary">
-          {product.price}
-        </p>
-        {product.colors && product.colors.length > 0 && (
-          <div className="flex items-center gap-2 mt-2">
-            {product.colors.map((colorClass, idx) => (
-              <div
-                key={idx}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className={`w-4 h-4 rounded-full ${colorClass} border border-outline-variant cursor-pointer`}
-              ></div>
-            ))}
-          </div>
-        )}
+        <div className="flex items-center justify-between mt-0.5">
+          <p className="font-body-md text-[11px] font-medium text-primary/80">
+            {product.price}
+          </p>
+          {(product.detailedColors && product.detailedColors.length > 0) ? (
+            <div className="flex items-center gap-1">
+              {product.detailedColors.slice(0, 4).map((color, idx) => {
+                const isSelected = selectedColorName === color.name;
+                return (
+                  <div
+                    key={idx}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Toggle off if already selected, otherwise select
+                      setSelectedColorName(isSelected ? null : color.name);
+                    }}
+                    className={`w-3.5 h-3.5 rounded-full border shadow-sm cursor-pointer hover:scale-110 transition-all duration-200 relative ${
+                      isSelected
+                        ? 'ring-2 ring-offset-1 ring-primary scale-110'
+                        : color.name.toLowerCase() === 'white' ? 'border-outline-variant/60' : 'border-black/10'
+                    }`}
+                    style={color.bgStyle}
+                    title={color.name}
+                  >
+                    {!color.inStock && (
+                      <div className="absolute inset-0 w-full h-full border border-red-500/50 rounded-full" />
+                    )}
+                  </div>
+                );
+              })}
+              {product.detailedColors.length > 4 && (
+                <span className="text-[9px] text-secondary font-medium ml-0.5">
+                  +{product.detailedColors.length - 4}
+                </span>
+              )}
+            </div>
+          ) : product.colors && product.colors.length > 0 ? (
+            <div className="flex items-center gap-1">
+              {product.colors.slice(0, 4).map((colorClass, idx) => (
+                <div
+                  key={idx}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  className={`w-3.5 h-3.5 rounded-full ${colorClass} border border-outline-variant shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+                ></div>
+              ))}
+              {product.colors.length > 4 && (
+                <span className="text-[9px] text-secondary font-medium ml-0.5">
+                  +{product.colors.length - 4}
+                </span>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

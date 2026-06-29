@@ -40,6 +40,21 @@ export function CollectionPage() {
   const [categoriesTree, setCategoriesTree] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
+  // ── Hero Banner State ────────────────────────────────────────────────────
+  const [heroBannerData, setHeroBannerData] = useState<any>(null);
+
+  useEffect(() => {
+    api.get('/api/banners')
+      .then(res => {
+        if (res.data.success && Array.isArray(res.data.banners)) {
+          const activeBanners = res.data.banners.filter((b: any) => b.status);
+          const collectionHero = activeBanners.find((b: any) => b.position === 'collection_hero');
+          if (collectionHero) setHeroBannerData(collectionHero);
+        }
+      })
+      .catch(() => { });
+  }, []);
+
   useEffect(() => {
     api.get('/api/categories/public')
       .then(res => {
@@ -195,24 +210,65 @@ export function CollectionPage() {
 
       <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
-        <section className="w-full bg-[#F5F5F0] py-12 md:py-20 min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center">
-          <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
-            <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-1">
-              Season Collection
-            </p>
-            <h1 className="font-display-lg text-primary mb-2 uppercase text-2xl md:text-3xl">
-              {displayTitle}
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-              Effortless silhouettes for the modern woman.
-            </p>
-          </div>
-          <div className="absolute left-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
-            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroLeft})` }} />
-          </div>
-          <div className="absolute right-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
-            <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroRight})` }} />
-          </div>
+        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-12 md:py-20 min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
+          {heroBannerData ? (
+            <div className="absolute inset-0 w-full h-full">
+              {(() => {
+                const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
+                const mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
+
+                return isVideo ? (
+                  <video
+                    autoPlay loop muted playsInline
+                    className="w-full h-full object-cover object-top absolute inset-0"
+                  >
+                    <source src={mediaUrl} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    alt={heroBannerData.title || displayTitle}
+                    className="w-full h-full object-cover object-top absolute inset-0"
+                    src={mediaUrl}
+                  />
+                );
+              })()}
+              <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
+                <p className="text-[9px] tracking-[0.35em] text-white/80 uppercase font-medium mb-1">
+                  Season Collection
+                </p>
+                <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
+                  {heroBannerData.title || displayTitle}
+                </h1>
+                {heroBannerData.subtitle && (
+                  <p className="font-body-md text-body-md text-white/90 max-w-xl drop-shadow">
+                    {heroBannerData.subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
+                <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-1">
+                  Season Collection
+                </p>
+                <h1 className="font-display-lg text-primary mb-2 uppercase text-2xl md:text-3xl">
+                  {displayTitle}
+                </h1>
+                <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
+                  Effortless silhouettes for the modern woman.
+                </p>
+              </div>
+              <div className="absolute left-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
+                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroLeft})` }} />
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
+                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroRight})` }} />
+              </div>
+            </>
+          )}
         </section>
 
         {/* ── Category tab bar ────────────────────────────────────────────── */}

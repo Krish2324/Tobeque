@@ -40,7 +40,7 @@ export function HomePage() {
 
   // Fetch live featured products
   const [featuredLimit, setFeaturedLimit] = useState(10);
-  const { products: featuredProducts, loading: featuredLoading, total: featuredTotal } = useProducts({
+  const { products: featuredProducts, loading: featuredLoading } = useProducts({
     status: 'published',
     featured: true,
     limit: featuredLimit,

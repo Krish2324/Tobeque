@@ -7,6 +7,7 @@ import { CollectionPage } from "../pages/Collection/CollectionPage";
 import { ProductDetailPage } from "../pages/ProductDetail/ProductDetailPage";
 import { AboutPage } from "../pages/About/AboutPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
+import { StyleJournalPage } from "../pages/StyleJournal/StyleJournalPage";
 import { TermsAndConditionsPage } from "../pages/TermsAndConditions/TermsAndConditionsPage";
 import { PrivacyPolicyPage } from "../pages/PrivacyPolicy/PrivacyPolicyPage";
 import { CartProvider } from "../context/CartContext";
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/product/:id" element={<ProductDetailPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/style-journal" element={<StyleJournalPage />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           </Routes>

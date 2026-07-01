@@ -26,9 +26,9 @@ export function ProductCard({
 }: ProductCardProps) {
   if (viewMode === 'list') {
     return (
-      <div className="group relative flex items-center gap-4 border-b border-outline-variant/20 py-2.5 w-full text-left">
-        {/* Left Side: Compact Image Container */}
-        <div className="relative w-14 sm:w-16 shrink-0 aspect-[2/3] bg-surface-container overflow-hidden">
+      <div className="group relative flex items-start sm:items-center gap-4 sm:gap-8 md:gap-12 border-b border-outline-variant/20 py-6 md:py-8 w-full text-left transition-colors">
+        {/* Left Side: Responsive Image Container */}
+        <div className="relative w-28 sm:w-56 md:w-72 lg:w-[280px] shrink-0 aspect-[4/5] bg-surface-container overflow-hidden rounded-md">
           <Link 
             to={`/product/${product.id || ""}`}
             className="absolute inset-0 z-0 block cursor-pointer"
@@ -40,64 +40,57 @@ export function ProductCard({
               src={product.imageSrc}
             />
           </Link>
+          {/* Badge Overlay - Same as Grid View */}
+          {product.badge && (
+            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10 pointer-events-none">
+              <span
+                className={`${product.badgeClass || 'bg-primary text-on-primary'} font-label-caps text-[8px] px-1.5 py-0.5 uppercase tracking-wider rounded-sm`}
+              >
+                {product.badge}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Right Side: Sleek Info & Actions Row */}
-        <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
-          {/* Main Info */}
-          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-            <Link to={`/product/${product.id || ""}`} className="hover:underline cursor-pointer truncate block">
-              <h3 className="font-body-md text-[11px] sm:text-xs text-primary uppercase tracking-wider font-semibold truncate">
+        {/* Right Side: Info & Actions */}
+        <div className="flex-1 flex flex-col justify-center gap-3 sm:gap-4 md:gap-5 min-w-0 py-1">
+          <div className="flex flex-col gap-1 sm:gap-2">
+            <Link to={`/product/${product.id || ""}`} className="hover:text-primary cursor-pointer transition-colors inline-block">
+              <h2 className="font-body-md text-xs sm:text-sm text-secondary uppercase tracking-[0.1em] font-medium truncate sm:whitespace-normal">
                 {product.name}
-              </h3>
+              </h2>
             </Link>
-            <p className="font-body-md text-[11px] sm:text-xs font-bold text-secondary">
+            <p className="font-body-md text-[11px] sm:text-xs font-bold text-secondary/80">
               {product.price}
             </p>
-            {/* Sizes & Colors in one inline row */}
-            <div className="flex flex-wrap items-center gap-2 mt-0.5 text-[9px] font-label-caps text-secondary/80">
-              {product.sizes && product.sizes.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <span className="font-bold">SIZES:</span>
-                  <span className="text-primary">{product.sizes.join(', ')}</span>
-                </div>
-              )}
-              {product.detailedColors && product.detailedColors.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {product.sizes && product.sizes.length > 0 && <span className="text-outline-variant/60">•</span>}
-                  <span className="font-bold">COLORS:</span>
-                  <span className="text-primary">{product.detailedColors.map(c => c.name).join(', ')}</span>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Action Row */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 mt-1">
             <button
-              onClick={() => onQuickViewClick?.(product)}
-              className="w-7 h-7 rounded-full border border-outline-variant hover:border-primary flex items-center justify-center text-primary transition-colors cursor-pointer"
-              title="Quick View"
+              onClick={(e) => onAddToCartClick?.(e, product)}
+              className="px-4 py-2 bg-primary text-on-primary hover:bg-neutral-800 transition-colors text-[9px] font-label-caps tracking-widest font-bold cursor-pointer rounded-sm"
             >
-              <span className="material-symbols-outlined text-[15px]">visibility</span>
+              Add to Bag
             </button>
             <button
               onClick={(e) => onWishlistClick?.(e, product)}
-              className={`w-7 h-7 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+              className={`w-8 h-8 flex items-center justify-center transition-colors cursor-pointer rounded-full border ${
                 isWishlisted
                   ? "bg-primary border-primary text-on-primary"
-                  : "bg-transparent border-outline-variant hover:border-primary text-primary"
+                  : "border-outline-variant text-secondary hover:border-primary hover:text-primary"
               }`}
               title="Wishlist"
             >
-              <span className="material-symbols-outlined text-[15px]">favorite</span>
+              <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: isWishlisted ? "'FILL' 1" : "'FILL' 0" }}>
+                favorite
+              </span>
             </button>
             <button
-              onClick={(e) => onAddToCartClick?.(e, product)}
-              className="px-3.5 py-1.5 bg-primary text-on-primary hover:bg-neutral-800 transition-colors text-[9px] font-label-caps tracking-wider uppercase font-bold flex items-center gap-1 cursor-pointer"
+              onClick={() => onQuickViewClick?.(product)}
+              className="w-8 h-8 flex items-center justify-center transition-colors cursor-pointer rounded-full border border-outline-variant text-secondary hover:border-primary hover:text-primary"
+              title="Quick View"
             >
-              <span className="material-symbols-outlined text-[12px]">shopping_bag</span>
-              ADD
+              <span className="material-symbols-outlined text-[15px] font-light">visibility</span>
             </button>
           </div>
         </div>

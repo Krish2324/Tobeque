@@ -64,6 +64,9 @@ export function ProductDetailPage() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isAskQuestionOpen, setIsAskQuestionOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [innerZoom, setInnerZoom] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
   const [askName, setAskName] = useState('');
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
@@ -303,15 +306,16 @@ export function ProductDetailPage() {
         {/* Product Detail Section (Split Frame) */}
         <section className="flex flex-col lg:flex-row w-full mb-6 md:mb-8">
 
-          {/* Left: Split Image Gallery — wider, images first */}
+          {/* Left: Split Image Gallery */}
           <div
             ref={galleryScrollRef}
-            className="w-full lg:w-3/4 flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[calc(100svh-64px)] lg:h-auto scroll-smooth"
+            className="w-full lg:w-[70%] flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[calc(100svh-64px)] lg:h-auto scroll-smooth"
           >
             {displayedImages.map((img, index) => (
               <div
                 key={`${img}-${index}`}
-                className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container"
+                onClick={() => { setZoomedImage(img); setInnerZoom(false); }}
+                className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container cursor-zoom-in group"
               >
                 {isVideo(img) ? (
                   <video
@@ -331,7 +335,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* Right: Minimal editorial product info — quiet, refined, secondary to imagery */}
-          <div className="w-full lg:w-1/4 flex flex-col py-6 lg:py-10 px-5 lg:px-7 lg:sticky top-0 self-start gap-0">
+          <div className="w-full lg:w-[30%] flex flex-col py-6 lg:py-10 px-5 lg:pl-10 lg:pr-6 lg:sticky top-0 self-start gap-0">
 
             {/* Brand label / category hint */}
             {product.badge && (
@@ -770,6 +774,71 @@ export function ProductDetailPage() {
         product={quickViewProduct}
         onClose={() => setQuickViewProduct(null)}
       />
+
+      {/* Premium Zoom Modal */}
+      {zoomedImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in"
+          onClick={() => { setZoomedImage(null); setInnerZoom(false); }}
+        >
+          <div 
+            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-black/20"
+            onClick={(e) => {
+               if (isVideo(zoomedImage)) {
+                 e.stopPropagation();
+                 return;
+               }
+               e.stopPropagation(); 
+               setInnerZoom(!innerZoom); 
+            }}
+            onMouseMove={(e) => {
+              if (!innerZoom) return;
+              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - left) / width) * 100;
+              const y = ((e.clientY - top) / height) * 100;
+              setMousePos({ x, y });
+            }}
+            onMouseLeave={() => setInnerZoom(false)}
+            style={{ cursor: isVideo(zoomedImage) ? 'auto' : (innerZoom ? 'zoom-out' : 'zoom-in') }}
+          >
+            {isVideo(zoomedImage) ? (
+              <video
+                className="w-full h-full object-contain"
+                src={zoomedImage}
+                autoPlay loop controls playsInline
+              />
+            ) : (
+              <img
+                alt="Zoomed view"
+                className="w-full h-full object-contain"
+                src={zoomedImage}
+                style={{
+                  transform: innerZoom ? 'scale(2.2)' : 'scale(1)',
+                  transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+                  transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
+                }}
+                draggable={false}
+              />
+            )}
+            
+            {/* Close Button */}
+            <button
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-10"
+              onClick={(e) => { e.stopPropagation(); setZoomedImage(null); setInnerZoom(false); }}
+              aria-label="Close zoom"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            
+            {/* Hint text */}
+            {!innerZoom && !isVideo(zoomedImage) && (
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 text-white/90 px-6 py-2.5 rounded-full text-[10px] font-medium tracking-[0.2em] uppercase backdrop-blur-md border border-white/10 pointer-events-none transition-opacity duration-500 opacity-70">
+                Click to pan & zoom
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <ShareModal 
         isOpen={isShareModalOpen} 

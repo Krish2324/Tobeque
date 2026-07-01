@@ -19,7 +19,7 @@ export function Footer() {
               </svg>
               <span className="font-bold text-[13px] text-[#333]">Whatsapp</span>
             </div>
-            <p className="text-[13px] text-[#555]">+918447000200</p>
+            <a href="https://wa.me/918447000200?text=Hello" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#555] hover:text-[#25D366] transition-colors">+918447000200</a>
             <a href="mailto:care@tobeque.com" className="text-[13px] text-[#555] hover:text-primary transition-colors mt-2">care@tobeque.com</a>
           </div>
 
@@ -27,7 +27,7 @@ export function Footer() {
           <div className="flex flex-col gap-3">
             <h3 className="font-bold text-[13px] tracking-wide mb-2 text-black">Quick Links</h3>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">About Us</Link>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Style Journal</Link>
+            <Link to="/style-journal" className="text-[13px] text-[#555] hover:text-primary transition-colors">Style Journal</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Career</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">FAQs</Link>
             <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Steal the Style</Link>

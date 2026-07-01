@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
@@ -39,14 +39,63 @@ export function HomePage() {
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   // Fetch live featured products
-  const { products: featuredProducts, loading: featuredLoading } = useProducts({
+  const [featuredLimit, setFeaturedLimit] = useState(10);
+  const { products: featuredProducts, loading: featuredLoading, total: featuredTotal } = useProducts({
     status: 'published',
     featured: true,
+    limit: featuredLimit,
+  });
+
+  // Fetch On Sale products (products flagged for this section)
+  const { products: onSaleProducts, loading: onSaleLoading } = useProducts({
+    status: 'published',
+    isOnSaleSection: true,
+    limit: 50,
+  });
+
+  // Fetch Hot Right Now products
+  const { products: hotRightNowProducts, loading: hotRightNowLoading } = useProducts({
+    status: 'published',
+    isHotRightNow: true,
     limit: 10,
   });
 
+  // On Sale slider
+  const onSaleScrollRef = useRef<HTMLDivElement>(null);
+  const onSaleDragging = useRef(false);
+  const onSaleDragStartX = useRef(0);
+  const onSaleDragScrollLeft = useRef(0);
+
+  const scrollOnSale = useCallback((dir: 'left' | 'right') => {
+    if (!onSaleScrollRef.current) return;
+    // Scroll exactly one card width
+    const container = onSaleScrollRef.current;
+    const firstCard = container.firstElementChild as HTMLElement | null;
+    const cardWidth = firstCard ? firstCard.offsetWidth + 3 : container.offsetWidth / 8;
+    container.scrollBy({ left: dir === 'right' ? cardWidth : -cardWidth, behavior: 'smooth' });
+  }, []);
+
+  const onSaleMouseDown = (e: React.MouseEvent) => {
+    onSaleDragging.current = true;
+    onSaleDragStartX.current = e.pageX - (onSaleScrollRef.current?.offsetLeft || 0);
+    onSaleDragScrollLeft.current = onSaleScrollRef.current?.scrollLeft || 0;
+    if (onSaleScrollRef.current) onSaleScrollRef.current.style.cursor = 'grabbing';
+  };
+  const onSaleMouseMove = (e: React.MouseEvent) => {
+    if (!onSaleDragging.current || !onSaleScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - (onSaleScrollRef.current.offsetLeft || 0);
+    const walk = (x - onSaleDragStartX.current) * 1.5;
+    onSaleScrollRef.current.scrollLeft = onSaleDragScrollLeft.current - walk;
+  };
+  const onSaleMouseUp = () => {
+    onSaleDragging.current = false;
+    if (onSaleScrollRef.current) onSaleScrollRef.current.style.cursor = 'grab';
+  };
+
   // ── Hero Banner State ────────────────────────────────────────────────────
   const [heroBannerData, setHeroBannerData] = useState<any>(null);
+  const [bottomBannerData, setBottomBannerData] = useState<any>(null);
 
   useEffect(() => {
     api.get('/api/banners')
@@ -58,6 +107,9 @@ export function HomePage() {
             activeBanners.find((b: any) => b.position === 'promo_top') ||
             activeBanners[0];
           if (promo) setHeroBannerData(promo);
+
+          const bottomPromo = activeBanners.find((b: any) => b.position === 'promo_bottom');
+          if (bottomPromo) setBottomBannerData(bottomPromo);
         }
       })
       .catch(() => { });
@@ -371,8 +423,232 @@ export function HomePage() {
               </p>
             </div>
           )}
+
+          {/* Load More Button */}
+          {featuredProducts.length > 0 && (
+            <div className="flex justify-center mt-6">
+              {featuredProducts.length >= featuredLimit ? (
+                <button
+                  onClick={() => setFeaturedLimit(prev => prev + 10)}
+                  disabled={featuredLoading}
+                  className="px-6 py-2.5 border border-outline-variant/30 text-primary hover:bg-primary hover:text-on-primary transition-colors text-xs font-semibold tracking-widest uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {featuredLoading ? 'Loading...' : 'Load more'}
+                </button>
+              ) : (
+                <p className="text-xs text-secondary font-medium tracking-wider uppercase">
+                  All {featuredProducts.length} featured products loaded
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* ── Home Bottom Banner ───────────────────────────────────────────── */}
+        {bottomBannerData && (
+          <section className="relative w-full h-[52vh] md:h-[86vh] mb-8 cursor-pointer" onClick={() => bottomBannerData.linkUrl && navigate(bottomBannerData.linkUrl)}>
+            <div className="w-full h-full relative overflow-hidden bg-surface-container">
+              {(() => {
+                const rawUrl = bottomBannerData?.imageUrl ? bottomBannerData.imageUrl.replace(/\\/g, '/') : '';
+                const mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
+                const titleText = bottomBannerData?.title || "Bottom Banner";
+
+                return isVideo ? (
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover absolute inset-0"
+                  >
+                    <source src={mediaUrl} type="video/mp4" />
+                  </video>
+                ) : (
+                  <img
+                    alt={titleText}
+                    className="w-full h-full object-cover absolute inset-0"
+                    src={mediaUrl}
+                  />
+                );
+              })()}
+              <div className="absolute inset-0 bg-primary/20 mix-blend-multiply pointer-events-none" />
+
+              {/* Overlay Text Content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/50 via-transparent to-black/10 pointer-events-none">
+                {bottomBannerData?.title && (
+                  <h2 className="text-3xl md:text-5xl font-light text-white mb-2 tracking-widest drop-shadow-lg pointer-events-auto">
+                    {bottomBannerData.title}
+                  </h2>
+                )}
+                {bottomBannerData?.subtitle && (
+                  <p className="text-xs md:text-base text-white/90 mb-6 max-w-2xl font-light tracking-wide drop-shadow pointer-events-auto">
+                    {bottomBannerData.subtitle}
+                  </p>
+                )}
+                {(bottomBannerData?.linkUrl || bottomBannerData?.title) && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(bottomBannerData?.linkUrl || '/collection');
+                    }}
+                    className="px-6 py-2.5 bg-white text-black text-xs font-semibold tracking-widest uppercase hover:bg-black hover:text-white transition-colors duration-500 pointer-events-auto"
+                  >
+                    Discover More
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── On Sale ─────────────────────────────────────────────────────── */}
+        <section className="w-full px-2 mb-12">
+          {/* Section Heading – centered with lines, no arrows */}
+          <div className="flex items-center justify-center gap-5 mb-5">
+            <span className="flex-1 h-px bg-outline-variant max-w-[120px]" />
+            <div className="text-center">
+              <h2 className="text-[13px] tracking-[0.3em] font-light text-primary uppercase">On Sale</h2>
+            </div>
+            <span className="flex-1 h-px bg-outline-variant max-w-[120px]" />
+          </div>
+
+          {/* Slider with left/right flanking arrow buttons */}
+          <div className="relative">
+            {/* Left Arrow – overlaps slider edge */}
+            <button
+              onClick={() => scrollOnSale('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm border border-outline-variant/30 shadow text-primary hover:bg-primary hover:text-on-primary transition-all duration-200"
+              aria-label="Scroll left"
+            >
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7.5 10L3.5 6l4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+
+            {/* Slider track – full width, arrows overlay edges */}
+            {onSaleLoading ? (
+              <div className="flex gap-[3px] overflow-hidden">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="shrink-0 aspect-[2/3] bg-surface-container animate-pulse" style={{ width: 'calc((100% - 21px) / 8)' }} />
+                ))}
+              </div>
+            ) : onSaleProducts.length > 0 ? (
+              <div
+                ref={onSaleScrollRef}
+                className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab"
+                style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+                onMouseDown={onSaleMouseDown}
+                onMouseMove={onSaleMouseMove}
+                onMouseUp={onSaleMouseUp}
+                onMouseLeave={onSaleMouseUp}
+              >
+                {onSaleProducts.map((p, idx) => (
+                  <div
+                    key={idx}
+                    className="shrink-0"
+                    style={{ width: 'calc((100% - 21px) / 8)', scrollSnapAlign: 'start' }}
+                  >
+                    <ProductCard
+                      product={p}
+                      compact={true}
+                      isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
+                      onWishlistClick={handleWishlist}
+                      onQuickViewClick={setQuickViewProduct}
+                      onAddToCartClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addToCart({ ...p, quantity: 1, selectedSize: 'S', selectedColor: 'Default' });
+                        setIsCartOpen(true);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 w-full">
+                <p className="text-secondary text-sm">No on-sale products found. Add a discount price to any product in the Admin Panel.</p>
+              </div>
+            )}
+
+            {/* Right Arrow – overlaps slider edge */}
+            <button
+              onClick={() => scrollOnSale('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm border border-outline-variant/30 shadow text-primary hover:bg-primary hover:text-on-primary transition-all duration-200"
+              aria-label="Scroll right"
+            >
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M4.5 2L8.5 6l-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
         </section>
       </main>
+
+      {/* ── Hot Right Now ─────────────────────────────────────────────────────── */}
+      <section className="w-full px-2 mb-12">
+        <div className="flex items-center justify-center gap-5 mb-5">
+          <span className="flex-1 h-px bg-outline-variant max-w-[120px]" />
+          <div className="text-center">
+            <h2 className="text-[13px] tracking-[0.3em] font-light text-primary uppercase">See What's Trending</h2>
+          </div>
+          <span className="flex-1 h-px bg-outline-variant max-w-[120px]" />
+        </div>
+
+        {hotRightNowLoading ? (
+          <div className="flex gap-[3px] overflow-hidden">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="shrink-0 aspect-[9/16] bg-surface-container animate-pulse" style={{ width: 'calc((100% - 12px) / 5)' }} />
+            ))}
+          </div>
+        ) : hotRightNowProducts.length > 0 ? (
+          <div className="flex gap-[3px] overflow-x-auto no-scrollbar" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+            {hotRightNowProducts.map((p, idx) => {
+              const mediaUrl = p.hotRightNowMedia || p.imageSrc;
+              const isVid = mediaUrl && !!mediaUrl.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
+              const oPriceVal = p.originalPrice ? parseFloat(p.originalPrice.replace(/[^0-9.]/g, '')) : 0;
+              const priceVal = parseFloat(p.price.replace(/[^0-9.]/g, ''));
+              const savePercent = oPriceVal && oPriceVal > priceVal ? Math.round((1 - priceVal / oPriceVal) * 100) : 0;
+
+              return (
+                <div key={idx} className="shrink-0 aspect-[9/16] relative group cursor-pointer overflow-hidden" style={{ width: 'calc((100% - 12px) / 5)', minWidth: '240px', scrollSnapAlign: 'start' }} onClick={() => navigate(`/product/${p.id}`)}>
+                  {isVid ? (
+                    <video
+                      src={mediaUrl}
+                      autoPlay loop muted playsInline
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                  ) : (
+                    <img
+                      src={mediaUrl}
+                      alt={p.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                  
+                  <div className="absolute bottom-0 inset-x-0 p-4 pointer-events-none flex flex-col justify-end h-full">
+                    <div className="flex gap-3 mt-auto pointer-events-auto items-end">
+                      <img src={p.imageSrc} className="w-14 h-18 object-cover border border-white/20 rounded shadow-md shrink-0 bg-white" alt={p.name} />
+                      <div className="flex flex-col text-left mb-1">
+                        <h3 className="text-white text-xs font-semibold leading-tight line-clamp-2 mb-1">{p.name}</h3>
+                        <p className="text-white/80 text-[10px] line-clamp-2 mb-1">{p.description}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-white font-bold text-sm">{p.price}</span>
+                          {p.originalPrice && <span className="text-white/60 line-through text-[10px]">{p.originalPrice}</span>}
+                          {savePercent > 0 && (
+                            <span className="text-emerald-400 font-bold text-[10px]">Save {savePercent}% off</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 w-full">
+            <p className="text-secondary text-sm">No trending products found. Flag products as "Hot Right Now" in the Admin Panel.</p>
+          </div>
+        )}
+      </section>
 
       <Footer />
 

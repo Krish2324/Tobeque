@@ -22,6 +22,9 @@ interface BackendProduct {
   images?: Array<{ id: number; imageUrl: string }>;
   category?: { id: number; name: string } | null;
   brand?: { id: number; name: string } | null;
+  isOnSaleSection?: boolean;
+  isHotRightNow?: boolean;
+  hotRightNowMedia?: string | null;
 }
 
 interface UseProductsOptions {
@@ -30,6 +33,8 @@ interface UseProductsOptions {
   limit?: number;
   page?: number;
   category?: string | number;
+  isOnSaleSection?: boolean;
+  isHotRightNow?: boolean;
 }
 
 interface UseProductsResult {
@@ -175,6 +180,7 @@ function mapBackendProduct(bp: BackendProduct): Product {
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
     sku: bp.sku || undefined,
+    hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,
   };
 }
 
@@ -187,6 +193,8 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     limit = 20,
     page = 1,
     category,
+    isOnSaleSection,
+    isHotRightNow,
   } = options;
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -205,6 +213,8 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
       };
       if (featured !== undefined) params.featured = featured;
       if (category !== undefined) params.category = category;
+      if (isOnSaleSection !== undefined) params.isOnSaleSection = isOnSaleSection;
+      if (isHotRightNow !== undefined) params.isHotRightNow = isHotRightNow;
 
       const response = await api.get('/api/products', { params });
       const data = response.data;
@@ -225,7 +235,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     } finally {
       setLoading(false);
     }
-  }, [status, featured, limit, page, category]);
+  }, [status, featured, limit, page, category, isOnSaleSection, isHotRightNow]);
 
   useEffect(() => {
     fetchProducts();

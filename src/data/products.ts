@@ -25,6 +25,7 @@ export type Product = {
   galleryImageObjects?: { url: string; color?: string }[];
   sku?: string; // Product SKU from admin panel
   rawVariants?: any[]; // For frontend price/stock logic based on selections
+  hotRightNowMedia?: string;
 };
 
 export const productsData: Product[] = [

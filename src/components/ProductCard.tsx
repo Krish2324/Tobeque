@@ -10,6 +10,7 @@ export interface ProductCardProps {
   onQuickViewClick?: (product: Product) => void;
   onAddToCartClick?: (e: React.MouseEvent, product: Product) => void;
   viewMode?: 'grid' | 'list';
+  compact?: boolean;
 }
 
 const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
@@ -21,6 +22,7 @@ export function ProductCard({
   onQuickViewClick,
   onAddToCartClick,
   viewMode = 'grid',
+  compact = false,
 }: ProductCardProps) {
   if (viewMode === 'list') {
     return (
@@ -33,6 +35,7 @@ export function ProductCard({
           >
             <img
               alt={product.imageAlt || product.name}
+              loading="lazy"
               className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
               src={product.imageSrc}
             />
@@ -116,7 +119,7 @@ export function ProductCard({
   }, [selectedColorName, product.imageSrc, product.galleryImageObjects]);
 
   return (
-    <div className="group relative flex flex-col">
+    <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02]">
       {/* Image Container with Separated Link & Button Layers */}
       <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block">
         {/* Clickable Image Layer */}
@@ -134,6 +137,7 @@ export function ProductCard({
           ) : (
             <img
               alt={product.imageAlt || product.name}
+              loading="lazy"
               className={`w-full h-full object-cover object-center absolute inset-0 transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
               src={displayImage}
             />
@@ -149,6 +153,7 @@ export function ProductCard({
             ) : (
               <img
                 alt={(product.imageAlt || product.name) + " alternate view"}
+                loading="lazy"
                 className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
                 src={product.hoverImageSrc}
               />
@@ -158,9 +163,9 @@ export function ProductCard({
 
         {/* Badge Overlay */}
         {product.badge && (
-          <div className="absolute top-4 left-4 flex flex-col gap-2 z-10 pointer-events-none">
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10 pointer-events-none">
             <span
-              className={`${product.badgeClass || 'bg-primary text-on-primary'} font-label-caps text-[10px] px-2 py-1 uppercase tracking-wider`}
+              className={`${product.badgeClass || 'bg-primary text-on-primary'} font-label-caps text-[8px] px-1.5 py-0.5 uppercase tracking-wider rounded-sm`}
             >
               {product.badge}
             </span>
@@ -168,36 +173,59 @@ export function ProductCard({
         )}
 
         {/* Floating Top Right Icons */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-10 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+        <div className={`absolute flex flex-col z-10 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ${
+          compact ? 'top-1.5 right-1.5 gap-1' : 'top-4 right-4 gap-2'
+        }`}>
+          {/* Wishlist */}
           <button
             onClick={(e) => onWishlistClick?.(e, product)}
             aria-label="Add to Wishlist"
-            className={`w-8 h-8 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+            className={`rounded-full flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
+              compact ? 'w-6 h-6' : 'w-8 h-8'
+            } ${
               isWishlisted
                 ? "bg-primary text-on-primary"
-                : "bg-surface/90 text-primary hover:bg-primary hover:text-on-primary"
+                : "bg-white/95 text-primary hover:bg-primary hover:text-white"
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">favorite</span>
+            {compact ? (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            ) : (
+              <span className="material-symbols-outlined text-[18px]">favorite</span>
+            )}
           </button>
+          {/* Quick View */}
           <button
             onClick={() => onQuickViewClick?.(product)}
             aria-label="Quick View"
-            className="w-8 h-8 bg-surface/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors shadow-sm cursor-pointer"
+            className={`bg-white/95 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm cursor-pointer ${
+              compact ? 'w-6 h-6' : 'w-8 h-8'
+            }`}
           >
-            <span className="material-symbols-outlined text-[18px]">visibility</span>
+            {compact ? (
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            ) : (
+              <span className="material-symbols-outlined text-[18px]">visibility</span>
+            )}
           </button>
-          <button
-            onClick={(e) => onAddToCartClick?.(e, product)}
-            aria-label="Add to Bag"
-            className="w-8 h-8 bg-surface/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors shadow-sm cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
-          </button>
+          {!compact && (
+            <button
+              onClick={(e) => onAddToCartClick?.(e, product)}
+              aria-label="Add to Bag"
+              className="w-8 h-8 bg-surface/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors shadow-sm cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">shopping_bag</span>
+            </button>
+          )}
         </div>
 
-        {/* Hover Size UI */}
-        {product.sizes && product.sizes.length > 0 && (
+        {/* Hover Size UI — hidden in compact mode */}
+        {!compact && product.sizes && product.sizes.length > 0 && (
           <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-2 z-10 pointer-events-none">
             <div className="flex justify-center gap-4 text-[10px] font-label-caps bg-surface/90 backdrop-blur-sm py-2 border border-outline-variant shadow-sm pointer-events-auto">
               {product.sizes.map((s) => (
@@ -217,7 +245,7 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-0 px-0.5 mt-1.5">
+      <div className="flex flex-col gap-0 px-0.5 mt-1.5 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
         {/* Clickable Title */}
         <Link 
           to={`/product/${product.id || ""}`} 

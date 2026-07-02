@@ -17,7 +17,7 @@ export function AboutPage() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="relative w-full h-[60vh] md:h-[70vh] flex items-center justify-center bg-surface-container mt-[72px]">
+      <section className="relative w-full h-[55vh] md:h-[65vh] flex items-center justify-center bg-surface-container mt-[64px]">
         <img src={heroBanner} alt="Tobeque About Us" className="absolute inset-0 w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-black/30" />
         <div className="relative z-10 text-center px-4 pt-16">

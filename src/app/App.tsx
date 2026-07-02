@@ -8,8 +8,12 @@ import { ProductDetailPage } from "../pages/ProductDetail/ProductDetailPage";
 import { AboutPage } from "../pages/About/AboutPage";
 import { ProfilePage } from "../pages/Profile/ProfilePage";
 import { StyleJournalPage } from "../pages/StyleJournal/StyleJournalPage";
+import { StyleJournalDetailPage } from "../pages/StyleJournalDetail/StyleJournalDetailPage";
 import { TermsAndConditionsPage } from "../pages/TermsAndConditions/TermsAndConditionsPage";
 import { PrivacyPolicyPage } from "../pages/PrivacyPolicy/PrivacyPolicyPage";
+import { CareerPage } from "../pages/Career/CareerPage";
+import { FAQPage } from "../pages/FAQ/FAQPage";
+import { StealTheStylePage } from "../pages/StealTheStyle/StealTheStylePage";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
 import { CartDrawer } from "../components/CartDrawer/CartDrawer";
@@ -39,8 +43,12 @@ export default function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/style-journal" element={<StyleJournalPage />} />
+            <Route path="/style-journal/:id" element={<StyleJournalDetailPage />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/career" element={<CareerPage />} />
+            <Route path="/faq" element={<FAQPage />} />
+            <Route path="/steal-the-style" element={<StealTheStylePage />} />
           </Routes>
           <CartDrawer />
           <CheckoutModal />

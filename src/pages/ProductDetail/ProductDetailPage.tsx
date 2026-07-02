@@ -16,6 +16,82 @@ const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg
 
 // Delivery estimate will be fetched from settings
 
+function useDragScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    
+    let isDown = false;
+    let isDragging = false;
+    let startX = 0;
+    let scrollLeft = 0;
+
+    const mouseDown = (e: MouseEvent) => {
+      isDown = true;
+      isDragging = false;
+      el.classList.remove('snap-mandatory', 'snap-x', 'scroll-smooth');
+      el.classList.add('select-none', '[&_*]:pointer-events-none');
+      el.style.cursor = 'grabbing';
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    };
+    
+    const mouseLeave = () => {
+      isDown = false;
+      el.style.cursor = '';
+      el.classList.remove('select-none', '[&_*]:pointer-events-none');
+      el.classList.add('snap-mandatory', 'snap-x', 'scroll-smooth');
+    };
+    
+    const mouseUp = () => {
+      isDown = false;
+      el.style.cursor = '';
+      el.classList.remove('select-none', '[&_*]:pointer-events-none');
+      el.classList.add('snap-mandatory', 'snap-x', 'scroll-smooth');
+    };
+    
+    const mouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - el.offsetLeft;
+      const walk = (x - startX) * 2; 
+      if (Math.abs(walk) > 5) {
+        isDragging = true;
+      }
+      el.scrollLeft = scrollLeft - walk;
+    };
+
+    const dragStart = (e: DragEvent) => e.preventDefault();
+    
+    const click = (e: MouseEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    el.addEventListener('mousedown', mouseDown);
+    el.addEventListener('mouseleave', mouseLeave);
+    el.addEventListener('mouseup', mouseUp);
+    el.addEventListener('mousemove', mouseMove);
+    el.addEventListener('dragstart', dragStart);
+    el.addEventListener('click', click, true); // Intercept during capture phase
+
+    return () => {
+      el.removeEventListener('mousedown', mouseDown);
+      el.removeEventListener('mouseleave', mouseLeave);
+      el.removeEventListener('mouseup', mouseUp);
+      el.removeEventListener('mousemove', mouseMove);
+      el.removeEventListener('dragstart', dragStart);
+      el.removeEventListener('click', click, true);
+    };
+  }, []);
+
+  return ref;
+}
+
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -101,9 +177,9 @@ export function ProductDetailPage() {
   }, []);
 
   // Carousel scroll refs
-  const styleItCarouselRef = useRef<HTMLDivElement>(null);
-  const likeCarouselRef = useRef<HTMLDivElement>(null);
-  const galleryScrollRef = useRef<HTMLDivElement>(null);
+  const styleItCarouselRef = useDragScroll();
+  const likeCarouselRef = useDragScroll();
+  const galleryScrollRef = useDragScroll();
 
   // Sync state if product route changes
   useEffect(() => {
@@ -223,11 +299,9 @@ export function ProductDetailPage() {
   // Smooth Carousel scroll handlers
   const scrollCarousel = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
     if (ref.current) {
-      const scrollAmt = ref.current.offsetWidth * 0.75;
-      ref.current.scrollBy({
-        left: direction === "left" ? -scrollAmt : scrollAmt,
-        behavior: "smooth"
-      });
+      const itemWidth = ref.current.firstElementChild?.clientWidth || ref.current.offsetWidth * 0.5;
+      const scrollAmt = itemWidth * 2;
+      ref.current.scrollBy({ left: direction === "left" ? -scrollAmt : scrollAmt, behavior: "smooth" });
     }
   };
 
@@ -335,11 +409,11 @@ export function ProductDetailPage() {
           </div>
 
           {/* Right: Minimal editorial product info — quiet, refined, secondary to imagery */}
-          <div className="w-full lg:w-[30%] flex flex-col py-6 lg:py-10 px-5 lg:pl-10 lg:pr-6 lg:sticky top-0 self-start gap-0">
+          <div className="w-full lg:w-[30%] flex flex-col py-6 px-5 lg:pl-10 lg:pr-6 lg:sticky top-0 self-start gap-0">
 
             {/* Brand label / category hint */}
             {product.badge && (
-              <span className="text-[9px] tracking-[0.2em] uppercase text-secondary font-medium mb-3 block">
+              <span className="text-[9px] tracking-[0.2em] uppercase text-secondary font-medium mb-2 block">
                 {product.badge}
               </span>
             )}
@@ -350,7 +424,7 @@ export function ProductDetailPage() {
             </h1>
 
             {/* Price Row — compact */}
-            <div className="flex items-baseline gap-2 mb-6">
+            <div className="flex items-baseline gap-2 mb-3">
               <span className="text-sm font-medium text-primary">{displayPrice}</span>
               {product.originalPrice && (
                 <span className="text-xs text-secondary/60 line-through">{product.originalPrice}</span>
@@ -358,7 +432,7 @@ export function ProductDetailPage() {
             </div>
 
             {/* Live Viewer Count */}
-            <div className="flex items-center gap-1.5 mb-6 text-[10px] text-secondary/70 tracking-wide">
+            <div className="flex items-center gap-1.5 mb-4 text-[10px] text-secondary/70 tracking-wide">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-primary">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
@@ -369,11 +443,11 @@ export function ProductDetailPage() {
             </div>
 
             {/* Thin divider */}
-            <div className="w-8 h-px bg-outline-variant mb-6" />
+            <div className="w-8 h-px bg-outline-variant mb-4" />
 
             {/* Size Selection — compact, minimal */}
             {product.sizes && product.sizes.length > 0 && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <div className="flex justify-between items-center mb-2.5">
                   <span className="text-[10px] tracking-[0.15em] uppercase text-secondary font-medium">
                     Size
@@ -405,7 +479,7 @@ export function ProductDetailPage() {
 
             {/* Color Selection — minimal dots */}
             {product.detailedColors && product.detailedColors.length > 0 && (
-              <div className="mb-6">
+              <div className="mb-4">
                 <span className="text-[10px] tracking-[0.15em] uppercase text-secondary font-medium block mb-2.5">
                   Colour — <span className="text-primary">{selectedColor.name}</span>
                 </span>
@@ -439,7 +513,7 @@ export function ProductDetailPage() {
             )}
 
             {/* Quantity + Add to Cart */}
-            <div className="flex flex-col gap-2 mb-5">
+            <div className="flex flex-col gap-2 mb-4">
               <div className="flex gap-2 items-stretch">
                 <div className="flex items-center border border-outline-variant h-10 shrink-0">
                   <button
@@ -488,7 +562,7 @@ export function ProductDetailPage() {
             </div>
 
             {/* Ask a Question + Share */}
-            <div className="flex items-center gap-6 mb-6">
+            <div className="flex items-center gap-6 mb-4">
               <button
                 className="flex items-center gap-1.5 hover:text-primary transition-colors text-[10px] text-secondary/60 tracking-wide w-fit font-bold uppercase"
                 onClick={() => { setAskSubmitted(false); setIsAskQuestionOpen(true); }}
@@ -507,7 +581,7 @@ export function ProductDetailPage() {
             </div>
 
             {/* Estimated Delivery + SKU — ultra-light meta info */}
-            <div className="border-t border-outline-variant/50 pt-4 mb-5 space-y-2">
+            <div className="border-t border-outline-variant/50 pt-3 mb-4 space-y-1.5">
               <div className="flex items-center gap-2 text-[10px] text-secondary/70">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-secondary/50"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                 <span>Delivery:</span>
@@ -522,7 +596,7 @@ export function ProductDetailPage() {
             </div>
 
             {/* Payment Trust Badge — very subtle */}
-            <div className="border border-outline-variant/40 rounded px-3 py-2.5 mb-5">
+            <div className="border border-outline-variant/40 rounded px-3 py-2.5 mb-4">
               <div className="flex items-center gap-2 justify-center mb-1">
                 {/* Visa */}
                 <svg viewBox="0 0 48 32" width="30" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#1a1f71"/><path d="M20 22L22.5 10H26L23.5 22H20ZM35 10.4C34.2 10.1 33 9.8 31.5 9.8C28.5 9.8 26.4 11.3 26.4 13.4C26.4 15 27.8 15.9 28.9 16.4C30 16.9 30.4 17.3 30.4 17.8C30.4 18.6 29.3 19 28.3 19C27 19 26.3 18.8 25.2 18.4L24.8 18.2L24.3 21.1C25.3 21.5 27 21.9 28.8 21.9C32 21.9 34 20.4 34 18.1C34 16.9 33.2 16 31.6 15.2C30.6 14.7 29.9 14.4 29.9 13.8C29.9 13.3 30.5 12.7 31.8 12.7C32.9 12.7 33.7 12.9 34.3 13.2L34.6 13.3L35 10.4ZM40.5 10H38.1C37.3 10 36.7 10.2 36.4 11L32 22H35.2L35.9 20H39.7L40.1 22H43L40.5 10ZM36.8 17.5L38.2 13.6L39 17.5H36.8ZM17.5 10L14.5 18.3L14.2 16.9C13.6 15 11.8 12.9 9.8 11.8L12.5 22H15.8L21 10H17.5Z" fill="white"/><path d="M11.4 10H6L5.9 10.3C10.1 11.4 13 13.9 14.2 16.9L13 11C12.7 10.2 12.1 10 11.4 10Z" fill="#f9a51a"/></svg>
@@ -671,26 +745,26 @@ export function ProductDetailPage() {
           </div>
         )}
 
-        <div className="px-8 max-w-[1600px] mx-auto w-full">
+        <div className="w-full">
           {/* Divider */}
           <div className="w-full h-px bg-outline-variant my-6" />
 
           {/* STYLE IT WITH Carousel */}
           <section className="mb-8 md:mb-10 relative">
-            <div className="flex flex-col items-center mb-4">
+            <div className="flex flex-col items-center mb-6">
               <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">STYLE IT WITH</h2>
             </div>
 
-            <div className="relative">
+            <div className="relative group/carousel">
               {/* Carousel Container */}
               <div
                 ref={styleItCarouselRef}
-                className="flex overflow-x-auto snap-x snap-mandatory gap-4 no-scrollbar pb-4 scroll-smooth"
+                className="flex overflow-x-auto snap-x snap-mandatory gap-2 no-scrollbar pb-4 scroll-smooth px-1"
               >
                 {styleItWithProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="snap-start shrink-0 w-[80%] md:w-[calc(33.333%-12px)] lg:w-[calc(25%-12px)]"
+                    className="snap-start shrink-0 w-[85%] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
                   >
                     <ProductCard
                       product={item}
@@ -703,38 +777,40 @@ export function ProductDetailPage() {
 
               {/* Carousel Controls */}
               <button
-                onClick={() => scrollCarousel(styleItCarouselRef, "left")}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollCarousel(styleItCarouselRef, "left"); }}
                 aria-label="Previous items"
-                className="hidden lg:flex absolute top-1/2 -left-6 -translate-y-1/2 w-12 h-12 bg-white border border-outline-variant items-center justify-center text-primary hover:bg-neutral-50 hover:scale-105 shadow-sm transition-all z-10 cursor-pointer"
+                className="hidden lg:flex absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] text-primary hover:bg-white hover:scale-110 items-center justify-center transition-all z-20 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
               >
-                <span className="material-symbols-outlined">chevron_left</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_left</span>
               </button>
               <button
-                onClick={() => scrollCarousel(styleItCarouselRef, "right")}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollCarousel(styleItCarouselRef, "right"); }}
                 aria-label="Next items"
-                className="hidden lg:flex absolute top-1/2 -right-6 -translate-y-1/2 w-12 h-12 bg-white border border-outline-variant items-center justify-center text-primary hover:bg-neutral-50 hover:scale-105 shadow-sm transition-all z-10 cursor-pointer"
+                className="hidden lg:flex absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] text-primary hover:bg-white hover:scale-110 items-center justify-center transition-all z-20 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
               >
-                <span className="material-symbols-outlined">chevron_right</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_right</span>
               </button>
             </div>
           </section>
 
           {/* YOU MIGHT ALSO LIKE Carousel */}
           <section className="mb-8 md:mb-10 relative">
-            <div className="flex flex-col items-center mb-4">
+            <div className="flex flex-col items-center mb-6">
               <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">YOU MIGHT ALSO LIKE</h2>
             </div>
 
-            <div className="relative">
+            <div className="relative group/carousel">
               {/* Carousel Container */}
               <div
                 ref={likeCarouselRef}
-                className="flex overflow-x-auto snap-x snap-mandatory gap-4 no-scrollbar pb-4 scroll-smooth"
+                className="flex overflow-x-auto snap-x snap-mandatory gap-2 no-scrollbar pb-4 scroll-smooth px-1"
               >
                 {youMightAlsoLikeProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="snap-start shrink-0 w-[80%] md:w-[calc(33.333%-12px)] lg:w-[calc(25%-12px)]"
+                    className="snap-start shrink-0 w-[85%] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
                   >
                     <ProductCard
                       product={item}
@@ -747,18 +823,20 @@ export function ProductDetailPage() {
 
               {/* Carousel Controls */}
               <button
-                onClick={() => scrollCarousel(likeCarouselRef, "left")}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollCarousel(likeCarouselRef, "left"); }}
                 aria-label="Previous items"
-                className="hidden lg:flex absolute top-1/2 -left-6 -translate-y-1/2 w-12 h-12 bg-white border border-outline-variant items-center justify-center text-primary hover:bg-neutral-50 hover:scale-105 shadow-sm transition-all z-10 cursor-pointer"
+                className="hidden lg:flex absolute top-1/2 left-4 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] text-primary hover:bg-white hover:scale-110 items-center justify-center transition-all z-20 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
               >
-                <span className="material-symbols-outlined">chevron_left</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_left</span>
               </button>
               <button
-                onClick={() => scrollCarousel(likeCarouselRef, "right")}
+                type="button"
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); scrollCarousel(likeCarouselRef, "right"); }}
                 aria-label="Next items"
-                className="hidden lg:flex absolute top-1/2 -right-6 -translate-y-1/2 w-12 h-12 bg-white border border-outline-variant items-center justify-center text-primary hover:bg-neutral-50 hover:scale-105 shadow-sm transition-all z-10 cursor-pointer"
+                className="hidden lg:flex absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_4px_12px_rgba(0,0,0,0.05)] text-primary hover:bg-white hover:scale-110 items-center justify-center transition-all z-20 cursor-pointer opacity-0 group-hover/carousel:opacity-100"
               >
-                <span className="material-symbols-outlined">chevron_right</span>
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>chevron_right</span>
               </button>
             </div>
           </section>

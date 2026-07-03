@@ -9,7 +9,7 @@ export function RefundRequestPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const { token, user, isAuthenticated, openLoginModal } = useAuth();
+  const { user, openLoginModal } = useAuth();
   const location = useLocation();
 
   // Pre-fill form from URL query param + logged-in user details

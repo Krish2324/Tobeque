@@ -23,16 +23,6 @@ interface PincodeApiResponse {
 /* ─── Helpers ─── */
 const COUNTRY = 'India';
 
-function buildFullAddress(
-  street: string,
-  area: string,
-  city: string,
-  state: string,
-  pincode: string
-) {
-  return [street, area, city, state, pincode, COUNTRY].filter(Boolean).join(', ');
-}
-
 /* ════════════════════════════════════════════════════════════════
    Render Helpers
 ════════════════════════════════════════════════════════════════ */

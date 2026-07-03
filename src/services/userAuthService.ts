@@ -106,7 +106,7 @@ export const uploadProfilePhoto = async (token: string, file: File): Promise<Use
 export const createOrder = async (
   token: string,
   orderData: {
-    shippingAddress: string;
+    shippingAddress: any;
     customerName?: string;
     customerPhone?: string;
     items: Array<{

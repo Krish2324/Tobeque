@@ -19,8 +19,9 @@ import { StealTheStylePage } from "../pages/StealTheStyle/StealTheStylePage";
 import { RefundRequestPage } from "../pages/RefundRequest/RefundRequestPage";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
+import { CurrencyProvider } from "../context/CurrencyContext";
 import { CartDrawer } from "../components/CartDrawer/CartDrawer";
-import { CheckoutModal } from "../components/CheckoutModal/CheckoutModal";
+import { CheckoutPage } from "../pages/Checkout/CheckoutPage";
 import { OtpLoginModal } from "../components/OtpLoginModal/OtpLoginModal";
 
 function ScrollToTop() {
@@ -38,28 +39,30 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/collection" element={<CollectionPage />} />
-            <Route path="/product/:id" element={<ProductDetailPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/style-journal" element={<StyleJournalPage />} />
-            <Route path="/style-journal/:id" element={<StyleJournalDetailPage />} />
-            <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-            <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-            <Route path="/cookie-settings" element={<CookieSettingsPage />} />
-            <Route path="/career" element={<CareerPage />} />
-            <Route path="/faq" element={<FAQPage />} />
-            <Route path="/steal-the-style" element={<StealTheStylePage />} />
-            <Route path="/refund-request" element={<RefundRequestPage />} />
-          </Routes>
-          <CartDrawer />
-          <CheckoutModal />
-          {/* OTP Login Modal lives at root so it can appear from any page */}
-          <OtpLoginModal />
+          <CurrencyProvider>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/collection" element={<CollectionPage />} />
+              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/style-journal" element={<StyleJournalPage />} />
+              <Route path="/style-journal/:id" element={<StyleJournalDetailPage />} />
+              <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+              <Route path="/cookie-settings" element={<CookieSettingsPage />} />
+              <Route path="/career" element={<CareerPage />} />
+              <Route path="/faq" element={<FAQPage />} />
+              <Route path="/steal-the-style" element={<StealTheStylePage />} />
+              <Route path="/refund-request" element={<RefundRequestPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+            </Routes>
+            <CartDrawer />
+            {/* OTP Login Modal lives at root so it can appear from any page */}
+            <OtpLoginModal />
+          </CurrencyProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

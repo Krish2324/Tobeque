@@ -110,12 +110,15 @@ export const createOrder = async (
     customerName?: string;
     customerPhone?: string;
     items: Array<{
-      productId: number;
+      productId: string | number;
       price: number | string;
       quantity: number;
       variantDetails?: any;
     }>;
     couponCode?: string;
+    paymentMethod?: string;
+    billingAddress?: any;
+    notes?: string;
   }
 ) => {
   const res = await fetch(`${API_BASE}/orders`, {

@@ -8,6 +8,7 @@ import { QuickViewModal } from '../../components/QuickViewModal/QuickViewModal';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import api from '../../services/api';
+import { useCurrency } from '../../context/CurrencyContext';
 
 import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
 import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
@@ -21,6 +22,7 @@ interface Category {
 
 export function CollectionPage() {
   const navigate = useNavigate();
+  const { currencySymbol } = useCurrency();
   const { setIsCartOpen, addToCart, wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [currentSort, setCurrentSort] = useState('FEATURED');
@@ -614,7 +616,7 @@ export function CollectionPage() {
             <h3 className="font-label-caps text-[10px] tracking-widest text-secondary uppercase font-bold mb-3">Price Range</h3>
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">{currencySymbol}</span>
                 <input
                   type="number"
                   placeholder="Min"
@@ -625,7 +627,7 @@ export function CollectionPage() {
               </div>
               <span className="text-secondary text-xs">-</span>
               <div className="flex-1 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-secondary">{currencySymbol}</span>
                 <input
                   type="number"
                   placeholder="Max"

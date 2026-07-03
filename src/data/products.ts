@@ -23,6 +23,7 @@ export type Product = {
   shippingReturns?: string;
   galleryImages?: string[];
   galleryImageObjects?: { url: string; color?: string }[];
+  taxRate?: number;
   sku?: string; // Product SKU from admin panel
   rawVariants?: any[]; // For frontend price/stock logic based on selections
   hotRightNowMedia?: string;

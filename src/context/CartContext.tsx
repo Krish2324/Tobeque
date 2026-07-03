@@ -25,8 +25,6 @@ interface CartContextType {
   setWishlistItems: React.Dispatch<React.SetStateAction<Product[]>>;
   addToWishlist: (product: Product) => void;
   removeFromWishlist: (productName: string) => void;
-  isCheckoutOpen: boolean;
-  setIsCheckoutOpen: (isOpen: boolean) => void;
   checkoutProduct: Product | null;
   setCheckoutProduct: (prod: Product | null) => void;
   updateCartItemQty: (cartId: string, qty: number) => void;
@@ -43,7 +41,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
@@ -109,8 +106,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setWishlistItems,
         addToWishlist,
         removeFromWishlist,
-        isCheckoutOpen,
-        setIsCheckoutOpen,
         checkoutProduct,
         setCheckoutProduct,
         updateCartItemQty,

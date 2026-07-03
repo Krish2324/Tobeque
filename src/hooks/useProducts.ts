@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import type { Product } from '../components/ProductCard';
+import { useCurrency } from '../context/CurrencyContext';
 
 // ─── Types from Backend ───────────────────────────────────────────────────────
 
@@ -70,14 +71,14 @@ function resolveImageUrl(path: string | null | undefined): string {
  * Maps a backend product object to the website's Product type
  * used by ProductCard and related components.
  */
-function mapBackendProduct(bp: BackendProduct): Product {
+function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): Product {
   const price = parseFloat(String(bp.price));
   const discountPrice = bp.discountPrice ? parseFloat(String(bp.discountPrice)) : null;
 
-  // Format price as "₹XX.XX"
-  const formattedPrice = `₹${price.toFixed(2)}`;
+  // Format price
+  const formattedPrice = `${currencySymbol}${price.toFixed(2)}`;
   
-  const displayPrice = discountPrice ? `₹${discountPrice.toFixed(2)}` : formattedPrice;
+  const displayPrice = discountPrice ? `${currencySymbol}${discountPrice.toFixed(2)}` : formattedPrice;
   const originalPrice = discountPrice ? formattedPrice : undefined;
 
   // Extract sizes and colors from variants JSON
@@ -201,6 +202,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const { currencySymbol } = useCurrency();
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -220,7 +222,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
       const data = response.data;
 
       if (data.success && data.data?.products) {
-        const mapped = (data.data.products as BackendProduct[]).map(mapBackendProduct);
+        const mapped = (data.data.products as BackendProduct[]).map((bp) => mapBackendProduct(bp, currencySymbol));
         setProducts(mapped);
         setTotal(data.data.pagination?.total ?? mapped.length);
       } else {
@@ -235,7 +237,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     } finally {
       setLoading(false);
     }
-  }, [status, featured, limit, page, category, isOnSaleSection, isHotRightNow]);
+  }, [status, featured, limit, page, category, isOnSaleSection, isHotRightNow, currencySymbol]);
 
   useEffect(() => {
     fetchProducts();
@@ -257,6 +259,7 @@ export function useProduct(id: string | undefined): UseProductResult {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { currencySymbol } = useCurrency();
 
   const fetchProduct = useCallback(async () => {
     if (!id) {
@@ -272,7 +275,7 @@ export function useProduct(id: string | undefined): UseProductResult {
       const data = response.data;
 
       if (data.success && data.product) {
-        setProduct(mapBackendProduct(data.product as BackendProduct));
+        setProduct(mapBackendProduct(data.product as BackendProduct, currencySymbol));
       } else {
         setProduct(null);
         setError('Product not found.');
@@ -284,7 +287,7 @@ export function useProduct(id: string | undefined): UseProductResult {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, currencySymbol]);
 
   useEffect(() => {
     fetchProduct();

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useCurrency } from "../../context/CurrencyContext";
 
 export interface SearchModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ export interface SearchModalProps {
 const isVideo = (url: string | undefined) => url && typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i);
 
 export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalProps) {
+  const { currencySymbol } = useCurrency();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -122,7 +124,7 @@ export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalPro
                       )}
                     </div>
                     <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>
-                    <p className="font-bold text-primary text-sm">₹{product.price}</p>
+                    <p className="font-bold text-primary text-sm">{currencySymbol}{product.price}</p>
                   </button>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useCart } from '../../context/CartContext';
 import { type Product } from '../../data/products';
+import { useCurrency } from '../../context/CurrencyContext';
 
 export interface QuickViewModalProps {
   product: Product | null;
@@ -11,6 +12,7 @@ const isVideo = (url: string | undefined) => url && typeof url === 'string' && u
 
 export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   const { addToCart, setIsCartOpen } = useCart();
+  const { currencySymbol } = useCurrency();
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(product?.detailedColors && product.detailedColors.length > 0 ? product.detailedColors[0].name : undefined);
   const [selectedSize, setSelectedSize] = useState<string | undefined>(product?.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined);
@@ -32,7 +34,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
   }, [product, selectedColor, selectedSize]);
 
   const displayPrice = currentVariant && currentVariant.price !== undefined && currentVariant.price !== null && currentVariant.price !== ''
-    ? `₹${Number(currentVariant.price).toFixed(2)}` 
+    ? `${currencySymbol}${Number(currentVariant.price).toFixed(2)}` 
     : product?.price;
 
   const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;

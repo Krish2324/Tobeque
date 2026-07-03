@@ -6,6 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { Footer } from '../../components/Footer/Footer';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { getUserOrders, updateUserProfile, uploadProfilePhoto } from '../../services/userAuthService';
+import { useCurrency } from '../../context/CurrencyContext';
 
 interface Order {
   id: number;
@@ -53,6 +54,7 @@ const REFUND_STATUS_LABELS: Record<string, string> = {
 export function ProfilePage() {
   const { user, token, isAuthenticated, logout, updateUser } = useAuth();
   const { wishlistItems, removeFromWishlist, addToCart, setIsCartOpen } = useCart();
+  const { currencySymbol } = useCurrency();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -300,7 +302,7 @@ export function ProfilePage() {
                             <div className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
                               {order.orderStatus}
                             </div>
-                            <span className="text-lg font-headline-md text-primary">₹{Number(order.totalAmount).toLocaleString('en-IN')}</span>
+                            <span className="text-lg font-headline-md text-primary">{currencySymbol}{Number(order.totalAmount).toLocaleString('en-IN')}</span>
                           </div>
                         </div>
                         

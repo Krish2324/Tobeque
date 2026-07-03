@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
 import { useProduct, useProducts } from "../../hooks/useProducts";
 import api from "../../services/api";
@@ -11,6 +11,7 @@ import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { ShareModal } from '../../components/ShareModal/ShareModal';
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
+import { useCurrency } from "../../context/CurrencyContext";
 
 const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
 
@@ -94,6 +95,7 @@ function useDragScroll() {
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { currencySymbol } = useCurrency();
 
   // Fetch specific product from backend
   const { product, loading, error } = useProduct(id);
@@ -107,7 +109,8 @@ export function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });
   const [selectedSize, setSelectedSize] = useState<string>("S");
 
-  const { addToCart, setIsCartOpen, setIsCheckoutOpen } = useCart();
+  const { addToCart, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -131,7 +134,7 @@ export function ProductDetailPage() {
   }, [product, selectedColor, selectedSize]);
 
   const displayPrice = currentVariant && currentVariant.price !== undefined && currentVariant.price !== null && currentVariant.price !== ''
-    ? `₹${Number(currentVariant.price).toFixed(2)}` 
+    ? `${currencySymbol}${Number(currentVariant.price).toFixed(2)}` 
     : product?.price;
 
   const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
@@ -243,7 +246,8 @@ export function ProductDetailPage() {
         imageSrc: product.imageSrc,
         selectedSize: selectedSize,
         selectedColor: selectedColor.name,
-        quantity: quantity
+        quantity: quantity,
+        taxRate: product.taxRate || 0
       };
 
       addToCart(newItem);
@@ -293,7 +297,7 @@ export function ProductDetailPage() {
     };
 
     addToCart(newItem);
-    setIsCheckoutOpen(true);
+    navigate('/checkout');
   };
 
   // Smooth Carousel scroll handlers

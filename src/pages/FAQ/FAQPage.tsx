@@ -1,62 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Footer } from "../../components/Footer/Footer";
 import { Navbar } from "../../components/Navbar/Navbar";
 
-const faqs = [
-  {
-    id: 1,
-    question: "What sizes do you offer?",
-    answer:
-      "We offer sizes XS to XL across most of our collections. Each product page includes a detailed size guide to help you find your perfect fit. If you're between sizes, we recommend sizing up for a more relaxed look.",
-  },
-  {
-    id: 2,
-    question: "How do I track my order?",
-    answer:
-      "Once your order is shipped, you'll receive a tracking link via email and SMS. You can also track your order from your profile page under 'My Orders'. Delivery typically takes 3–5 business days.",
-  },
-  {
-    id: 3,
-    question: "What is your return & exchange policy?",
-    answer:
-      "We accept returns and exchanges within 7 days of delivery. Items must be unworn, unwashed, and in original packaging with tags attached. Sale items are not eligible for returns. To initiate a return, contact us at care@tobeque.com.",
-  },
-  {
-    id: 4,
-    question: "Do you ship internationally?",
-    answer:
-      "Currently, we ship across India. International shipping is coming soon! Sign up to our newsletter to be the first to know when we expand to your country.",
-  },
-  {
-    id: 5,
-    question: "How do I care for my Tobeque garments?",
-    answer:
-      "Each garment has a care label inside with specific instructions. In general, we recommend machine washing on cold with similar colors, avoiding bleach, and hanging to dry to preserve the quality and shape of your pieces.",
-  },
-  {
-    id: 6,
-    question: "Can I change or cancel my order?",
-    answer:
-      "Orders can be modified or cancelled within 1 hour of placing them. Please contact us immediately at care@tobeque.com or WhatsApp us at +91 84470 00200. After 1 hour, orders may have already been processed for shipping.",
-  },
-  {
-    id: 7,
-    question: "What payment methods do you accept?",
-    answer:
-      "We accept all major credit and debit cards, UPI, net banking, Wallets (Paytm, PhonePe), and EMI options. All transactions are secured with SSL encryption.",
-  },
-  {
-    id: 8,
-    question: "Is there a loyalty or rewards program?",
-    answer:
-      "Yes! Every purchase earns you Tobeque points that you can redeem on future orders. Create a free account to start earning and tracking your rewards.",
-  },
-];
+interface FAQItem {
+  _id: string;
+  question: string;
+  answer: string;
+  order: number;
+  isActive: boolean;
+}
 
 export function FAQPage() {
-  const [openId, setOpenId] = useState<number | null>(null);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
-  const toggle = (id: number) => {
+  useEffect(() => {
+    fetch("/api/faqs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) setFaqs(data.faqs);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const toggle = (id: string) => {
     setOpenId(openId === id ? null : id);
   };
 
@@ -88,32 +57,60 @@ export function FAQPage() {
           .
         </p>
 
-        <div className="divide-y divide-outline-variant border-t border-b border-outline-variant">
-          {faqs.map((faq) => (
-            <div key={faq.id}>
-              <button
-                onClick={() => toggle(faq.id)}
-                className="w-full flex items-center justify-between py-5 px-0 text-left cursor-pointer hover:text-primary transition-colors group"
-              >
-                <span className="text-[14px] font-medium text-primary pr-4 group-hover:text-black transition-colors">
-                  {faq.question}
-                </span>
-                <span
-                  className={`material-symbols-outlined text-[20px] text-secondary shrink-0 transition-transform duration-300 ${openId === faq.id ? "rotate-180" : ""}`}
-                >
-                  expand_more
-                </span>
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-300 ease-in-out ${openId === faq.id ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
-              >
-                <p className="text-[13px] text-secondary leading-relaxed pb-5">
-                  {faq.answer}
-                </p>
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="divide-y divide-outline-variant border-t border-b border-outline-variant">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="py-5">
+                <div className="h-4 bg-neutral-100 animate-pulse rounded w-3/4 mb-2" />
+                <div className="h-3 bg-neutral-50 animate-pulse rounded w-1/2" />
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* FAQs list */}
+        {!loading && faqs.length > 0 && (
+          <div className="divide-y divide-outline-variant border-t border-b border-outline-variant">
+            {faqs.map((faq) => (
+              <div key={faq._id}>
+                <button
+                  onClick={() => toggle(faq._id)}
+                  className="w-full flex items-center justify-between py-5 px-0 text-left cursor-pointer hover:text-primary transition-colors group"
+                >
+                  <span className="text-[14px] font-medium text-primary pr-4 group-hover:text-black transition-colors">
+                    {faq.question}
+                  </span>
+                  <span
+                    className={`material-symbols-outlined text-[20px] text-secondary shrink-0 transition-transform duration-300 ${openId === faq._id ? "rotate-180" : ""}`}
+                  >
+                    expand_more
+                  </span>
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${openId === faq._id ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+                >
+                  <p className="text-[13px] text-secondary leading-relaxed pb-5">
+                    {faq.answer}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && faqs.length === 0 && (
+          <div className="border border-outline-variant p-8 text-center">
+            <p className="text-[13px] text-secondary">
+              No FAQs available at the moment. Please check back soon or{" "}
+              <a href="mailto:care@tobeque.com" className="underline hover:text-primary">
+                contact us
+              </a>{" "}
+              for help.
+            </p>
+          </div>
+        )}
 
         <div className="mt-12 bg-surface-container border border-outline-variant p-8 text-center">
           <h2 className="text-[15px] font-semibold text-primary mb-2">

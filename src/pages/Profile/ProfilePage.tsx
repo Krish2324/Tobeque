@@ -36,6 +36,20 @@ const STATUS_COLORS: Record<string, string> = {
   returned: 'bg-gray-50 text-gray-600 border border-gray-200',
 };
 
+const REFUND_STATUS_COLORS: Record<string, string> = {
+  pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  under_review: 'bg-blue-50 text-blue-700 border-blue-200',
+  approved: 'bg-green-50 text-green-700 border-green-200',
+  rejected: 'bg-red-50 text-red-700 border-red-200',
+};
+
+const REFUND_STATUS_LABELS: Record<string, string> = {
+  pending: 'Refund Pending',
+  under_review: 'Under Review',
+  approved: 'Refund Approved',
+  rejected: 'Refund Rejected',
+};
+
 export function ProfilePage() {
   const { user, token, isAuthenticated, logout, updateUser } = useAuth();
   const { wishlistItems, removeFromWishlist, addToCart, setIsCartOpen } = useCart();
@@ -46,6 +60,8 @@ export function ProfilePage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
+  // refund requests keyed by order number for quick lookup
+  const [refundMap, setRefundMap] = useState<Record<string, { status: string }>>({});
   
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +149,22 @@ export function ProfilePage() {
       .then((data) => setOrders(data || []))
       .catch((err) => setOrdersError(err.message || 'Failed to load orders'))
       .finally(() => setOrdersLoading(false));
+
+    // Fetch user's refund requests and build a map keyed by order number
+    fetch('/api/refund-requests/my', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const map: Record<string, { status: string }> = {};
+          (data.requests as Array<{ orderId: string; status: string }>).forEach(r => {
+            map[r.orderId] = { status: r.status };
+          });
+          setRefundMap(map);
+        }
+      })
+      .catch(() => {}); // silently ignore refund fetch errors
   }, [token, isAuthenticated]);
 
   if (!isAuthenticated || !user) return null;
@@ -264,7 +296,7 @@ export function ProfilePage() {
                             <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-1">Order #{order.orderNumber}</p>
                             <p className="text-sm text-primary font-medium">Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             <div className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
                               {order.orderStatus}
                             </div>
@@ -272,7 +304,7 @@ export function ProfilePage() {
                           </div>
                         </div>
                         
-                        <div className="flex flex-wrap gap-4">
+                        <div className="flex flex-wrap gap-4 mb-5">
                           {order.items?.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-4 bg-surface-container-lowest rounded-2xl p-3 pr-6 border border-outline-variant/30">
                               <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container">
@@ -290,6 +322,28 @@ export function ProfilePage() {
                               </div>
                             </div>
                           ))}
+                        </div>
+
+                        {/* Refund status / request refund */}
+                        <div className="pt-4 border-t border-outline-variant/30 flex items-center justify-between">
+                          {refundMap[order.orderNumber] ? (
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border ${REFUND_STATUS_COLORS[refundMap[order.orderNumber].status]}`}>
+                              <span className="material-symbols-outlined text-[14px]">receipt_long</span>
+                              {REFUND_STATUS_LABELS[refundMap[order.orderNumber].status]}
+                            </div>
+                          ) : (
+                            ['delivered', 'returned', 'cancelled'].includes(order.orderStatus) ? (
+                              <Link
+                                to={`/refund-request?orderId=${order.orderNumber}`}
+                                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-secondary/60 hover:text-primary transition-colors border border-outline-variant/50 rounded-full px-4 py-2 hover:border-outline-variant"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">undo</span>
+                                Request Refund
+                              </Link>
+                            ) : (
+                              <span className="text-[10px] text-secondary/40 italic">Refund available after delivery</span>
+                            )
+                          )}
                         </div>
                       </div>
                     ))}

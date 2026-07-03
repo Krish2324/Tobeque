@@ -1,7 +1,37 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { SocialLinks } from "../SocialLinks/SocialLinks";
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/subscribers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      
+      if (!data.success) throw new Error(data.error || "Subscription failed");
+      
+      setStatus("success");
+      setMessage(data.message || "Thank you for subscribing!");
+      setEmail("");
+    } catch (err: any) {
+      setStatus("error");
+      setMessage(err.message || "Something went wrong. Please try again.");
+    }
+  };
   return (
     <footer className="w-full bg-[#f4f4f4] text-[#333] pt-10 pb-6 border-t border-outline-variant font-body-md relative overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
@@ -40,10 +70,9 @@ export function Footer() {
             <h3 className="font-bold text-[13px] tracking-wide mb-2 text-black">Policies</h3>
             <Link to="/terms-and-conditions" className="text-[13px] text-[#555] hover:text-primary transition-colors">Terms and conditions</Link>
             <Link to="/privacy-policy" className="text-[13px] text-[#555] hover:text-primary transition-colors">Privacy policy</Link>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookies policy</Link>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookie settings</Link>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Delete Account</Link>
-            <Link to="#" className="text-[13px] text-[#555] hover:text-primary transition-colors">Refund Request</Link>
+            <Link to="/cookie-policy" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookies policy</Link>
+            <Link to="/cookie-settings" className="text-[13px] text-[#555] hover:text-primary transition-colors">Cookie settings</Link>
+            <Link to="/refund-request" className="text-[13px] text-[#555] hover:text-primary transition-colors">Refund Request</Link>
           </div>
 
           {/* Column 4: Subscribe */}
@@ -52,20 +81,29 @@ export function Footer() {
             <p className="text-[13px] text-[#555] leading-relaxed pr-4">
               Enter your email below to be the first to know about new collections and product launches.
             </p>
-            <form className="flex mt-2" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex mt-2 relative" onSubmit={handleSubscribe}>
               <input 
                 type="email" 
-                placeholder="Email" 
+                placeholder="Email address" 
                 required
-                className="flex-1 bg-white border border-[#ccc] px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#666] transition-colors"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={status === 'loading'}
+                className="flex-1 bg-white border border-[#ccc] px-4 py-2.5 text-[13px] focus:outline-none focus:border-[#666] transition-colors disabled:bg-gray-50"
               />
               <button 
                 type="submit" 
-                className="bg-[#6b7280] hover:bg-[#4b5563] text-white px-6 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer"
+                disabled={status === 'loading'}
+                className="bg-[#6b7280] hover:bg-[#4b5563] text-white px-6 py-2.5 text-[13px] font-semibold transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Subscribe
+                {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
               </button>
             </form>
+            {message && (
+              <p className={`text-xs mt-1 ${status === 'success' ? 'text-green-600' : 'text-red-500'}`}>
+                {message}
+              </p>
+            )}
           </div>
         </div>
 

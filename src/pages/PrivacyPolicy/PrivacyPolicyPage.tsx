@@ -1,5 +1,6 @@
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
+import { Link } from 'react-router-dom';
 
 const SECTIONS = [
   {
@@ -164,7 +165,7 @@ export function PrivacyPolicyPage() {
               <section key={section.number} className="py-6">
                 <div className="flex items-start gap-6">
                   {/* Section number */}
-                  <span className="text-[11px] text-gray-300 font-mono mt-1 select-none w-5 shrink-0">
+                  <span className="text-sm text-gray-400 font-bold font-mono mt-0.5 select-none w-7 shrink-0">
                     {section.number}
                   </span>
 
@@ -234,7 +235,7 @@ export function PrivacyPolicyPage() {
           {/* Contact Section */}
           <div className="pt-10 border-t border-gray-100 mt-4">
             <div className="flex items-start gap-6">
-              <span className="text-[11px] text-gray-300 font-mono mt-1 select-none w-5 shrink-0">
+              <span className="text-sm text-gray-400 font-bold font-mono mt-0.5 select-none w-7 shrink-0">
                 10
               </span>
               <div className="flex-1">
@@ -269,14 +270,12 @@ export function PrivacyPolicyPage() {
                   </p>
                   <p className="text-sm text-gray-500">
                     Website:{' '}
-                    <a
-                      href="https://www.tobeque.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity"
+                    <Link
+                      to="/"
+                      className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity cursor-pointer"
                     >
                       www.tobeque.com
-                    </a>
+                    </Link>
                   </p>
                 </div>
               </div>

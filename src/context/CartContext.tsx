@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { type Product } from '../components/ProductCard';
 
 export interface CartItem extends Product {
@@ -37,9 +37,36 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = 'tobeque_cart_data_v2';
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  
+  // Initialize cart from localStorage if available
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        // FORCE CLEAR STALE CARTS: If any item is missing taxRate, drop the cart so the user has to re-add it.
+        const hasStaleItems = parsedCart.some((item: any) => item.taxRate === undefined);
+        if (hasStaleItems) {
+          localStorage.removeItem(CART_STORAGE_KEY);
+          return [];
+        }
+        return parsedCart;
+      }
+    } catch (err) {
+      console.error('Failed to parse cart from localStorage', err);
+    }
+    return [];
+  });
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+  }, [cart]);
+
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);

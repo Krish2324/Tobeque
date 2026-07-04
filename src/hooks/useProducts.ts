@@ -18,6 +18,7 @@ interface BackendProduct {
   status: 'draft' | 'published';
   isFeatured: boolean;
   thumbnail: string | null;
+  taxRate?: number;
   colors?: string[];
   variants: Array<{ size?: string; color?: string; stock?: number; price?: number; sku?: string }> | null;
   images?: Array<{ id: number; imageUrl: string }>;
@@ -181,6 +182,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
     sku: bp.sku || undefined,
+    taxRate: bp.taxRate,
     hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,
   };
 }

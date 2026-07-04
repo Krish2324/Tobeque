@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -160,6 +160,33 @@ export function CheckoutPage() {
     removeCoupon,
   } = useCart();
   const { isAuthenticated, openLoginModal, user, token } = useAuth();
+
+  /* ─── Fetch fresh taxRates from the API to avoid stale cart data ─── */
+  const [liveTaxRates, setLiveTaxRates] = useState<Record<string, number>>({});
+  const fetchedIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const idsToFetch = cart
+      .map(item => item.id)
+      .filter(id => !fetchedIdsRef.current.has(String(id)));
+
+    if (idsToFetch.length === 0) return;
+
+    idsToFetch.forEach(id => fetchedIdsRef.current.add(String(id)));
+
+    Promise.all(
+      idsToFetch.map(id =>
+        fetch(`/api/products/${id}`)
+          .then(r => r.json())
+          .then(data => ({ id: String(id), taxRate: data?.product?.taxRate ?? 0 }))
+          .catch(() => ({ id: String(id), taxRate: 0 }))
+      )
+    ).then(results => {
+      const map: Record<string, number> = {};
+      results.forEach(r => { map[r.id] = r.taxRate; });
+      setLiveTaxRates(prev => ({ ...prev, ...map }));
+    });
+  }, [cart]);
 
   /* ─── Billing form ─── */
   const fullName = user?.firstName
@@ -339,7 +366,10 @@ export function CheckoutPage() {
     const priceStr = String(item.price || '').replace(/[^0-9.-]+/g, '');
     const price = parseFloat(priceStr) || 0;
     const qty = item.quantity;
-    const taxRate = item.taxRate || 0;
+    // Prefer the live (freshly fetched) taxRate, fall back to cart item's taxRate
+    const taxRate = (liveTaxRates[String(item.id)] !== undefined)
+      ? liveTaxRates[String(item.id)]
+      : (item.taxRate || 0);
     
     // Tax Inclusive Math
     const lineTotal = price * qty;
@@ -348,6 +378,14 @@ export function CheckoutPage() {
     
     return total + gst;
   }, 0);
+
+  const distinctTaxRates = [...new Set(cart.map(item => {
+    return (liveTaxRates[String(item.id)] !== undefined)
+      ? liveTaxRates[String(item.id)]
+      : (item.taxRate || 0);
+  }))];
+  const taxRateLabel = distinctTaxRates.length === 1 ? `(${distinctTaxRates[0]}%)` : '(Mixed)';
+
 
   let discountAmount = 0;
   if (appliedCoupon) {
@@ -925,7 +963,7 @@ export function CheckoutPage() {
                   <span className="text-green-600 font-medium">Free</span>
                 </div>
                 <div className="flex justify-between text-secondary/70">
-                  <span>GST</span>
+                  <span>GST {taxRateLabel}</span>
                   <span>{currencySymbol}{finalGst.toFixed(2)}</span>
                 </div>
                 <div className="h-px bg-outline-variant/30 my-1" />

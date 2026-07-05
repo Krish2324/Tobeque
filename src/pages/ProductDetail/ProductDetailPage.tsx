@@ -111,7 +111,7 @@ export function ProductDetailPage() {
 
   const { addToCart, setIsCartOpen } = useCart();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated, openLoginModal } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [buttonText, setButtonText] = useState("ADD TO CART");
@@ -297,7 +297,12 @@ export function ProductDetailPage() {
     };
 
     addToCart(newItem);
-    navigate('/checkout');
+    
+    if (!isAuthenticated) {
+      openLoginModal(() => navigate('/checkout'));
+    } else {
+      navigate('/checkout');
+    }
   };
 
   // Smooth Carousel scroll handlers

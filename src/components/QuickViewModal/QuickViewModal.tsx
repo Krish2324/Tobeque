@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { type Product } from '../../data/products';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -39,6 +39,23 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
 
+  const currentImage = useMemo(() => {
+    if (!product) return '';
+    if (selectedColor && product.galleryImageObjects) {
+      const matchedImg = product.galleryImageObjects.find(
+        img => img.color && img.color.toLowerCase() === selectedColor.toLowerCase()
+      );
+      if (matchedImg) return matchedImg.url;
+    }
+    return product.imageSrc || '';
+  }, [product, selectedColor]);
+
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [currentImage]);
+
   // 3. Quantity State
   const [quantity, setQuantity] = useState<number>(1);
 
@@ -77,43 +94,50 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
         </button>
 
         {/* Left Image Section */}
-        <div className="w-full md:w-1/2 relative bg-surface-container aspect-[3/4] md:aspect-auto">
-          <div className="absolute top-4 left-4 bg-surface text-primary px-3 py-1 text-xs font-bold font-label-caps border border-outline-variant z-10">
+        <div className="w-full md:w-1/2 relative bg-surface-container aspect-[3/4] overflow-hidden">
+          <div className="absolute top-4 left-4 bg-surface text-primary px-3 py-1 text-xs font-bold font-label-caps border border-outline-variant z-20">
             NEW IN
           </div>
-          {isVideo(product.imageSrc) ? (
+
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-surface-container animate-pulse z-10" />
+          )}
+
+          {isVideo(currentImage) ? (
             <video
-              src={product.imageSrc}
-              className="w-full h-full object-cover object-top"
+              src={currentImage}
+              className={`w-full h-full object-cover object-top transition-opacity duration-500 relative z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               autoPlay loop muted playsInline
+              onLoadedData={() => setImageLoaded(true)}
             />
           ) : (
             <img
-              src={product.imageSrc}
+              src={currentImage}
               alt={product.imageAlt || product.name}
-              className="w-full h-full object-cover object-top"
+              className={`w-full h-full object-cover object-top transition-opacity duration-500 relative z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
             />
           )}
         </div>
 
         {/* Right Details Section */}
-        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto text-left">
-          <h2 className="font-headline-md text-3xl md:text-4xl text-primary pr-12">
+        <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto text-left">
+          <h2 className="font-headline-md text-2xl md:text-3xl text-primary pr-10">
             {product.name}
           </h2>
-          <p className="font-body-md font-semibold text-xl text-primary mt-3">
+          <p className="font-body-md font-semibold text-lg text-primary mt-2">
             {displayPrice}
           </p>
 
-          <div className="bg-surface-container/50 px-4 py-3 mt-6 flex items-center gap-2 text-sm text-secondary font-body-md border border-outline-variant/50">
-            <span className="material-symbols-outlined text-[18px]">visibility</span>
+          <div className="bg-surface-container/50 px-3 py-2 mt-4 flex items-center gap-2 text-xs text-secondary font-body-md border border-outline-variant/50">
+            <span className="material-symbols-outlined text-[16px]">visibility</span>
             34 people are viewing this right now
           </div>
 
           {/* Color Selection */}
           {product.detailedColors && product.detailedColors.length > 0 && (
-            <div className="mt-8">
-              <p className="font-label-caps text-xs tracking-widest text-primary mb-3 font-bold">
+            <div className="mt-5">
+              <p className="font-label-caps text-xs tracking-widest text-primary mb-2 font-bold">
                 COLOR : <span className="font-bold">{selectedColor}</span>
               </p>
               <div className="flex gap-3">
@@ -144,8 +168,8 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
           {/* Size Selection */}
           {product.sizes && product.sizes.length > 0 && (
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-3">
+            <div className="mt-5">
+              <div className="flex justify-between items-center mb-2">
                 <p className="font-label-caps text-xs tracking-widest text-primary font-bold">
                   SIZE : <span className="font-bold">{selectedSize}</span>
                 </p>
@@ -159,7 +183,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                   <button
                     key={sz}
                     onClick={() => setSelectedSize(sz)}
-                    className={`border py-3 font-label-caps text-xs transition-colors ${
+                    className={`border py-2 font-label-caps text-xs transition-colors ${
                       selectedSize === sz
                         ? 'border-primary bg-primary text-on-primary font-bold'
                         : 'border-outline-variant text-primary hover:border-primary'
@@ -173,26 +197,26 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           )}
 
           {/* Actions */}
-          <div className="mt-8 flex flex-col md:flex-row gap-4">
-            <div className="flex items-center border border-outline-variant h-14 md:w-32 shrink-0">
+          <div className="mt-6 flex flex-col md:flex-row gap-3">
+            <div className="flex items-center border border-outline-variant h-12 md:w-28 shrink-0">
               <button 
                 onClick={handleDecreaseQty}
                 className="flex-1 flex items-center justify-center text-primary hover:bg-surface-container transition-colors h-full"
               >
-                <span className="material-symbols-outlined text-[18px]">remove</span>
+                <span className="material-symbols-outlined text-[16px]">remove</span>
               </button>
               <span className="font-body-md text-sm font-semibold w-8 text-center">{quantity}</span>
               <button 
                 onClick={handleIncreaseQty}
                 className="flex-1 flex items-center justify-center text-primary hover:bg-surface-container transition-colors h-full"
               >
-                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span className="material-symbols-outlined text-[16px]">add</span>
               </button>
             </div>
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="flex-1 bg-primary text-on-primary font-label-caps text-xs tracking-widest h-14 hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-primary text-on-primary font-label-caps text-xs tracking-widest h-12 hover:bg-on-primary hover:text-primary border border-primary transition-colors font-bold disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isOutOfStock ? "OUT OF STOCK" : "ADD TO CART"}
             </button>
@@ -200,23 +224,23 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
           <button
             onClick={handleAddToCart}
-            className="w-full mt-4 bg-transparent text-primary border-2 border-primary font-label-caps text-sm tracking-widest py-4 hover:bg-primary hover:text-on-primary transition-colors font-bold"
+            className="w-full mt-3 bg-transparent text-primary border-2 border-primary font-label-caps text-xs tracking-widest py-3 hover:bg-primary hover:text-on-primary transition-colors font-bold"
           >
             BUY NOW
           </button>
 
           {/* Footer Links */}
-          <div className="mt-8 pt-6 border-t border-outline-variant flex flex-col gap-4 font-body-md text-sm text-secondary">
+          <div className="mt-5 pt-4 border-t border-outline-variant flex flex-col gap-3 font-body-md text-xs text-secondary">
             <div className="flex gap-6">
-              <a href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-[18px]">mail</span> Ask a Question
+              <a href="#" className="flex items-center gap-1 hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-[16px]">mail</span> Ask a Question
               </a>
-              <a href="#" className="flex items-center gap-2 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-[18px]">share</span> Share
+              <a href="#" className="flex items-center gap-1 hover:text-primary transition-colors">
+                <span className="material-symbols-outlined text-[16px]">share</span> Share
               </a>
             </div>
-            <p className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">local_shipping</span> Estimated Delivery: Oct 24 - Oct 28
+            <p className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">local_shipping</span> Estimated Delivery: Oct 24 - Oct 28
             </p>
           </div>
         </div>

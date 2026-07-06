@@ -13,6 +13,20 @@ import { useCurrency } from '../../context/CurrencyContext';
 import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
 import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
 
+const BASE_COLORS = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'White', hex: '#FFFFFF', border: true },
+  { name: 'Grey', hex: '#9CA3AF' },
+  { name: 'Beige', hex: '#F5F5DC', border: true },
+  { name: 'Brown', hex: '#8B4513' },
+  { name: 'Blue', hex: '#3B82F6' },
+  { name: 'Navy', hex: '#1E3A8A' },
+  { name: 'Green', hex: '#10B981' },
+  { name: 'Red', hex: '#EF4444' },
+  { name: 'Pink', hex: '#F472B6' },
+  { name: 'Yellow', hex: '#FBBF24' },
+];
+
 interface Category {
   id?: string;
   _id?: string;
@@ -31,6 +45,7 @@ export function CollectionPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid-3' | 'grid-4'>('grid-4');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
 
@@ -104,23 +119,34 @@ export function CollectionPage() {
   }, [categoriesTree, categoryParam]);
 
   // ── Products ──────────────────────────────────────────────────────────────
-  const { products: liveProducts, loading, error, total } = useProducts({
+  let sortByParam = 'createdAt';
+  let sortDirParam = 'DESC';
+  if (currentSort === 'PRICE_LOW_HIGH') {
+    sortByParam = 'price';
+    sortDirParam = 'ASC';
+  } else if (currentSort === 'PRICE_HIGH_LOW') {
+    sortByParam = 'price';
+    sortDirParam = 'DESC';
+  } else if (currentSort === 'NEWEST') {
+    sortByParam = 'createdAt';
+    sortDirParam = 'DESC';
+  }
+
+  const { products: liveProducts, loading, loadingMore, error, total, hasMore, loadMore } = useProducts({
     status: 'published',
-    limit: 40,
+    limit: 20,
     category: categoryParam || undefined,
+    sortBy: sortByParam,
+    sortDir: sortDirParam,
   });
 
-  // Extract all unique sizes and colors from loaded products dynamically
+  // Extract all unique sizes from loaded products dynamically
   const { allSizes } = useMemo(() => {
     const sizesSet = new Set<string>();
-    const colorsSet = new Set<string>();
 
     liveProducts.forEach(p => {
       if (p.sizes) {
         p.sizes.forEach(s => sizesSet.add(s));
-      }
-      if (p.detailedColors) {
-        p.detailedColors.forEach(c => colorsSet.add(c.name));
       }
     });
 
@@ -135,8 +161,7 @@ export function CollectionPage() {
     });
 
     return {
-      allSizes: sortedSizes.length > 0 ? sortedSizes : ['XS', 'S', 'M', 'L', 'XL'],
-      allColors: Array.from(colorsSet).length > 0 ? Array.from(colorsSet) : ['BLACK', 'WHITE', 'CREAM', 'OATMEAL', 'RED']
+      allSizes: sortedSizes.length > 0 ? sortedSizes : ['XS', 'S', 'M', 'L', 'XL']
     };
   }, [liveProducts]);
 
@@ -149,6 +174,30 @@ export function CollectionPage() {
       result = result.filter(p =>
         p.sizes && p.sizes.some(s => selectedSizes.includes(s))
       );
+    }
+
+    // Filter by selected colors
+    if (selectedColors.length > 0) {
+      result = result.filter(p => {
+        const pColors: string[] = [];
+        if (p.detailedColors) pColors.push(...p.detailedColors.map(c => c.name.toLowerCase()));
+        if (p.colors) pColors.push(...p.colors.map(c => c.toLowerCase()));
+
+        return selectedColors.some(selected => {
+          const s = selected.toLowerCase();
+          const matchTerms = [s];
+          if (s === 'blue') matchTerms.push('navy', 'teal', 'cyan', 'denim', 'sapphire', 'azure');
+          if (s === 'red') matchTerms.push('maroon', 'burgundy', 'wine', 'crimson', 'ruby');
+          if (s === 'green') matchTerms.push('olive', 'mint', 'emerald', 'forest', 'khaki');
+          if (s === 'white') matchTerms.push('ivory', 'cream', 'snow', 'off-white');
+          if (s === 'grey') matchTerms.push('silver', 'charcoal', 'ash', 'slate', 'gray');
+          if (s === 'brown' || s === 'beige') matchTerms.push('tan', 'chocolate', 'camel', 'beige', 'mocha', 'sand', 'oatmeal');
+          if (s === 'pink') matchTerms.push('rose', 'magenta', 'fuchsia', 'peach');
+          if (s === 'yellow') matchTerms.push('mustard', 'gold', 'lemon');
+
+          return pColors.some(pc => matchTerms.some(term => pc.includes(term)));
+        });
+      });
     }
 
     // Filter by price range
@@ -167,31 +216,8 @@ export function CollectionPage() {
       });
     }
 
-    // Sort products
-    if (currentSort === 'PRICE: LOW TO HIGH') {
-      result.sort((a, b) => {
-        const priceA = parseFloat(a.price.replace(/[^0-9.-]+/g, '')) || 0;
-        const priceB = parseFloat(b.price.replace(/[^0-9.-]+/g, '')) || 0;
-        return priceA - priceB;
-      });
-    } else if (currentSort === 'PRICE: HIGH TO LOW') {
-      result.sort((a, b) => {
-        const priceA = parseFloat(a.price.replace(/[^0-9.-]+/g, '')) || 0;
-        const priceB = parseFloat(b.price.replace(/[^0-9.-]+/g, '')) || 0;
-        return priceB - priceA;
-      });
-    } else if (currentSort === 'NEWEST') {
-      result.sort((a, b) => b.id.localeCompare(a.id));
-    } else if (currentSort === 'FEATURED') {
-      result.sort((a, b) => {
-        const featA = a.badge?.toLowerCase().includes('featured') || a.badge?.toLowerCase().includes('arrival') ? 1 : 0;
-        const featB = b.badge?.toLowerCase().includes('featured') || b.badge?.toLowerCase().includes('arrival') ? 1 : 0;
-        return featB - featA;
-      });
-    }
-
     return result;
-  }, [liveProducts, selectedSizes, minPrice, maxPrice, currentSort]);
+  }, [liveProducts, selectedSizes, selectedColors, minPrice, maxPrice]);
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
@@ -269,6 +295,19 @@ export function CollectionPage() {
               <div className="absolute right-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
                 <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroRight})` }} />
               </div>
+              {/* Loading State */}
+              {loading && !loadingMore && (
+                <div className={`grid gap-1 md:gap-1.5 transition-all w-full ${
+                  viewMode === 'list' ? 'grid-cols-1' : 
+                  viewMode === 'grid-3' ? 'grid-cols-3' : 
+                  'grid-cols-2 md:grid-cols-4'
+                }`}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={`init-skel-${i}`} className="flex flex-col gap-2 animate-pulse bg-surface-container aspect-[3/4]">
+                    </div>
+                  ))}
+                </div>
+              )}
             </>
           )}
         </section>
@@ -420,7 +459,7 @@ export function CollectionPage() {
             </div>
           )}
 
-          {!loading && !error && filteredAndSortedProducts.length === 0 && (
+          {!loading && filteredAndSortedProducts.length === 0 && (
             <div className="w-full flex flex-col items-center justify-center py-24 gap-4 text-center px-4">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant">inventory_2</span>
               <p className="font-headline-sm text-primary">No matching products found</p>
@@ -449,9 +488,12 @@ export function CollectionPage() {
                     }}
                   />
                 ))}
+                {loadingMore && Array.from({ length: 2 }).map((_, i) => (
+                  <div key={`skel-more-list-${i}`} className="w-full h-48 bg-surface-container animate-pulse rounded-sm" />
+                ))}
               </div>
             ) : viewMode === 'grid-3' ? (
-              <div className="grid grid-cols-3 gap-1 md:gap-1.5 animate-fade-in">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-1.5 animate-fade-in">
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -468,9 +510,12 @@ export function CollectionPage() {
                     }}
                   />
                 ))}
+                {loadingMore && Array.from({ length: 3 }).map((_, i) => (
+                  <div key={`skel-more-grid3-${i}`} className="flex flex-col animate-pulse bg-surface-container aspect-[3/4]" />
+                ))}
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-1 md:gap-1.5 animate-fade-in">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-1.5 animate-fade-in">
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -486,16 +531,29 @@ export function CollectionPage() {
                       setIsCartOpen(true);
                     }}
                   />
+                ))}
+                {loadingMore && Array.from({ length: 4 }).map((_, i) => (
+                  <div key={`skel-more-grid4-${i}`} className="flex flex-col animate-pulse bg-surface-container aspect-[3/4]" />
                 ))}
               </div>
             )
           )}
 
           {!loading && !error && filteredAndSortedProducts.length > 0 && (
-            <div className="w-full flex justify-center mt-6 mb-2">
-              <button className="border border-primary text-primary font-label-caps text-label-caps px-6 py-3 uppercase hover:bg-primary hover:text-on-primary transition-colors duration-300">
-                Load More Products
-              </button>
+            <div className="w-full flex flex-col mt-6 mb-2">
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="flex justify-center mt-4">
+                  <button 
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); loadMore(); }}
+                    disabled={loadingMore}
+                    className="px-10 py-3 bg-surface border-2 border-primary text-primary font-label-caps tracking-widest text-[11px] font-bold hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                  >
+                    {loadingMore ? 'LOADING...' : 'LOAD MORE PRODUCTS'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -514,10 +572,11 @@ export function CollectionPage() {
             <h2 className="font-label-caps text-[11px] tracking-widest font-bold uppercase">FILTERS</h2>
           </div>
           <div className="flex items-center gap-4">
-            {(selectedSizes.length > 0 || minPrice || maxPrice || currentSort !== 'FEATURED') && (
+            {(selectedSizes.length > 0 || selectedColors.length > 0 || minPrice || maxPrice || currentSort !== 'FEATURED') && (
               <button
                 onClick={() => {
                   setSelectedSizes([]);
+                  setSelectedColors([]);
                   setMinPrice('');
                   setMaxPrice('');
                   setCurrentSort('FEATURED');
@@ -607,6 +666,32 @@ export function CollectionPage() {
                   >
                     {size}
                   </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-label-caps text-[10px] tracking-widest text-secondary uppercase font-bold mb-4">Colors</h3>
+            <div className="flex flex-wrap gap-3">
+              {BASE_COLORS.map(color => {
+                const isSelected = selectedColors.includes(color.name);
+                return (
+                  <button
+                    key={color.name}
+                    title={color.name}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedColors(selectedColors.filter(c => c !== color.name));
+                      } else {
+                        setSelectedColors([...selectedColors, color.name]);
+                      }
+                    }}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all ${
+                      isSelected ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'
+                    } ${color.border ? 'border border-outline-variant/60' : 'border border-transparent'}`}
+                    style={{ backgroundColor: color.hex }}
+                  />
                 );
               })}
             </div>

@@ -37,14 +37,19 @@ interface UseProductsOptions {
   category?: string | number;
   isOnSaleSection?: boolean;
   isHotRightNow?: boolean;
+  sortBy?: string;
+  sortDir?: string;
 }
 
 interface UseProductsResult {
   products: Product[];
   loading: boolean;
+  loadingMore: boolean;
   error: string | null;
   total: number;
+  hasMore: boolean;
   refetch: () => void;
+  loadMore: () => void;
 }
 
 // ─── Image URL Helper ─────────────────────────────────────────────────────────
@@ -194,58 +199,96 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
     status = 'published',
     featured,
     limit = 20,
-    page = 1,
+    page: initialPage = 1,
     category,
     isOnSaleSection,
     isHotRightNow,
+    sortBy,
+    sortDir,
   } = options;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(initialPage);
   const { currencySymbol } = useCurrency();
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async (isLoadMore = false, currentPage = 1) => {
+    if (isLoadMore) setLoadingMore(true);
+    else setLoading(true);
+    
     setError(null);
     try {
       const params: Record<string, string | number | boolean> = {
         status,
         limit,
-        page,
+        page: currentPage,
       };
       if (featured !== undefined) params.featured = featured;
       if (category !== undefined) params.category = category;
       if (isOnSaleSection !== undefined) params.isOnSaleSection = isOnSaleSection;
       if (isHotRightNow !== undefined) params.isHotRightNow = isHotRightNow;
+      if (sortBy !== undefined) params.sortBy = sortBy;
+      if (sortDir !== undefined) params.sortDir = sortDir;
 
       const response = await api.get('/api/products', { params });
       const data = response.data;
 
       if (data.success && data.data?.products) {
         const mapped = (data.data.products as BackendProduct[]).map((bp) => mapBackendProduct(bp, currencySymbol));
-        setProducts(mapped);
-        setTotal(data.data.pagination?.total ?? mapped.length);
+        if (isLoadMore) {
+          setProducts(prev => {
+            // Deduplicate products by id
+            const newProducts = [...prev];
+            mapped.forEach(m => {
+              if (!newProducts.find(p => p.id === m.id)) {
+                newProducts.push(m);
+              }
+            });
+            return newProducts;
+          });
+        } else {
+          setProducts(mapped);
+        }
+        setTotal(data.data.pagination?.total ?? (isLoadMore ? products.length + mapped.length : mapped.length));
       } else {
-        setProducts([]);
-        setTotal(0);
+        if (!isLoadMore) {
+          setProducts([]);
+          setTotal(0);
+        }
       }
     } catch (err: unknown) {
       console.error('[useProducts] Failed to fetch products:', err);
       setError('Could not load products. Make sure the backend is running.');
-      setProducts([]);
-      setTotal(0);
+      if (!isLoadMore) {
+        setProducts([]);
+        setTotal(0);
+      }
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [status, featured, limit, page, category, isOnSaleSection, isHotRightNow, currencySymbol]);
+  }, [status, featured, limit, category, isOnSaleSection, isHotRightNow, sortBy, sortDir, currencySymbol]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    setPage(1);
+    fetchProducts(false, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, featured, limit, category, isOnSaleSection, isHotRightNow, sortBy, sortDir, currencySymbol]);
 
-  return { products, loading, error, total, refetch: fetchProducts };
+  const loadMore = useCallback(() => {
+    if (products.length < total) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchProducts(true, nextPage);
+    }
+  }, [products.length, total, page, fetchProducts]);
+
+  const hasMore = products.length < total;
+
+  return { products, loading, loadingMore, error, total, hasMore, refetch: () => fetchProducts(false, 1), loadMore };
 }
 
 // ─── Single Product Hook ──────────────────────────────────────────────────────

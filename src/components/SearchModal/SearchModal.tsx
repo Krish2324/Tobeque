@@ -9,8 +9,11 @@ export interface SearchModalProps {
 
 const isVideo = (url: string | undefined) => url && typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i);
 
+import { useNavigate } from "react-router-dom";
+
 export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalProps) {
   const { currencySymbol } = useCurrency();
+  const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,11 +103,8 @@ export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalPro
                   <button
                     key={product.id}
                     onClick={() => {
-                      if (onProductSelect) {
-                        onProductSelect(product);
-                      } else {
-                        onClose();
-                      }
+                      onClose();
+                      navigate(`/product/${product.id}`);
                     }}
                     className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                   >

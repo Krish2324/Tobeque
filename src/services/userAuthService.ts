@@ -146,3 +146,47 @@ export const validateCouponAPI = async (code: string, cartTotal?: number) => {
   if (!data.success) throw new Error(data.error || 'Invalid coupon code');
   return data.coupon;
 };
+
+export const getRazorpayConfig = async () => {
+  const res = await fetch(`${API_BASE}/razorpay/config`);
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to fetch Razorpay config');
+  return data.key;
+};
+
+export const createRazorpayOrder = async (
+  token: string,
+  orderData: {
+    items: Array<{ productId: string | number; price: number | string; quantity: number; variantDetails?: any }>;
+    couponCode?: string;
+  }
+) => {
+  const res = await fetch(`${API_BASE}/razorpay/create-order`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(orderData)
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Failed to initialize payment');
+  return data;
+};
+
+export const verifyRazorpayPayment = async (
+  token: string,
+  verifyData: any
+) => {
+  const res = await fetch(`${API_BASE}/razorpay/verify`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(verifyData)
+  });
+  const data = await res.json();
+  if (!data.success) throw new Error(data.error || 'Payment verification failed');
+  return data;
+};

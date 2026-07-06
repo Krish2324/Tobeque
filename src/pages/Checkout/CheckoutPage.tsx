@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { createOrder, validateCouponAPI } from '../../services/userAuthService';
+import { createOrder, validateCouponAPI, getRazorpayConfig, createRazorpayOrder, verifyRazorpayPayment } from '../../services/userAuthService';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -160,6 +160,17 @@ export function CheckoutPage() {
     removeCoupon,
   } = useCart();
   const { isAuthenticated, openLoginModal, user, token } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   /* ─── Fetch fresh taxRates from the API to avoid stale cart data ─── */
   const [liveTaxRates, setLiveTaxRates] = useState<Record<string, number>>({});
@@ -470,25 +481,89 @@ export function CheckoutPage() {
         };
       });
 
-      await createOrder(token, {
-        customerName: billingName,
-        customerPhone: billingPhone,
-        shippingAddress: shippingAddressObj,
-        billingAddress: billingAddressObj,
-        items,
-        couponCode: appliedCoupon?.code,
-        paymentMethod: 'cod',
-        notes: orderNotes,
-      });
+      if (paymentMethod === 'cod') {
+        await createOrder(token, {
+          customerName: billingName,
+          customerPhone: billingPhone,
+          shippingAddress: shippingAddressObj,
+          billingAddress: billingAddressObj,
+          items,
+          couponCode: appliedCoupon?.code,
+          paymentMethod: 'cod',
+          notes: orderNotes,
+        });
 
-      setIsSubmittingOrder(false);
-      setCheckoutSuccess(true);
+        setIsSubmittingOrder(false);
+        setCheckoutSuccess(true);
+        setTimeout(() => {
+          clearCart();
+          setCheckoutSuccess(false);
+          navigate('/');
+        }, 3500);
+      } else {
+        const keyId = await getRazorpayConfig();
+        const rpOrder = await createRazorpayOrder(token, {
+          items,
+          couponCode: appliedCoupon?.code,
+        });
 
-      setTimeout(() => {
-        clearCart();
-        setCheckoutSuccess(false);
-        navigate('/');
-      }, 3500);
+        const options = {
+          key: keyId,
+          amount: rpOrder.amount,
+          currency: rpOrder.currency,
+          name: "Tobeque",
+          description: "Order Payment",
+          order_id: rpOrder.orderId,
+          handler: async function (response: any) {
+            try {
+              setIsSubmittingOrder(true);
+              await verifyRazorpayPayment(token, {
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                customerName: billingName,
+                customerPhone: billingPhone,
+                shippingAddress: shippingAddressObj,
+                billingAddress: billingAddressObj,
+                items,
+                couponCode: appliedCoupon?.code,
+                notes: orderNotes,
+              });
+
+              setIsSubmittingOrder(false);
+              setCheckoutSuccess(true);
+              setTimeout(() => {
+                clearCart();
+                setCheckoutSuccess(false);
+                navigate('/');
+              }, 3500);
+            } catch (err: any) {
+              setIsSubmittingOrder(false);
+              setErrorMessage(err.message || 'Payment verification failed.');
+            }
+          },
+          prefill: {
+            name: billingName,
+            email: billingEmail,
+            contact: billingPhone,
+          },
+          theme: {
+            color: "#1A1A1A",
+          },
+          modal: {
+            ondismiss: function() {
+              setIsSubmittingOrder(false);
+            }
+          }
+        };
+
+        const rzp1 = new (window as any).Razorpay(options);
+        rzp1.on('payment.failed', function (response: any) {
+          setIsSubmittingOrder(false);
+          setErrorMessage('Payment failed. ' + response.error.description);
+        });
+        rzp1.open();
+      }
     } catch (error: any) {
       setIsSubmittingOrder(false);
       setErrorMessage(error.message || 'An error occurred while placing the order.');
@@ -979,15 +1054,34 @@ export function CheckoutPage() {
               {/* Payment */}
               <div>
                 <SectionLabel>Payment Method</SectionLabel>
-                <div className="flex items-center gap-3 bg-white border border-outline-variant/50 rounded-xl px-4 py-3">
-                  <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center shrink-0">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-primary">Cash on Delivery</p>
-                    <p className="text-[10px] text-secondary/50">Pay when your order arrives</p>
-                  </div>
-                  <span className="material-symbols-outlined text-[20px] text-secondary/30 ml-auto">local_shipping</span>
+                <div className="flex flex-col gap-3">
+                  <label 
+                    className={`flex items-center gap-3 bg-white border ${paymentMethod === 'online' ? 'border-primary' : 'border-outline-variant/50'} rounded-xl px-4 py-3 cursor-pointer transition-colors`}
+                    onClick={() => setPaymentMethod('online')}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 ${paymentMethod === 'online' ? 'border-primary' : 'border-secondary/40'} flex items-center justify-center shrink-0 transition-colors`}>
+                      {paymentMethod === 'online' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-primary">Pay Online (Razorpay)</p>
+                      <p className="text-[10px] text-secondary/50">Credit/Debit Card, UPI, NetBanking</p>
+                    </div>
+                    <span className="material-symbols-outlined text-[20px] text-secondary/30 ml-auto">credit_card</span>
+                  </label>
+
+                  <label 
+                    className={`flex items-center gap-3 bg-white border ${paymentMethod === 'cod' ? 'border-primary' : 'border-outline-variant/50'} rounded-xl px-4 py-3 cursor-pointer transition-colors`}
+                    onClick={() => setPaymentMethod('cod')}
+                  >
+                    <div className={`w-4 h-4 rounded-full border-2 ${paymentMethod === 'cod' ? 'border-primary' : 'border-secondary/40'} flex items-center justify-center shrink-0 transition-colors`}>
+                      {paymentMethod === 'cod' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-primary">Cash on Delivery</p>
+                      <p className="text-[10px] text-secondary/50">Pay when your order arrives</p>
+                    </div>
+                    <span className="material-symbols-outlined text-[20px] text-secondary/30 ml-auto">local_shipping</span>
+                  </label>
                 </div>
               </div>
 

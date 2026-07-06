@@ -11,7 +11,7 @@ const isVideo = (url: string | undefined) => url && typeof url === 'string' && u
 
 import { useNavigate } from "react-router-dom";
 
-export function SearchModal({ isOpen, onClose, onProductSelect }: SearchModalProps) {
+export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { currencySymbol } = useCurrency();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");

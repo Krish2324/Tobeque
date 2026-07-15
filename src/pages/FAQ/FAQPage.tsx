@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Footer } from "../../components/Footer/Footer";
 import { Navbar } from "../../components/Navbar/Navbar";
+import api from "../../services/api";
 
 interface FAQItem {
   _id: string;
@@ -16,12 +17,13 @@ export function FAQPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/faqs")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setFaqs(data.faqs);
+    api.get("/api/faqs")
+      .then((res) => {
+        if (res.data.success) setFaqs(res.data.faqs);
       })
-      .catch(() => {})
+      .catch((err) => {
+        console.error("Failed to load FAQs", err);
+      })
       .finally(() => setLoading(false));
   }, []);
 

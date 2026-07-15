@@ -1,33 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Footer } from "../../components/Footer/Footer";
 import { Navbar } from "../../components/Navbar/Navbar";
 import { useAuth } from "../../context/AuthContext";
-
-const jobOpenings = [
-  {
-    id: 1,
-    title: "Digital Marketing Executive",
-    location: "Gurgaon",
-    type: "Full-Time",
-    department: "Marketing",
-    description:
-      "We are looking for a creative and data-driven Digital Marketing Executive to help us grow our online presence, manage campaigns, and engage with our community across social media platforms.",
-    responsibilities: [
-      "Plan and execute digital marketing campaigns across social media, email, and search",
-      "Manage and grow social media accounts (Instagram, Facebook, Pinterest)",
-      "Create compelling content that resonates with our teen audience",
-      "Analyze campaign performance and report key metrics",
-      "Collaborate with the design team for creative assets",
-    ],
-    requirements: [
-      "1-3 years of experience in digital marketing",
-      "Proficiency in social media platforms and analytics tools",
-      "Excellent written communication skills",
-      "Knowledge of SEO/SEM and Google Analytics",
-      "Passion for fashion and youth culture",
-    ],
-  },
-];
+import api from "../../services/api";
 
 interface ApplicationForm {
   fullName: string;
@@ -293,13 +268,29 @@ function ApplyModal({ jobTitle, onClose }: ApplyModalProps) {
 }
 
 export function CareerPage() {
-  const [expandedJob, setExpandedJob] = useState<number | null>(null);
+  const [jobOpenings, setJobOpenings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState("All Job Type");
   const [locationFilter, setLocationFilter] = useState("All Job Location");
   const [applyingForJob, setApplyingForJob] = useState<string | null>(null);
 
-  const jobTypes = ["All Job Type", "Full-Time", "Part-Time", "Internship"];
-  const locations = ["All Job Location", "Gurgaon", "Delhi", "Remote"];
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        const response = await api.get('/api/job-postings/public');
+        setJobOpenings(response.data.data);
+      } catch (error) {
+        console.error("Failed to load job postings", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
+
+  const jobTypes = ["All Job Type", "Full-time", "Part-time", "Contract", "Internship"];
+  const locations = ["All Job Location", ...Array.from(new Set(jobOpenings.map(j => j.location)))];
 
   const filtered = jobOpenings.filter((job) => {
     const typeMatch = typeFilter === "All Job Type" || job.type === typeFilter;
@@ -323,6 +314,12 @@ export function CareerPage() {
         <h1 className="text-3xl font-semibold text-primary mb-8 tracking-tight">
           Job Openings
         </h1>
+
+        {loading && (
+          <div className="flex justify-center py-10">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex gap-3 mb-8 flex-wrap">
@@ -415,29 +412,13 @@ export function CareerPage() {
                     {job.description}
                   </p>
 
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <h3 className="text-[12px] font-bold uppercase tracking-widest text-primary mb-3">
-                        Responsibilities
-                      </h3>
-                      <ul className="space-y-2">
-                        {job.responsibilities.map((r, i) => (
-                          <li
-                            key={i}
-                            className="text-[13px] text-secondary flex gap-2"
-                          >
-                            <span className="text-primary mt-0.5">–</span>
-                            {r}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="grid md:grid-cols-1 gap-8">
                     <div>
                       <h3 className="text-[12px] font-bold uppercase tracking-widest text-primary mb-3">
                         Requirements
                       </h3>
                       <ul className="space-y-2">
-                        {job.requirements.map((r, i) => (
+                        {job.requirements && job.requirements.map((r: string, i: number) => (
                           <li
                             key={i}
                             className="text-[13px] text-secondary flex gap-2"

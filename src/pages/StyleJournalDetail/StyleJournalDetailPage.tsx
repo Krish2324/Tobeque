@@ -1,7 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
-import { journalEntries } from "../../data/journalData";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 
@@ -13,16 +12,39 @@ interface Category {
 
 export function StyleJournalDetailPage() {
   const { id } = useParams();
-  const [post, setPost] = useState(journalEntries[0]);
+  const [post, setPost] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
   
   useEffect(() => {
-    if (id) {
-      const foundPost = journalEntries.find((entry) => entry.id === Number(id));
-      if (foundPost) {
-        setPost(foundPost);
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/api/blogs/${id}`);
+        setPost(res.data.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
+    };
+    
+    if (id) {
+      fetchPost();
     }
+  }, [id]);
+
+  // Fetch recent posts
+  useEffect(() => {
+    api.get('/api/blogs?status=published')
+      .then(res => {
+        if (res.data.success && Array.isArray(res.data.data)) {
+          const all = res.data.data;
+          setRecentPosts(all.filter((p: any) => p._id !== id && p.slug !== id).slice(0, 3));
+        }
+      })
+      .catch(() => {});
   }, [id]);
 
   useEffect(() => {
@@ -35,17 +57,28 @@ export function StyleJournalDetailPage() {
       .catch(() => {});
   }, []);
 
-  if (!post) {
-    return <div>Post not found</div>;
+  if (loading) {
+    return (
+      <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
-  // Get recent posts (excluding current)
-  const recentPosts = journalEntries.filter(p => p.id !== post.id).slice(0, 3);
-  
-  // Get prev and next posts
-  const currentIndex = journalEntries.findIndex(p => p.id === post.id);
-  const prevPost = currentIndex > 0 ? journalEntries[currentIndex - 1] : null;
-  const nextPost = currentIndex < journalEntries.length - 1 ? journalEntries[currentIndex + 1] : null;
+  if (!post) {
+    return (
+      <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold mb-4">Post not found</h2>
+          <Link to="/style-journal" className="text-primary hover:underline">Back to Journal</Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Not implemented next/prev for dynamic yet, can be added later
+  const prevPost: any = null;
+  const nextPost: any = null;
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary selection:text-on-primary">
@@ -57,13 +90,13 @@ export function StyleJournalDetailPage() {
           {/* Post Header */}
           <div className="text-center mb-12">
             <span className="text-[10px] tracking-[0.2em] font-bold text-primary uppercase mb-4 block">
-              {post.tag}
+              Editorial
             </span>
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-primary leading-tight mb-6 max-w-4xl mx-auto">
               {post.title}
             </h1>
             <p className="text-secondary font-body-md text-sm">
-              By <span className="text-primary font-medium">{post.author}</span> on {post.date}
+              By <span className="text-primary font-medium">{post.author || 'Admin'}</span> on {new Date(post.createdAt).toLocaleDateString()}
             </p>
           </div>
 
@@ -81,11 +114,10 @@ export function StyleJournalDetailPage() {
                 </div>
               )}
               
-              <div className="prose prose-lg prose-neutral max-w-none prose-headings:font-display prose-headings:font-medium prose-p:text-secondary prose-p:leading-relaxed prose-a:text-primary">
-                {post.content.map((paragraph, idx) => (
-                  <p key={idx} className="mb-6">{paragraph}</p>
-                ))}
-              </div>
+              <div 
+                className="prose prose-lg prose-neutral max-w-none prose-headings:font-display prose-headings:font-medium prose-p:text-secondary prose-p:leading-relaxed prose-a:text-primary"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
             </div>
 
             {/* Sidebar */}
@@ -126,14 +158,14 @@ export function StyleJournalDetailPage() {
                   <h3 className="font-display text-xl font-medium text-primary mb-6">Recent Posts</h3>
                   <div className="space-y-6">
                     {recentPosts.map((recentPost) => (
-                      <Link to={`/style-journal/${recentPost.id}`} key={recentPost.id} className="flex items-start gap-4 group cursor-pointer">
+                      <Link to={`/style-journal/${recentPost.slug}`} key={recentPost._id} className="flex items-start gap-4 group cursor-pointer">
                         {recentPost.image ? (
                           <img src={recentPost.image} alt={recentPost.title} className="w-16 h-16 object-cover rounded-sm bg-surface-container" />
                         ) : (
                           <div className="w-16 h-16 bg-surface-container rounded-sm flex items-center justify-center text-[10px] text-outline-variant">No Img</div>
                         )}
                         <div className="flex-1">
-                          <span className="text-[9px] tracking-[0.1em] font-bold text-secondary uppercase block mb-1">{recentPost.tag}</span>
+                          <span className="text-[9px] tracking-[0.1em] font-bold text-secondary uppercase block mb-1">Editorial</span>
                           <h4 className="font-display text-sm font-medium text-primary leading-tight group-hover:underline underline-offset-2">{recentPost.title}</h4>
                         </div>
                       </Link>
@@ -141,16 +173,8 @@ export function StyleJournalDetailPage() {
                   </div>
                 </div>
 
-                {/* Tags */}
                 <div>
-                  <h3 className="font-display text-xl font-medium text-primary mb-6">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tag) => (
-                      <span key={tag} className="px-3 py-1 bg-surface-container-low text-secondary text-xs rounded-full hover:bg-primary hover:text-on-primary transition-colors cursor-pointer">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Tags functionality could be added later */}
                 </div>
 
               </div>

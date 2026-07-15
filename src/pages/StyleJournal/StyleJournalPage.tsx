@@ -1,11 +1,37 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
 import { Footer } from "../../components/Footer/Footer";
-import { journalEntries } from "../../data/journalData";
+import api from "../../services/api";
 
 export function StyleJournalPage() {
-  const featuredArticle = journalEntries.find(e => e.isFeatured);
-  const gridArticles = journalEntries.filter(e => !e.isFeatured);
+  const [blogs, setBlogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await api.get('/api/blogs?status=published');
+        setBlogs(response.data.data);
+      } catch (err) {
+        console.error("Failed to fetch blogs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBlogs();
+  }, []);
+
+  const featuredArticle = blogs.length > 0 ? blogs[0] : null;
+  const gridArticles = blogs.length > 1 ? blogs.slice(1) : [];
+
+  if (loading) {
+    return (
+      <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary selection:text-on-primary">
@@ -38,10 +64,10 @@ export function StyleJournalPage() {
                 <div className="w-full lg:w-[45%] flex flex-col justify-center px-4 lg:px-10 z-10 lg:-ml-32 lg:bg-white/95 lg:backdrop-blur-xl lg:py-16 lg:px-12 lg:shadow-2xl transition-transform duration-1000 ease-out group-hover:-translate-y-2">
                   <div className="flex items-center gap-4 mb-6">
                     <span className="text-[10px] tracking-[0.2em] font-bold text-primary uppercase relative before:content-[''] before:absolute before:-bottom-1.5 before:left-0 before:w-0 before:h-px before:bg-primary before:transition-all before:duration-700 group-hover:before:w-full">
-                      {featuredArticle.tag}
+                      Editorial
                     </span>
                     <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
-                    <span className="text-[9px] tracking-widest text-secondary uppercase font-medium">{featuredArticle.readTime}</span>
+                    <span className="text-[9px] tracking-widest text-secondary uppercase font-medium">{new Date(featuredArticle.createdAt).toLocaleDateString()}</span>
                   </div>
                   <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-primary leading-tight mb-8">
                     {featuredArticle.title}
@@ -65,7 +91,7 @@ export function StyleJournalPage() {
             {gridArticles.map((entry) => (
               <Link to={`/style-journal/${entry.id}`} key={entry.id} className="break-inside-avoid flex flex-col group cursor-pointer animate-fade-in relative block">
                 <article>
-                  {entry.order === "image-first" && entry.image && (
+                  {entry.image && (
                     <div className="mb-8 overflow-hidden bg-surface-container rounded-sm shadow-md">
                       <img src={entry.image} alt={entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
                     </div>
@@ -74,21 +100,15 @@ export function StyleJournalPage() {
                   <div className="flex flex-col gap-4 px-1 relative z-10">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[9px] tracking-[0.2em] font-bold text-secondary uppercase transition-colors duration-300 group-hover:text-primary">
-                        {entry.tag}
+                        Article
                       </span>
-                      <span className="text-[9px] tracking-widest text-secondary/50 uppercase">{entry.readTime}</span>
+                      <span className="text-[9px] tracking-widest text-secondary/50 uppercase">{new Date(entry.createdAt).toLocaleDateString()}</span>
                     </div>
                     
                     <h3 className="font-display text-xl md:text-2xl lg:text-[1.75rem] font-medium text-primary leading-[1.3] group-hover:text-black transition-colors duration-300 pr-2 decoration-[1.5px] underline-offset-4 group-hover:underline">
                       {entry.title}
                     </h3>
                   </div>
-
-                  {entry.order === "title-first" && entry.image && (
-                    <div className="mt-8 overflow-hidden bg-surface-container rounded-sm shadow-md">
-                      <img src={entry.image} alt={entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
-                    </div>
-                  )}
                   
                   {/* Thin, elegant divider line */}
                   <div className="absolute -bottom-8 md:-bottom-12 left-0 w-full h-px bg-outline-variant/40 scale-x-0 group-hover:scale-x-100 transition-transform duration-[1.5s] origin-left" />

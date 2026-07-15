@@ -1,115 +1,128 @@
-
+import { useState, useEffect } from "react";
 import { Footer } from "../../components/Footer/Footer";
 import { Navbar } from "../../components/Navbar/Navbar";
-
-
-
-import heroBanner from "../../assets/images/hero-spring-edit.jpg";
-import productSheerTop from "../../assets/images/product-sheer-top-1.jpg";
-import productDenim from "../../assets/images/product-denim-1.jpg";
-import campaignBanner from "../../assets/images/campaign-banner.jpg";
+import api from "../../services/api";
 
 export function AboutPage() {
+  const [pageData, setPageData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPage = async () => {
+      try {
+        const response = await api.get('/api/about-us');
+        setPageData(response.data.data);
+      } catch (error) {
+        console.error("Failed to load about us content", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPage();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-background min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!pageData) {
+    return (
+      <div className="bg-background text-on-background min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-semibold text-primary mb-4">Content not found</h2>
+            <p className="text-secondary">This page is currently being updated. Please check back later.</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
-      {/* TopNavBar */}
+    <div className="bg-background text-on-background font-body-md antialiased overflow-x-hidden min-h-screen flex flex-col">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative w-full h-[55vh] md:h-[65vh] flex items-center justify-center bg-surface-container">
-        <img src={heroBanner} alt="Tobeque About Us" className="absolute inset-0 w-full h-full object-cover object-center" />
-        <div className="absolute inset-0 bg-black/30" />
-        <div className="relative z-10 text-center px-4 pt-16">
-          <h1 className="font-display-lg text-[3rem] md:text-[5rem] text-on-primary mb-4 drop-shadow-sm uppercase tracking-widest">
-            About Us
-          </h1>
-          <p className="font-body-lg text-body-lg text-on-primary/90 max-w-2xl mx-auto tracking-wide">
-            Confidence is the best outfit. Tobeque just completes it.
-          </p>
-        </div>
-      </section>
+      <main className="flex-1 pt-16 w-full">
+        {/* Hero Section */}
+        <section className="bg-surface-container-low py-10 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-semibold text-primary mb-6 tracking-tight">
+              {pageData.heroTitle}
+            </h1>
+            <p className="text-lg md:text-xl text-secondary max-w-2xl mx-auto leading-relaxed">
+              {pageData.heroSubtitle}
+            </p>
+          </div>
+        </section>
 
-      {/* Intro section */}
-      <section className="w-full max-w-4xl mx-auto px-6 pt-8 pb-10 md:pt-10 md:pb-14 text-center">
-        <h2 className="font-display-md text-display-md text-primary mb-6">
-          We Are Tobeque
-        </h2>
-        <h3 className="font-headline-md text-headline-md text-secondary mb-10 tracking-wide">
-          Luxury Teen Wear Designed for the New Generation
-        </h3>
-        <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-3xl mx-auto">
-          Tobeque is more than just clothing—it's a brand that grows with you. Our designs evolve with changing styles, personalities, and moments, while always staying rooted in comfort and quality. Every piece is styled to help you feel confident, expressive, and ready to shine, no matter where your journey takes you.
-        </p>
-      </section>
-
-      {/* Structured Sections */}
-      {/* 1. Our Craft */}
-      <section className="w-full flex flex-col md:flex-row items-stretch bg-[#FAF9F6]">
-        <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[70vh] relative overflow-hidden">
-          <img src={productSheerTop} className="w-full h-full object-cover" alt="Our Craft - Premium Comfort" />
-        </div>
-        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">Our Craft</span>
-          <h2 className="font-display-sm text-display-sm text-primary mb-8">Premium Comfort, Everyday Wear</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">
-            Tobeque outfits are crafted with high-quality, skin-friendly fabrics that feel soft, breathable, and comfortable all day long. Designed especially for teenage girls, each piece balances premium finishing with easy movement—so you can stay confident, stylish, and comfortable whether it's a school day, a casual outing, or a special moment.
-          </p>
-          <div className="grid grid-cols-1 gap-6">
-            <div className="flex items-start gap-5">
-              <span className="material-symbols-outlined text-3xl text-secondary mt-1">cloud</span>
+        {/* Mission & Image Section */}
+        <section className="py-20 px-6 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              {pageData.missionImage ? (
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-surface-container">
+                  <img 
+                    src={pageData.missionImage.startsWith('http') ? pageData.missionImage : `http://localhost:5000${pageData.missionImage}`} 
+                    alt="Our Mission" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-surface-container flex items-center justify-center">
+                  <span className="text-outline-variant">No Image Provided</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="order-1 lg:order-2 space-y-12">
               <div>
-                <h4 className="font-headline-sm text-primary mb-2">Premium-Quality Fabrics</h4>
-                <p className="font-body-sm text-on-surface-variant leading-relaxed">Soft, breathable materials that feel comfortable all day and last longer.</p>
+                <h2 className="font-display text-2xl md:text-3xl font-semibold text-primary mb-4">Our Mission</h2>
+                <p className="text-secondary leading-relaxed text-lg">
+                  {pageData.missionStatement}
+                </p>
+              </div>
+              
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl font-semibold text-primary mb-4">Our Vision</h2>
+                <p className="text-secondary leading-relaxed text-lg">
+                  {pageData.visionStatement}
+                </p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 2. The TOBEQUE Woman */}
-      <section className="w-full flex flex-col-reverse md:flex-row items-stretch bg-white">
-        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">The TOBEQUE Woman</span>
-          <h2 className="font-display-sm text-display-sm text-primary mb-8">Trend-Forward Designs for Growing Confidence</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">
-            Every Tobeque design is inspired by the latest fashion trends while keeping comfort and age-appropriate styling at its core. Our thoughtfully tailored silhouettes and modern details help teenage girls express their individuality with confidence—making every outfit feel stylish, empowering, and effortlessly cool.
-          </p>
-          <div className="grid grid-cols-1 gap-8">
-            <div className="flex items-start gap-5">
-              <span className="material-symbols-outlined text-3xl text-secondary mt-1">eco</span>
-              <div>
-                <h4 className="font-headline-sm text-primary mb-2">Teen-Perfect Fit</h4>
-                <p className="font-body-sm text-on-surface-variant leading-relaxed">Designed to move with you, offering comfort without compromising style.</p>
+        {/* Stats Section */}
+        {pageData.stats && pageData.stats.length > 0 && (
+          <section className="bg-primary text-on-primary py-16 px-6">
+            <div className="max-w-6xl mx-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-on-primary/20">
+                {pageData.stats.map((stat: any, idx: number) => (
+                  <div key={idx} className="text-center px-4">
+                    <div className="font-display text-4xl md:text-5xl font-bold mb-2">{stat.value}</div>
+                    <div className="text-sm uppercase tracking-widest text-on-primary/80 font-medium">{stat.label}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex items-start gap-5">
-              <span className="material-symbols-outlined text-3xl text-secondary mt-1">schedule</span>
-              <div>
-                <h4 className="font-headline-sm text-primary mb-2">Trend-Led Styling</h4>
-                <p className="font-body-sm text-on-surface-variant leading-relaxed">Modern designs inspired by global trends, made age-appropriate for teens.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[70vh] relative overflow-hidden">
-          <img src={productDenim} className="w-full h-full object-cover" alt="The Tobeque Woman - Trend-Forward Designs" />
-        </div>
-      </section>
+          </section>
+        )}
 
-      {/* 3. Sustainability */}
-      <section className="w-full flex flex-col md:flex-row items-stretch bg-[#FAF9F6]">
-        <div className="w-full md:w-1/2 aspect-square md:aspect-auto md:min-h-[70vh] relative overflow-hidden">
-          <img src={campaignBanner} className="w-full h-full object-cover" alt="Sustainability - Made to grow with you" />
-        </div>
-        <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
-          <span className="font-label-caps text-label-caps text-secondary uppercase tracking-[0.3em] mb-6">Sustainability</span>
-          <h2 className="font-display-sm text-display-sm text-primary mb-8">Made to grow with you, styled to shine with confidence.</h2>
-          <p className="font-body-md text-body-md text-on-surface-variant mb-10 leading-relaxed">
-            We believe in creating pieces that are not only beautiful but also responsible. By focusing on premium-quality, long-lasting fabrics and timeless designs, we ensure our garments remain a cherished part of your wardrobe season after season. It’s our commitment to quality that transcends fast fashion, offering sustainable luxury for the new generation.
+        {/* Our Story Section */}
+        <section className="py-24 px-6 max-w-3xl mx-auto text-center">
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary mb-8">Our Story</h2>
+          <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
+            {pageData.ourStoryText}
           </p>
-        </div>
-      </section>
+        </section>
+
+      </main>
 
       <Footer />
     </div>

@@ -159,7 +159,7 @@ export function CheckoutPage() {
     applyCoupon,
     removeCoupon,
   } = useCart();
-  const { isAuthenticated, openLoginModal, user, token } = useAuth();
+  const { isAuthenticated, openLoginModal, logout, user, token } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
 
   useEffect(() => {
@@ -566,14 +566,57 @@ export function CheckoutPage() {
       }
     } catch (error: any) {
       setIsSubmittingOrder(false);
-      setErrorMessage(error.message || 'An error occurred while placing the order.');
+      
+      const errMsg = error.message || '';
+      if (errMsg.includes('token failed or expired') || errMsg.includes('Not authorized')) {
+        setErrorMessage('Your session has expired. Please log in again.');
+        logout();
+      } else {
+        setErrorMessage(errMsg || 'An error occurred while placing the order.');
+      }
     }
   };
 
 
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated) {
+    const isExpired = errorMessage && errorMessage.includes('expired');
+    
+    return (
+      <div className="bg-background min-h-screen text-on-background font-body-md antialiased flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+          
+          {isExpired && (
+            <div className="mb-6 px-5 py-3 bg-red-50 border border-red-200 text-red-600 text-sm font-bold rounded-xl flex items-center gap-2 shadow-sm animate-in slide-in-from-top-4">
+              <span className="material-symbols-outlined text-[20px]">warning</span>
+              {errorMessage}
+            </div>
+          )}
 
+          <div className="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-6 text-primary shadow-sm border border-outline-variant/30">
+            <span className="material-symbols-outlined text-[40px]">lock_person</span>
+          </div>
+          <h2 className="font-headline-md text-2xl text-primary mb-3 font-bold tracking-tight">
+            {isExpired ? 'Session Expired' : 'Login Required'}
+          </h2>
+          <p className="text-sm text-secondary/70 max-w-sm leading-relaxed mb-8">
+            {isExpired 
+              ? 'Please log in again to continue placing your order securely.' 
+              : 'Please log in or create an account to proceed with your secure checkout.'}
+          </p>
+          <button
+            onClick={() => openLoginModal()}
+            className="px-8 h-12 bg-primary text-on-primary text-[11px] font-bold tracking-[0.15em] uppercase rounded-full hover:bg-neutral-800 transition-all shadow-md hover:shadow-lg cursor-pointer flex items-center justify-center gap-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">login</span>
+            Login / Sign Up
+          </button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
   /* ────────────────────────────────────────────────────────────────
      JSX
   ──────────────────────────────────────────────────────────────── */
@@ -1103,7 +1146,7 @@ export function CheckoutPage() {
                   </>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-[18px]">lock</span>
+                    <span className="material-symbols-outlined text-[18px]">verified_user</span>
                     Place Order
                   </>
                 )}

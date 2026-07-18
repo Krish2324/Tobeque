@@ -121,10 +121,10 @@ export function CollectionPage() {
   // ── Products ──────────────────────────────────────────────────────────────
   let sortByParam = 'createdAt';
   let sortDirParam = 'DESC';
-  if (currentSort === 'PRICE_LOW_HIGH') {
+  if (currentSort === 'PRICE: LOW TO HIGH') {
     sortByParam = 'price';
     sortDirParam = 'ASC';
-  } else if (currentSort === 'PRICE_HIGH_LOW') {
+  } else if (currentSort === 'PRICE: HIGH TO LOW') {
     sortByParam = 'price';
     sortDirParam = 'DESC';
   } else if (currentSort === 'NEWEST') {
@@ -572,20 +572,6 @@ export function CollectionPage() {
             <h2 className="font-label-caps text-[11px] tracking-widest font-bold uppercase">FILTERS</h2>
           </div>
           <div className="flex items-center gap-4">
-            {(selectedSizes.length > 0 || selectedColors.length > 0 || minPrice || maxPrice || currentSort !== 'FEATURED') && (
-              <button
-                onClick={() => {
-                  setSelectedSizes([]);
-                  setSelectedColors([]);
-                  setMinPrice('');
-                  setMaxPrice('');
-                  setCurrentSort('FEATURED');
-                }}
-                className="text-[9px] tracking-widest text-secondary hover:text-primary transition-colors font-label-caps font-bold cursor-pointer"
-              >
-                CLEAR ALL
-              </button>
-            )}
             <button
               onClick={() => setIsFilterOpen(false)}
               className="w-8 h-8 flex items-center justify-center border border-outline-variant border-dashed text-primary hover:border-primary transition-colors cursor-pointer"
@@ -725,10 +711,24 @@ export function CollectionPage() {
           </div>
         </div>
 
-        <div className="p-6 border-t border-outline-variant bg-surface mt-auto">
+        <div className="p-6 border-t border-outline-variant bg-surface mt-auto flex gap-4">
+          <button
+            onClick={() => {
+              setSelectedSizes([]);
+              setSelectedColors([]);
+              setMinPrice('');
+              setMaxPrice('');
+              setCurrentSort('FEATURED');
+              navigate('/collection');
+              setIsFilterOpen(false);
+            }}
+            className="w-1/2 py-4 border border-outline-variant text-secondary text-[10px] tracking-widest font-bold hover:text-red-600 hover:border-red-600 transition-colors uppercase font-label-caps cursor-pointer"
+          >
+            Reset
+          </button>
           <button
             onClick={() => setIsFilterOpen(false)}
-            className="w-full py-4 bg-primary text-on-primary text-[10px] tracking-widest font-bold hover:bg-neutral-800 transition-colors uppercase font-label-caps cursor-pointer"
+            className="w-1/2 py-4 bg-primary text-on-primary text-[10px] tracking-widest font-bold hover:bg-neutral-800 transition-colors uppercase font-label-caps cursor-pointer"
           >
             Apply Filters
           </button>

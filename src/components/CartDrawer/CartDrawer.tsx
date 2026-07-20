@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { productsData, type Product } from '../../data/products';
 import { validateCouponAPI } from '../../services/userAuthService';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useProducts } from '../../hooks/useProducts';
 
 export function CartDrawer() {
   const { currencySymbol } = useCurrency();
@@ -29,6 +29,10 @@ export function CartDrawer() {
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const crossSellScrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch real products from the API for cross-sell
+  const { products: crossSellProducts } = useProducts({ limit: 20, status: 'published' });
 
   const handleCheckout = () => {
     setIsCartOpen(false);
@@ -39,12 +43,11 @@ export function CartDrawer() {
     }
   };
 
-  // Hardcode cross sell products for now, simulating real data
-  const crossSellProducts = [
-    productsData.find(p => p.id === "cream-silk-slip-dress"),
-    productsData.find(p => p.id === "classic-poplin-shirt"),
-    productsData.find(p => p.id === "fine-knit-linen-tee")
-  ].filter(Boolean) as Product[];
+  const scrollCrossSell = (dir: 'left' | 'right') => {
+    if (crossSellScrollRef.current) {
+      crossSellScrollRef.current.scrollBy({ left: dir === 'left' ? -280 : 280, behavior: 'smooth' });
+    }
+  };
 
   const cartTotal = cart.reduce((total, item) => {
     const priceStr = item.price.replace(/[^0-9.-]+/g, "");
@@ -182,36 +185,60 @@ export function CartDrawer() {
                 </div>
               </div>
 
-              {/* Cross Sell */}
-              <div className="p-6 relative">
-                <h3 className="font-label-caps text-[10px] tracking-widest text-secondary mb-4 uppercase">You might also like</h3>
-                <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar relative">
-                  {/* Left scroll button overlay */}
-                  <button className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface shadow-md flex items-center justify-center z-10 text-primary hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-[14px]">chevron_left</span>
-                  </button>
-                  {/* Right scroll button overlay */}
-                  <button className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface shadow-md flex items-center justify-center z-10 text-primary hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-                  </button>
-                  {crossSellProducts.map((p, idx) => (
-                    <div key={idx} className="w-[120px] shrink-0 flex flex-col gap-2 group cursor-pointer">
-                      <img src={p.imageSrc} alt={p.name} className="w-[120px] h-40 object-cover bg-surface-container group-hover:opacity-90 transition-opacity" />
-                      <h4 className="font-label-caps text-[9px] uppercase truncate tracking-widest text-primary font-bold mt-1">{p.name}</h4>
-                      <p className="font-body-md text-[11px] text-secondary">{p.price}</p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addToCart({ ...p, quantity: 1, selectedSize: 'S', selectedColor: 'Default' });
-                        }}
-                        className="font-label-caps text-[10px] font-bold border-b border-primary w-max pb-0.5 mt-1 hover:text-secondary hover:border-secondary transition-colors"
-                      >
-                        ADD TO BAG
-                      </button>
+              {/* Cross Sell — live from API */}
+              {crossSellProducts.length > 0 && (
+                <div className="px-6 pb-2 relative">
+                  <h3 className="font-label-caps text-[10px] tracking-widest text-secondary mb-4 uppercase">You might also like</h3>
+                  <div className="relative">
+                    {/* Scroll left */}
+                    <button
+                      onClick={() => scrollCrossSell('left')}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center z-10 text-primary hover:scale-110 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">chevron_left</span>
+                    </button>
+                    {/* Scroll right */}
+                    <button
+                      onClick={() => scrollCrossSell('right')}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center z-10 text-primary hover:scale-110 transition-transform"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                    </button>
+
+                    {/* Scrollable product strip */}
+                    <div
+                      ref={crossSellScrollRef}
+                      className="flex gap-4 overflow-x-auto no-scrollbar px-1"
+                    >
+                      {crossSellProducts.map((p) => (
+                        <div key={p.id} className="w-[110px] shrink-0 flex flex-col gap-1.5 group">
+                          <Link
+                            to={`/product/${p.id}`}
+                            onClick={() => setIsCartOpen(false)}
+                            className="block w-[110px] h-[140px] bg-surface-container overflow-hidden"
+                          >
+                            <img
+                              src={p.imageSrc}
+                              alt={p.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          </Link>
+                          <h4 className="font-label-caps text-[9px] uppercase truncate tracking-widest text-primary font-bold">{p.name}</h4>
+                          <p className="font-body-md text-[11px] text-secondary">{p.price}</p>
+                          <button
+                            onClick={() => {
+                              addToCart({ ...p, quantity: 1, selectedSize: 'S', selectedColor: 'Default', taxRate: p.taxRate || 0 });
+                            }}
+                            className="font-label-caps text-[9px] font-bold border-b border-primary w-max pb-0.5 hover:text-secondary hover:border-secondary transition-colors cursor-pointer"
+                          >
+                            ADD TO BAG
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Promo Code Section (Moved to scrollable area) */}
               {cart.length > 0 && (
@@ -309,7 +336,7 @@ export function CartDrawer() {
             </div>
             <div className="flex gap-4">
               <button 
-                onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}
+                onClick={() => { setIsCartOpen(false); navigate('/cart'); }}
                 className="flex-1 py-4 border border-primary text-primary font-label-caps tracking-widest text-xs hover:bg-surface-container transition-colors font-bold cursor-pointer"
               >
                 VIEW BAG

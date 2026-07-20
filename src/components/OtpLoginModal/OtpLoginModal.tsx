@@ -130,12 +130,12 @@ export function OtpLoginModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto"
       onClick={(e) => { if (e.target === e.currentTarget) closeLoginModal(); }}
     >
       {/* Modal card */}
       <div
-        className="bg-white w-full sm:max-w-[380px] relative flex flex-col overflow-hidden"
+        className="bg-white w-full sm:max-w-[380px] relative flex flex-col overflow-hidden m-auto"
         style={{ animation: 'loginSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
         {/* Close button */}
@@ -259,7 +259,7 @@ export function OtpLoginModal() {
               {/* OTP boxes */}
               <div className="flex flex-col gap-2">
                 <label className="text-[9px] tracking-[0.22em] uppercase text-gray-400 font-semibold">One-Time Password</label>
-                <div className="flex gap-2" onPaste={handleOtpPaste}>
+                <div className="flex justify-between gap-1.5" onPaste={handleOtpPaste}>
                   {otp.map((digit, i) => (
                     <input
                       key={i}
@@ -270,7 +270,7 @@ export function OtpLoginModal() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="flex-1 h-12 text-center text-xl font-light text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors duration-150 bg-transparent"
+                      className="w-10 h-10 text-center text-[15px] font-medium text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors duration-150 bg-transparent"
                     />
                   ))}
                 </div>

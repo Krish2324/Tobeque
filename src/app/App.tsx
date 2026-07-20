@@ -22,6 +22,7 @@ import { AuthProvider } from "../context/AuthContext";
 import { CurrencyProvider } from "../context/CurrencyContext";
 import { CartDrawer } from "../components/CartDrawer/CartDrawer";
 import { CheckoutPage } from "../pages/Checkout/CheckoutPage";
+import { CartPage } from "../pages/Cart/CartPage";
 import { OtpLoginModal } from "../components/OtpLoginModal/OtpLoginModal";
 
 function ScrollToTop() {
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="/steal-the-style" element={<StealTheStylePage />} />
               <Route path="/refund-request" element={<RefundRequestPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/cart" element={<CartPage />} />
             </Routes>
             <CartDrawer />
             {/* OTP Login Modal lives at root so it can appear from any page */}

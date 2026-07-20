@@ -429,7 +429,7 @@ export function HomePage() {
             {onSaleLoading ? (
               <div className="flex gap-[3px] overflow-hidden">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="shrink-0 aspect-[2/3] bg-surface-container animate-pulse" style={{ width: 'calc((100% - 21px) / 8)' }} />
+                  <div key={i} className="shrink-0 aspect-[2/3] bg-surface-container animate-pulse w-[calc((100%-9px)/4)] md:w-[calc((100%-21px)/8)]" />
                 ))}
               </div>
             ) : onSaleProducts.length > 0 ? (
@@ -445,8 +445,8 @@ export function HomePage() {
                 {onSaleProducts.map((p, idx) => (
                   <div
                     key={idx}
-                    className="shrink-0"
-                    style={{ width: 'calc((100% - 21px) / 8)', scrollSnapAlign: 'start' }}
+                    className="shrink-0 w-[calc((100%-9px)/4)] md:w-[calc((100%-21px)/8)]"
+                    style={{ scrollSnapAlign: 'start' }}
                   >
                     <ProductCard
                       product={p}

@@ -48,7 +48,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection';
+  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection' || window.location.pathname.startsWith('/product/');
   const isTransparent = isTopTransparentPage && !isScrolled;
 
   return (

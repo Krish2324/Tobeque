@@ -9,7 +9,7 @@ import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { ShareModal } from '../../components/ShareModal/ShareModal';
-import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
+import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 import { useCurrency } from "../../context/CurrencyContext";
 
@@ -349,7 +349,7 @@ export function ProductDetailPage() {
   if (loading) {
     return (
       <div className="bg-surface-container-lowest min-h-screen flex flex-col">
-        <SimpleNavbar />
+        <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <svg className="animate-spin h-10 w-10 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -366,7 +366,7 @@ export function ProductDetailPage() {
   if (error || !product) {
     return (
       <div className="bg-surface-container-lowest min-h-screen flex flex-col">
-        <SimpleNavbar />
+        <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center gap-4">
           <h1 className="text-headline-md font-headline-md text-primary">Product Not Found</h1>
           <Link to="/collection" className="border border-primary text-primary px-6 py-2 text-label-caps font-label-caps hover:bg-neutral-50 transition-colors">
@@ -381,7 +381,7 @@ export function ProductDetailPage() {
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md min-h-screen flex flex-col">
 
       {/* TopNavBar */}
-      <SimpleNavbar onSearchProductSelect={(p) => setQuickViewProduct(p)} />
+      <Navbar onSearchProductSelect={(p) => setQuickViewProduct(p)} />
 
       {/* Main Content Canvas */}
       <main className="flex-grow w-full">
@@ -865,11 +865,11 @@ export function ProductDetailPage() {
       {/* Premium Zoom Modal */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in"
           onClick={() => { setZoomedImage(null); setInnerZoom(false); }}
         >
           <div 
-            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-black/20"
+            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20"
             onClick={(e) => {
                if (isVideo(zoomedImage)) {
                  e.stopPropagation();
@@ -885,19 +885,36 @@ export function ProductDetailPage() {
               const y = ((e.clientY - top) / height) * 100;
               setMousePos({ x, y });
             }}
+            onTouchMove={(e) => {
+              if (!innerZoom) return;
+              // Prevent default to stop page scrolling while panning zoomed image
+              if (e.cancelable) e.preventDefault();
+              const touch = e.touches[0];
+              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+              // Calculate standard percentages
+              const rawX = ((touch.clientX - left) / width) * 100;
+              const rawY = ((touch.clientY - top) / height) * 100;
+              
+              // For touch dragging, we invert the movement so dragging left moves the image left (which means origin moves right)
+              // Let's use a standard mapping first:
+              setMousePos({ 
+                x: Math.max(0, Math.min(100, rawX)), 
+                y: Math.max(0, Math.min(100, rawY))
+              });
+            }}
             onMouseLeave={() => setInnerZoom(false)}
             style={{ cursor: isVideo(zoomedImage) ? 'auto' : (innerZoom ? 'zoom-out' : 'zoom-in') }}
           >
             {isVideo(zoomedImage) ? (
               <video
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover sm:object-contain"
                 src={zoomedImage}
                 autoPlay loop controls playsInline
               />
             ) : (
               <img
                 alt="Zoomed view"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover sm:object-contain"
                 src={zoomedImage}
                 style={{
                   transform: innerZoom ? 'scale(2.2)' : 'scale(1)',
@@ -920,7 +937,7 @@ export function ProductDetailPage() {
             {/* Hint text */}
             {!innerZoom && !isVideo(zoomedImage) && (
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 text-white/90 px-6 py-2.5 rounded-full text-[10px] font-medium tracking-[0.2em] uppercase backdrop-blur-md border border-white/10 pointer-events-none transition-opacity duration-500 opacity-70">
-                Click to pan & zoom
+                Tap to pan & zoom
               </div>
             )}
           </div>

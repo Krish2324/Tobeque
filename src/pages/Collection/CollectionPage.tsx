@@ -238,7 +238,7 @@ export function CollectionPage() {
 
       <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
-        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-12 md:py-20 min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
+        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[245px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
           {heroBannerData ? (
             <div className="absolute inset-0 w-full h-full">
               {(() => {

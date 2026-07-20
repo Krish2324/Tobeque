@@ -181,8 +181,8 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             </Link>
           </nav>
 
-          {/* Logo - Centered on Mobile, Left on Desktop */}
-          <div className="flex-1 flex justify-center md:justify-start">
+          {/* Logo - Centered */}
+          <div className="flex-1 flex justify-center">
             <Link to="/">
               <img src={logoImage} alt="Tobeque Logo" className="h-[14px] md:h-[24px] object-contain opacity-90" />
             </Link>

@@ -145,7 +145,7 @@ export function HomePage() {
 
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative w-full h-[90vh] md:h-[82.5vh] mb-4">
+        <section className="relative w-full h-[90vh] md:h-[92.5vh] mb-4">
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
             {(() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
@@ -234,11 +234,8 @@ export function HomePage() {
                 return (
                   <div
                     key={item.id}
-                    className="shrink-0 aspect-[3/4]"
+                    className="shrink-0 aspect-[3/4] w-[calc((100%-3px)/2)] md:w-[calc((100%-15px)/6)]"
                     style={{
-                      width: 'calc((100% - 6px) / 2.2)', // Shows 2.2 items on mobile so users know they can scroll
-                      minWidth: '140px',
-                      maxWidth: '280px',
                       scrollSnapAlign: 'start'
                     }}
                   >

@@ -119,11 +119,6 @@ export function HomePage() {
   const [collectionItems, setCollectionItems] = useState<SeasonCollectionItem[]>([]);
   const [collectionLoading, setCollectionLoading] = useState(true);
 
-  // Slider state
-  const [sliderIndex, setSliderIndex] = useState(0);
-  const [sliderTransition, setSliderTransition] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(6);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     api.get('/api/season-collection')
@@ -135,50 +130,6 @@ export function HomePage() {
       .catch(() => { })
       .finally(() => setCollectionLoading(false));
   }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setVisibleCount(6);
-      } else if (window.innerWidth >= 768) {
-        setVisibleCount(4);
-      } else {
-        setVisibleCount(2);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (collectionItems.length <= visibleCount) return;
-    if (isPaused) return;
-    const interval = setInterval(() => {
-      setSliderTransition(true);
-      setSliderIndex((prev) => prev + 1);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [collectionItems.length, visibleCount, isPaused]);
-
-  useEffect(() => {
-    if (collectionItems.length === 0) return;
-    if (sliderIndex >= collectionItems.length) {
-      const timeout = setTimeout(() => {
-        setSliderTransition(false);
-        setSliderIndex(0);
-      }, 500); // matches slide duration (500ms)
-      return () => clearTimeout(timeout);
-    }
-  }, [sliderIndex, collectionItems.length]);
-
-  const extendedCollectionItems = React.useMemo(() => {
-    if (collectionItems.length === 0) return [];
-    if (collectionItems.length <= visibleCount) return collectionItems;
-    return [...collectionItems, ...collectionItems.slice(0, visibleCount)];
-  }, [collectionItems, visibleCount]);
-
-  const showSlider = collectionItems.length > visibleCount;
 
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();

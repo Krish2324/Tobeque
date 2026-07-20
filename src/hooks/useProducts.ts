@@ -27,6 +27,7 @@ interface BackendProduct {
   isOnSaleSection?: boolean;
   isHotRightNow?: boolean;
   hotRightNowMedia?: string | null;
+  styleItWith?: BackendProduct[];
 }
 
 interface UseProductsOptions {
@@ -189,6 +190,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     sku: bp.sku || undefined,
     taxRate: bp.taxRate,
     hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,
+    styleItWith: bp.styleItWith ? bp.styleItWith.map(p => mapBackendProduct(p, currencySymbol)) : undefined,
   };
 }
 

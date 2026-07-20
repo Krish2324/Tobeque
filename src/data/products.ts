@@ -27,6 +27,7 @@ export type Product = {
   sku?: string; // Product SKU from admin panel
   rawVariants?: any[]; // For frontend price/stock logic based on selections
   hotRightNowMedia?: string;
+  styleItWith?: Product[];
 };
 
 export const productsData: Product[] = [

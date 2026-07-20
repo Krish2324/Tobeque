@@ -100,10 +100,21 @@ export function ProductDetailPage() {
   // Fetch specific product from backend
   const { product, loading, error } = useProduct(id);
 
-  // Fetch related products (e.g. latest 8 published products)
-  const { products: relatedProducts } = useProducts({ limit: 8, status: 'published' });
-  const styleItWithProducts = relatedProducts.slice(0, 4);
-  const youMightAlsoLikeProducts = relatedProducts.slice(4, 8);
+  // Fetch related products (e.g. latest 12 published products)
+  const { products: relatedProducts } = useProducts({ limit: 12, status: 'published' });
+  
+  // 1. Explicitly selected "Style It With" products
+  const explicitStyleItWith = product?.styleItWith || [];
+  
+  // 2. Filter out explicit products and the current product from related products
+  const explicitIds = new Set(explicitStyleItWith.map(p => p.id));
+  const otherProducts = relatedProducts.filter(p => p.id !== id && !explicitIds.has(p.id));
+  
+  // 3. Merge them for "Style It With" (show up to 8)
+  const styleItWithProducts = [...explicitStyleItWith, ...otherProducts].slice(0, 8);
+  
+  // 4. Use remaining for "You Might Also Like"
+  const youMightAlsoLikeProducts = otherProducts.slice(Math.max(0, 8 - explicitStyleItWith.length), Math.max(0, 8 - explicitStyleItWith.length) + 8);
 
   // Interactive States
   const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });
@@ -239,11 +250,12 @@ export function ProductDetailPage() {
     setButtonText("ADDING...");
 
     setTimeout(() => {
+      const cartImage = displayedImages.find(img => !img.match(/\.(mp4|webm|ogg)$/i)) || displayedImages[0] || product.imageSrc;
       const newItem = {
         id: product.id as string,
         name: product.name,
         price: displayPrice || product.price,
-        imageSrc: product.imageSrc,
+        imageSrc: cartImage,
         selectedSize: selectedSize,
         selectedColor: selectedColor.name,
         quantity: quantity,
@@ -286,14 +298,17 @@ export function ProductDetailPage() {
   const handleBuyItNow = () => {
     if (!product) return;
     
+    const cartImage = displayedImages.find(img => !img.match(/\.(mp4|webm|ogg)$/i)) || displayedImages[0] || product.imageSrc;
+    
     const newItem = {
       id: product.id as string,
       name: product.name,
       price: displayPrice || product.price,
-      imageSrc: product.imageSrc,
+      imageSrc: cartImage,
       selectedSize: selectedSize,
       selectedColor: selectedColor.name,
-      quantity: quantity
+      quantity: quantity,
+      taxRate: product.taxRate || 0
     };
 
     addToCart(newItem);

@@ -238,7 +238,7 @@ export function CollectionPage() {
 
       <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
-        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[245px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
+        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[298px] md:min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
           {heroBannerData ? (
             <div className="absolute inset-0 w-full h-full">
               {(() => {
@@ -263,7 +263,7 @@ export function CollectionPage() {
               })()}
               <div className="absolute inset-0 bg-black/40 pointer-events-none" />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
-                <p className="text-[9px] tracking-[0.35em] text-white/80 uppercase font-medium mb-1">
+                <p className="text-[9px] md:text-xs tracking-[0.35em] text-white/80 uppercase font-medium mb-1 md:mb-2 transition-all">
                   Season Collection
                 </p>
                 <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
@@ -279,7 +279,7 @@ export function CollectionPage() {
           ) : (
             <>
               <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
-                <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-1">
+                <p className="text-[9px] md:text-xs tracking-[0.35em] text-secondary uppercase font-medium mb-1 md:mb-2 transition-all">
                   Season Collection
                 </p>
                 <h1 className="font-display-lg text-primary mb-2 uppercase text-2xl md:text-3xl">

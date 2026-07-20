@@ -21,7 +21,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full z-50 bg-white/40 backdrop-blur-lg border-b border-outline-variant/20 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4 transition-all duration-300">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/40 backdrop-blur-lg border-b border-outline-variant/20 transition-all duration-300 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4">
         
         {/* Mobile Hamburger - Left */}
         <div className="flex md:hidden flex-1 justify-start">
@@ -128,7 +128,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+          <div className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white/90 backdrop-blur-xl shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-outline-variant/50">
               <img src={logoImage} alt="Logo" className="h-[22px]" />
@@ -139,28 +139,6 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
             
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-6 px-6 flex flex-col gap-8">
-              
-              {/* Quick Icons */}
-              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-outline-variant/30">
-                <button
-                  onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[24px]">search</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">Search</span>
-                </button>
-                <button
-                  onClick={() => { 
-                    setIsMobileMenuOpen(false);
-                    if (isAuthenticated) navigate('/profile');
-                    else openLoginModal();
-                  }}
-                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[24px]">person</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">{isAuthenticated ? 'Profile' : 'Login'}</span>
-                </button>
-              </div>
 
               {/* Navigation Links */}
               <div className="flex flex-col gap-6">
@@ -196,11 +174,33 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
                 </Link>
               </div>
               
+              {/* Quick Icons */}
+              <div className="flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-outline-variant/30">
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[24px]">search</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest">Search</span>
+                </button>
+                <button
+                  onClick={() => { 
+                    setIsMobileMenuOpen(false);
+                    if (isAuthenticated) navigate('/profile');
+                    else openLoginModal();
+                  }}
+                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[24px]">person</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest">{isAuthenticated ? 'Profile' : 'Login'}</span>
+                </button>
+              </div>
+              
               {/* Logout Button */}
               {isAuthenticated && (
                 <button 
                   onClick={() => { logout?.(); setIsMobileMenuOpen(false); }}
-                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50 py-3.5 rounded-xl uppercase tracking-widest text-[11px] font-bold cursor-pointer active:scale-95 transition-transform"
+                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50/50 py-3.5 rounded-xl uppercase tracking-widest text-[11px] font-bold cursor-pointer active:scale-95 transition-transform"
                 >
                   <span className="material-symbols-outlined text-[18px]">logout</span>
                   Logout

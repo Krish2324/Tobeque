@@ -277,7 +277,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+          <div className="absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white/90 backdrop-blur-xl shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-outline-variant/50">
               <img src={logoImage} alt="Logo" className="h-[22px]" />
@@ -289,8 +289,42 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-6 px-6 flex flex-col gap-8">
               
+              {/* Navigation Links */}
+              <div className="flex flex-col gap-6">
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
+                  New Arrivals
+                  <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
+                </Link>
+                
+                {/* Categories */}
+                <div className="flex flex-col gap-4 mt-2">
+                  <h4 className="text-[10px] uppercase tracking-[0.25em] text-secondary font-bold flex items-center gap-2">
+                    <span className="w-8 h-[1px] bg-secondary/30"></span> Shop By Category
+                  </h4>
+                  <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
+                    <Link to="/collection?category=Tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-semibold tracking-widest uppercase text-secondary hover:text-primary">
+                      Tops
+                    </Link>
+                    <Link to="/collection?category=Dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-semibold tracking-widest uppercase text-secondary hover:text-primary">
+                      Dresses
+                    </Link>
+                    <Link to="/collection?category=Jeans and Pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-semibold tracking-widest uppercase text-secondary hover:text-primary">
+                      Jeans and Pants
+                    </Link>
+                    <Link to="/collection?category=Skirts and Shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-semibold tracking-widest uppercase text-secondary hover:text-primary">
+                      Skirts and Shorts
+                    </Link>
+                  </div>
+                </div>
+
+                <Link to="/collection" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-4">
+                  Best Sellers
+                  <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
+                </Link>
+              </div>
+
               {/* Quick Icons */}
-              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-outline-variant/30">
+              <div className="flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-outline-variant/30">
                 <button
                   onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
                   className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
@@ -321,48 +355,12 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   <span className="text-[9px] font-bold uppercase tracking-widest">Wishlist</span>
                 </button>
               </div>
-
-              {/* Navigation Links */}
-              <div className="flex flex-col gap-6">
-                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
-                  New Arrivals
-                  <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
-                </Link>
-                <Link to="/collection" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
-                  All Collections
-                  <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
-                </Link>
-                
-                {/* Categories */}
-                <div className="flex flex-col gap-4 mt-2">
-                  <h4 className="text-[10px] uppercase tracking-[0.25em] text-secondary font-bold flex items-center gap-2">
-                    <span className="w-8 h-[1px] bg-secondary/30"></span> Shop By Category
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
-                    {CATEGORIES.map(item => (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="text-[11px] font-semibold uppercase tracking-wider text-secondary hover:text-primary"
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-2">
-                  About Us
-                  <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
-                </Link>
-              </div>
               
               {/* Logout Button */}
               {isAuthenticated && (
                 <button 
                   onClick={() => { logout?.(); setIsMobileMenuOpen(false); }}
-                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50 py-3.5 rounded-xl uppercase tracking-widest text-[11px] font-bold cursor-pointer active:scale-95 transition-transform"
+                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50/50 py-3.5 rounded-xl uppercase tracking-widest text-[11px] font-bold cursor-pointer active:scale-95 transition-transform"
                 >
                   <span className="material-symbols-outlined text-[18px]">logout</span>
                   Logout

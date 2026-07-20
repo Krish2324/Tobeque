@@ -194,7 +194,7 @@ export function HomePage() {
 
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative w-full h-[80vh] md:h-[82.5vh] mb-4">
+        <section className="relative w-full h-[85vh] md:h-[82.5vh] mb-4">
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
             {(() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
@@ -274,17 +274,25 @@ export function HomePage() {
               ))}
             </div>
           ) : collectionItems.length > 0 ? (
-            !showSlider ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-0.5 md:gap-[3px]">
-                {collectionItems.map((item, idx) => {
-                  const displayName = item.displayLabel || item.category?.name || 'Category';
-                  const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
-                  const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+            <div className="flex gap-[3px] overflow-x-auto no-scrollbar" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+              {collectionItems.map((item, idx) => {
+                const displayName = item.displayLabel || item.category?.name || 'Category';
+                const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
+                const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
 
-                  return (
+                return (
+                  <div
+                    key={item.id}
+                    className="shrink-0 aspect-[3/4]"
+                    style={{ 
+                      width: 'calc((100% - 6px) / 2.2)', // Shows 2.2 items on mobile so users know they can scroll
+                      minWidth: '140px',
+                      maxWidth: '280px',
+                      scrollSnapAlign: 'start' 
+                    }}
+                  >
                     <button
-                      key={item.id}
-                      className="group relative aspect-[3/4] overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left w-full block"
+                      className="group relative w-full h-full overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block rounded"
                       onClick={() =>
                         navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
                       }
@@ -297,14 +305,14 @@ export function HomePage() {
                       />
 
                       {/* Dark gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
                       {/* Category name at bottom */}
-                      <div className="absolute bottom-0 inset-x-0 p-3">
-                        <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate">
+                      <div className="absolute bottom-0 inset-x-0 p-3 pointer-events-none">
+                        <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate drop-shadow-md">
                           {displayName}
                         </p>
-                        <p className="text-[9px] tracking-widest text-white/60 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <p className="text-[9px] tracking-widest text-white/80 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md">
                           Shop Now
                           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                             <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
@@ -312,68 +320,10 @@ export function HomePage() {
                         </p>
                       </div>
                     </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <div
-                className="overflow-hidden w-full relative"
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
-              >
-                <div
-                  className="flex"
-                  style={{
-                    transform: `translateX(-${sliderIndex * (100 / visibleCount)}%)`,
-                    transition: sliderTransition ? 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-                  }}
-                >
-                  {extendedCollectionItems.map((item, idx) => {
-                    const displayName = item.displayLabel || item.category?.name || 'Category';
-                    const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
-                    const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
-
-                    return (
-                      <div
-                        key={`${item.id}-${idx}`}
-                        className="px-[1px] md:px-[1.5px] shrink-0"
-                        style={{ width: `${100 / visibleCount}%` }}
-                      >
-                        <button
-                          className="group relative w-full aspect-[3/4] overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block"
-                          onClick={() =>
-                            navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
-                          }
-                        >
-                          {/* Background image */}
-                          <img
-                            src={imageUrl || fallbackUrl}
-                            alt={displayName}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                          />
-
-                          {/* Dark gradient overlay */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                          {/* Category name at bottom */}
-                          <div className="absolute bottom-0 inset-x-0 p-3">
-                            <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate">
-                              {displayName}
-                            </p>
-                            <p className="text-[9px] tracking-widest text-white/60 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              Shop Now
-                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                                <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </p>
-                          </div>
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )) : (
+                  </div>
+                );
+              })}
+            </div>) : (
             <div className="text-center py-10">
               <p className="text-secondary text-sm">Season Collection is empty. Configure it from the Admin Panel.</p>
             </div>

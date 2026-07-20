@@ -243,12 +243,10 @@ export function OtpLoginModal() {
                 </button>
                 <h3 className="font-serif text-xl text-[#111] mb-2 tracking-wide">Enter OTP</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  We've sent a 6-digit OTP to <span className="text-[#111] font-medium">+91 {phone}</span>.
-                </p>
-                <p className="text-xs text-amber-600 mt-2 bg-amber-50 px-3 py-2 border border-amber-100">
-                  🔒 Dev mode: OTP is always <strong>123456</strong>
+                  We've sent a 6-digit OTP to <span className="text-[#111] font-medium">+91 {phone}</span> via SMS.
                 </p>
               </div>
+
 
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-medium">

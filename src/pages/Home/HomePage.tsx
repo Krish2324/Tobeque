@@ -194,7 +194,7 @@ export function HomePage() {
 
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative w-full h-[50vh] md:h-[82.5vh] mb-4">
+        <section className="relative w-full h-[80vh] md:h-[82.5vh] mb-4">
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
             {(() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';

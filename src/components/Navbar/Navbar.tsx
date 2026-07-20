@@ -41,7 +41,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
   return (
     <>
-      <header className="bg-white/85 backdrop-blur-md sticky top-0 w-full z-50 border-b border-outline-variant/30">
+      <header className="fixed top-0 left-0 w-full z-50 bg-white/40 backdrop-blur-lg border-b border-outline-variant/20 transition-all duration-300">
         <div className="flex justify-between items-center w-full px-4 md:px-outer-margin py-1.5 md:py-1.5 max-w-full mx-auto">
 
           {/* Mobile Menu Toggle - Left (Visible only on mobile) */}

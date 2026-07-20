@@ -21,7 +21,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
 
   return (
     <>
-      <nav className="w-full z-50 bg-white/85 backdrop-blur-md border-b border-outline-variant/30 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4">
+      <nav className="fixed top-0 left-0 w-full z-50 bg-white/40 backdrop-blur-lg border-b border-outline-variant/20 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4 transition-all duration-300">
         
         {/* Mobile Hamburger - Left */}
         <div className="flex md:hidden flex-1 justify-start">

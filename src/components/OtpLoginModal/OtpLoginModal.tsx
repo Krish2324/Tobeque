@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { sendOtp, verifyOtp } from '../../services/userAuthService';
+import logoImage from '../../assets/Tobeque-Logo-290x57.webp';
 
 type Step = 'phone' | 'otp';
 
@@ -17,7 +18,6 @@ export function OtpLoginModal() {
 
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (!isLoginModalOpen) {
       setTimeout(() => {
@@ -31,7 +31,6 @@ export function OtpLoginModal() {
     }
   }, [isLoginModalOpen]);
 
-  // Countdown timer for resend
   useEffect(() => {
     if (resendTimer > 0) {
       const t = setTimeout(() => setResendTimer((s) => s - 1), 1000);
@@ -101,7 +100,6 @@ export function OtpLoginModal() {
       const result = await verifyOtp(phone.replace(/\D/g, ''), otpString);
       login(result.user, result.token);
       closeLoginModal();
-      // Execute the callback (e.g., reopen checkout) after login
       if (loginSuccessCallback) {
         setTimeout(() => loginSuccessCallback(), 200);
       }
@@ -132,45 +130,64 @@ export function OtpLoginModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) closeLoginModal(); }}
     >
-      <div className="bg-white w-full max-w-md shadow-2xl relative flex flex-col overflow-hidden"
-        style={{ animation: 'modalSlideUp 0.3s ease-out' }}
+      {/* Modal card */}
+      <div
+        className="bg-white w-full sm:max-w-[380px] relative flex flex-col overflow-hidden"
+        style={{ animation: 'loginSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }}
       >
-        {/* Top brand bar */}
-        <div className="bg-[#111111] px-8 py-6 flex items-center justify-between">
-          <div>
-            <p className="text-white/50 text-[10px] tracking-[0.25em] uppercase font-medium mb-1">Welcome to</p>
-            <h2 className="text-white font-serif text-2xl tracking-widest uppercase">TOBEQUE</h2>
-          </div>
-          <button
-            onClick={closeLoginModal}
-            className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white transition-colors"
-            aria-label="Close"
-          >
-            <span className="material-symbols-outlined text-xl">close</span>
-          </button>
+        {/* Close button */}
+        <button
+          onClick={closeLoginModal}
+          className="absolute top-5 right-5 w-6 h-6 flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors z-10"
+          aria-label="Close"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1L12 12M12 1L1 12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        {/* ── Header: logo + subtitle ── */}
+        <div className="flex flex-col items-center pt-10 pb-7 px-8 border-b border-gray-100">
+          <img src={logoImage} alt="Tobeque" className="h-[17px] w-auto object-contain mb-5" style={{ filter: 'brightness(0)' }} />
+          {step === 'phone' ? (
+            <>
+              <p className="text-[12px] text-gray-800 font-medium tracking-wide">Sign in to your account</p>
+              <p className="text-[11px] text-gray-400 font-light mt-1">Enter your mobile number to continue</p>
+            </>
+          ) : (
+            <>
+              <p className="text-[12px] text-gray-800 font-medium tracking-wide">Verify your number</p>
+              <p className="text-[11px] text-gray-400 font-light mt-1">
+                OTP sent to <span className="text-gray-700 font-medium">+91 {phone}</span>
+              </p>
+            </>
+          )}
         </div>
 
-        {/* Body */}
+        {/* ── Form ── */}
         <div className="px-8 py-8">
           {step === 'phone' ? (
-            <form onSubmit={handleSendOtp} className="flex flex-col gap-6">
-              <div>
-                <h3 className="font-serif text-xl text-[#111] mb-2 tracking-wide">Sign in to continue</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  Enter your mobile number to receive a one-time password.
-                </p>
-              </div>
+            <form onSubmit={handleSendOtp} className="flex flex-col gap-7">
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-medium">
+              {/* Phone field */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[9px] tracking-[0.22em] uppercase text-gray-400 font-semibold">
                   Mobile Number
                 </label>
-                <div className="flex border border-gray-200 focus-within:border-[#111] transition-colors">
-                  <div className="flex items-center px-4 border-r border-gray-200 bg-gray-50">
-                    <span className="text-sm text-gray-500 font-medium select-none">🇮🇳 +91</span>
+                <div className="flex items-center border-b border-gray-200 focus-within:border-gray-800 transition-colors duration-200 pb-2.5 pt-1">
+                  {/* Flag + code */}
+                  <div className="flex items-center gap-1.5 pr-3 mr-3 border-r border-gray-200 shrink-0">
+                    <svg width="17" height="12" viewBox="0 0 225 150" className="rounded-[1px]">
+                      <rect width="225" height="50" fill="#FF9933"/>
+                      <rect y="50" width="225" height="50" fill="#FFFFFF"/>
+                      <rect y="100" width="225" height="50" fill="#138808"/>
+                      <circle cx="112.5" cy="75" r="17" stroke="#000080" strokeWidth="2" fill="none"/>
+                      <circle cx="112.5" cy="75" r="3.5" fill="#000080"/>
+                    </svg>
+                    <span className="text-[13px] text-gray-500 font-medium select-none">+91</span>
                   </div>
                   <input
                     type="tel"
@@ -179,79 +196,69 @@ export function OtpLoginModal() {
                     value={phone}
                     onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }}
                     placeholder="98765 43210"
-                    className="flex-1 px-4 py-3.5 text-sm text-[#111] focus:outline-none bg-white placeholder-gray-300"
+                    className="flex-1 text-[15px] text-gray-900 focus:outline-none bg-transparent placeholder-gray-300 font-light tracking-[0.06em]"
                     inputMode="numeric"
                   />
                 </div>
               </div>
 
+              {/* Error */}
               {error && (
-                <p className="text-red-500 text-xs flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base">error</span>
+                <p className="text-red-400 text-[11px] flex items-center gap-1.5 -mt-3">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                   {error}
                 </p>
               )}
 
+              {/* CTA */}
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full bg-[#111] text-white h-13 text-xs tracking-[0.2em] uppercase font-medium hover:bg-[#333] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                style={{ height: '52px' }}
+                disabled={isLoading || phone.length < 10}
+                className="w-full h-11 bg-gray-900 text-white text-[10.5px] tracking-[0.22em] uppercase font-semibold hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isLoading ? (
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
                 ) : (
                   <>
-                    <span>Send OTP</span>
-                    <span className="material-symbols-outlined text-base">arrow_forward</span>
+                    <span>Continue</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M13 6l6 6-6 6"/>
+                    </svg>
                   </>
                 )}
               </button>
 
-              <p className="text-center text-xs text-gray-400 leading-relaxed">
+              {/* Legal */}
+              <p className="text-center text-[10px] text-gray-400 font-light leading-relaxed">
                 By continuing, you agree to our{' '}
-                <Link
-                  to="/terms-and-conditions"
-                  onClick={closeLoginModal}
-                  className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity"
-                >
-                  Terms of Service
-                </Link>
-                {' '}and{' '}
-                <Link
-                  to="/privacy-policy"
-                  onClick={closeLoginModal}
-                  className="text-[#111] underline underline-offset-2 hover:opacity-70 transition-opacity"
-                >
-                  Privacy Policy
-                </Link>.
+                <Link to="/terms-and-conditions" onClick={closeLoginModal} className="text-gray-500 hover:text-gray-900 underline underline-offset-2 transition-colors">Terms</Link>
+                {' '}&{' '}
+                <Link to="/privacy-policy" onClick={closeLoginModal} className="text-gray-500 hover:text-gray-900 underline underline-offset-2 transition-colors">Privacy Policy</Link>.
               </p>
             </form>
           ) : (
-            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-6">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => { setStep('phone'); setOtp(['', '', '', '', '', '']); setError(''); }}
-                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-[#111] transition-colors mb-4 -ml-1"
-                >
-                  <span className="material-symbols-outlined text-base">arrow_back</span>
-                  Change number
-                </button>
-                <h3 className="font-serif text-xl text-[#111] mb-2 tracking-wide">Enter OTP</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  We've sent a 6-digit OTP to <span className="text-[#111] font-medium">+91 {phone}</span> via SMS.
-                </p>
-              </div>
+            <form onSubmit={handleVerifyOtp} className="flex flex-col gap-7">
 
+              {/* Back */}
+              <button
+                type="button"
+                onClick={() => { setStep('phone'); setOtp(['', '', '', '', '', '']); setError(''); }}
+                className="self-start flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-800 transition-colors -mt-2"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M11 6l-6 6 6 6"/>
+                </svg>
+                Change number
+              </button>
 
+              {/* OTP boxes */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] text-gray-400 tracking-[0.2em] uppercase font-medium">
-                  6-Digit OTP
-                </label>
+                <label className="text-[9px] tracking-[0.22em] uppercase text-gray-400 font-semibold">One-Time Password</label>
                 <div className="flex gap-2" onPaste={handleOtpPaste}>
                   {otp.map((digit, i) => (
                     <input
@@ -263,62 +270,76 @@ export function OtpLoginModal() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="flex-1 aspect-square text-center text-xl font-bold text-[#111] border border-gray-200 focus:border-[#111] focus:outline-none transition-colors bg-white"
-                      style={{ minWidth: 0 }}
+                      className="flex-1 h-12 text-center text-xl font-light text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors duration-150 bg-transparent"
                     />
                   ))}
                 </div>
               </div>
 
+              {/* Error */}
               {error && (
-                <p className="text-red-500 text-xs flex items-center gap-2">
-                  <span className="material-symbols-outlined text-base">error</span>
+                <p className="text-red-400 text-[11px] flex items-center gap-1.5 -mt-3">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
                   {error}
                 </p>
               )}
 
+              {/* Verify CTA */}
               <button
                 type="submit"
                 disabled={isLoading || otp.join('').length < 6}
-                className="w-full bg-[#111] text-white text-xs tracking-[0.2em] uppercase font-medium hover:bg-[#333] transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-                style={{ height: '52px' }}
+                className="w-full h-11 bg-gray-900 text-white text-[10.5px] tracking-[0.22em] uppercase font-semibold hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isLoading ? (
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
                 ) : (
                   <>
-                    <span className="material-symbols-outlined text-base">lock_open</span>
-                    <span>Verify & Continue</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                    <span>Verify & Sign In</span>
                   </>
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
-                <span>Didn't receive it?</span>
+              {/* Resend */}
+              <p className="text-center text-[11px] text-gray-400 font-light">
+                Didn't get it?{' '}
                 {resendTimer > 0 ? (
-                  <span className="text-gray-400">Resend in {resendTimer}s</span>
+                  <span className="tabular-nums">{resendTimer}s</span>
                 ) : (
                   <button
                     type="button"
                     onClick={handleResend}
-                    className="text-[#111] underline underline-offset-2 font-medium cursor-pointer hover:text-gray-600"
+                    className="text-gray-700 underline underline-offset-2 hover:text-black transition-colors font-medium"
                   >
-                    Resend OTP
+                    Resend
                   </button>
                 )}
-              </div>
+              </p>
             </form>
           )}
         </div>
+
+        {/* Bottom accent */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
       </div>
 
       <style>{`
-        @keyframes modalSlideUp {
+        @keyframes loginSlideUp {
           from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (min-width: 640px) {
+          @keyframes loginSlideUp {
+            from { opacity: 0; transform: scale(0.97) translateY(6px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+          }
         }
       `}</style>
     </div>

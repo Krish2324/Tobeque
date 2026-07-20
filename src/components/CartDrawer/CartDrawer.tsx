@@ -308,7 +308,10 @@ export function CartDrawer() {
               </div>
             </div>
             <div className="flex gap-4">
-              <button className="flex-1 py-4 border border-primary text-primary font-label-caps tracking-widest text-xs hover:bg-surface-container transition-colors font-bold">
+              <button 
+                onClick={() => { setIsCartOpen(false); navigate('/checkout'); }}
+                className="flex-1 py-4 border border-primary text-primary font-label-caps tracking-widest text-xs hover:bg-surface-container transition-colors font-bold cursor-pointer"
+              >
                 VIEW BAG
               </button>
               <button 

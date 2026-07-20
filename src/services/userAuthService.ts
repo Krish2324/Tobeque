@@ -120,6 +120,7 @@ export const createOrder = async (
     paymentMethod?: string;
     billingAddress?: any;
     notes?: string;
+    shippingCost?: number;
   }
 ) => {
   const res = await fetch(`${API_BASE}/orders`, {

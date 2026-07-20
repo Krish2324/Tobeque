@@ -237,10 +237,30 @@ export function CheckoutPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
 
+  /* ─── Shipping state ─── */
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [codFee, setCodFee] = useState<number>(0);
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false);
+  const [shippingSource, setShippingSource] = useState<'shiprocket' | 'fallback' | 'free' | null>(null);
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number>(0);
+
+  // Fetch public settings on mount to get free shipping threshold
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.settings?.freeShippingThreshold) {
+          setFreeShippingThreshold(parseFloat(data.settings.freeShippingThreshold) || 0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   /* ─── Coupon state ─── */
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
 
   /* ─── Sync user data on open ─── */
   useEffect(() => {
@@ -413,7 +433,57 @@ export function CheckoutPage() {
   const exTaxSubtotal = cartSubtotal - totalGst;
   const finalExTaxSubtotal = exTaxSubtotal * (1 - discountRatio);
   
-  const cartTotal = cartSubtotal - discountAmount;
+  const cartTotal = cartSubtotal - discountAmount + shippingCost;
+
+  /* ─── Calculate shipping whenever pincode or payment method changes ─── */
+  const deliveryPincode = shipDifferent ? shippingPincode : billingPincode;
+  useEffect(() => {
+    const pincode = String(deliveryPincode || '').trim();
+    if (pincode.length < 6) {
+      setShippingCost(0);
+      setCodFee(0);
+      setShippingSource(null);
+      return;
+    }
+
+    // Check free shipping threshold first (applied to subtotal after discount)
+    if (freeShippingThreshold > 0 && cartSubtotal - discountAmount >= freeShippingThreshold) {
+      // Note: If free shipping is met, we still need to know the COD fee if they selected COD.
+      // For now, let's fetch it anyway if it's COD, or just waive everything.
+      // The API handles adding COD to shippingCost even if base is 0. 
+      // We will let the API handle the logic so we get the accurate codFee.
+    }
+
+    let cancelled = false;
+    setIsCalculatingShipping(true);
+    fetch('/api/shipping/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pincode, paymentMethod, weight: 0.5 })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return;
+        if (data.success) {
+          // If free shipping threshold met, waive the base shipping but KEEP the codFee
+          let finalShipping = data.shippingCost;
+          let source = data.source;
+          
+          if (freeShippingThreshold > 0 && cartSubtotal - discountAmount >= freeShippingThreshold) {
+            finalShipping = data.codFee || 0; // Waive base, only charge COD if applicable
+            source = 'free';
+          }
+          
+          setShippingCost(finalShipping);
+          setCodFee(data.codFee || 0);
+          setShippingSource(source);
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setIsCalculatingShipping(false); });
+
+    return () => { cancelled = true; };
+  }, [deliveryPincode, paymentMethod, freeShippingThreshold, cartSubtotal, discountAmount]);
 
   /* ─── Apply Coupon ─── */
   const handleApplyCoupon = async () => {
@@ -491,6 +561,7 @@ export function CheckoutPage() {
           couponCode: appliedCoupon?.code,
           paymentMethod: 'cod',
           notes: orderNotes,
+          shippingCost,
         });
 
         setIsSubmittingOrder(false);
@@ -528,6 +599,7 @@ export function CheckoutPage() {
                 items,
                 couponCode: appliedCoupon?.code,
                 notes: orderNotes,
+                shippingCost,
               });
 
               setIsSubmittingOrder(false);
@@ -1077,9 +1149,33 @@ export function CheckoutPage() {
                   </div>
                 )}
                 <div className="flex justify-between text-secondary/70">
-                  <span>Shipping</span>
-                  <span className="text-green-600 font-medium">Free</span>
+                  <span>Shipping {codFee > 0 ? '(Base)' : ''}</span>
+                  {isCalculatingShipping ? (
+                    <span className="text-secondary/40 animate-pulse">Calculating...</span>
+                  ) : shippingSource === 'free' ? (
+                    <span className="text-green-600 font-medium">🎉 Free</span>
+                  ) : (shippingCost - codFee) > 0 ? (
+                    <span className="font-medium">
+                      {currencySymbol}{(shippingCost - codFee).toFixed(2)}
+                      {shippingSource === 'fallback' && (
+                        <span className="text-[9px] text-secondary/40 ml-1">(est.)</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-secondary/40">Enter pincode</span>
+                  )}
                 </div>
+                {codFee > 0 && (
+                  <div className="flex justify-between text-amber-600 font-medium">
+                    <span>COD Extra Charge</span>
+                    <span>+{currencySymbol}{codFee.toFixed(2)}</span>
+                  </div>
+                )}
+                {freeShippingThreshold > 0 && shippingSource !== 'free' && (cartSubtotal - discountAmount) < freeShippingThreshold && (
+                  <div className="text-[10px] text-amber-600 bg-amber-50 rounded-lg px-2 py-1.5">
+                    Add {currencySymbol}{(freeShippingThreshold - (cartSubtotal - discountAmount)).toFixed(0)} more for <strong>Free Shipping!</strong>
+                  </div>
+                )}
                 <div className="flex justify-between text-secondary/70">
                   <span>GST {taxRateLabel}</span>
                   <span>{currencySymbol}{finalGst.toFixed(2)}</span>

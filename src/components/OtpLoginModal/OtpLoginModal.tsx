@@ -99,10 +99,10 @@ export function OtpLoginModal() {
     try {
       const result = await verifyOtp(phone.replace(/\D/g, ''), otpString);
       login(result.user, result.token);
-      closeLoginModal();
       if (loginSuccessCallback) {
-        setTimeout(() => loginSuccessCallback(), 200);
+        loginSuccessCallback();
       }
+      closeLoginModal();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid OTP. Please try again.');
       setOtp(['', '', '', '', '', '']);

@@ -96,6 +96,7 @@ export function HomePage() {
   // ── Hero Banner State ────────────────────────────────────────────────────
   const [heroBannerData, setHeroBannerData] = useState<any>(null);
   const [bottomBannerData, setBottomBannerData] = useState<any>(null);
+  const [bannersLoading, setBannersLoading] = useState(true);
 
   useEffect(() => {
     api.get('/api/banners')
@@ -112,7 +113,8 @@ export function HomePage() {
           if (bottomPromo) setBottomBannerData(bottomPromo);
         }
       })
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => setBannersLoading(false));
   }, []);
 
   // ── Season Collection Categories ───────────────────────────────────────────
@@ -147,7 +149,9 @@ export function HomePage() {
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
         <section className="relative w-full h-[90vh] md:h-[92.5vh] mb-4">
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
-            {(() => {
+            {bannersLoading ? (
+              <div className="w-full h-full bg-surface-container animate-pulse absolute inset-0" />
+            ) : (() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
               const mediaUrl = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`)

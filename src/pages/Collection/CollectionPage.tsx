@@ -59,6 +59,7 @@ export function CollectionPage() {
 
   // ── Hero Banner State ────────────────────────────────────────────────────
   const [heroBannerData, setHeroBannerData] = useState<any>(null);
+  const [bannersLoading, setBannersLoading] = useState(true);
 
   useEffect(() => {
     api.get('/api/banners')
@@ -69,7 +70,8 @@ export function CollectionPage() {
           if (collectionHero) setHeroBannerData(collectionHero);
         }
       })
-      .catch(() => { });
+      .catch(() => { })
+      .finally(() => setBannersLoading(false));
   }, []);
 
   useEffect(() => {
@@ -239,7 +241,9 @@ export function CollectionPage() {
       <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
         <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[298px] md:min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
-          {heroBannerData ? (
+          {bannersLoading ? (
+            <div className="absolute inset-0 w-full h-full animate-pulse bg-surface-container" />
+          ) : heroBannerData ? (
             <div className="absolute inset-0 w-full h-full">
               {(() => {
                 const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';

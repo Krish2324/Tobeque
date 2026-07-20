@@ -145,7 +145,7 @@ export function HomePage() {
 
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative w-full h-[85vh] md:h-[82.5vh] mb-4">
+        <section className="relative w-full h-[90vh] md:h-[82.5vh] mb-4">
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
             {(() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
@@ -235,11 +235,11 @@ export function HomePage() {
                   <div
                     key={item.id}
                     className="shrink-0 aspect-[3/4]"
-                    style={{ 
+                    style={{
                       width: 'calc((100% - 6px) / 2.2)', // Shows 2.2 items on mobile so users know they can scroll
                       minWidth: '140px',
                       maxWidth: '280px',
-                      scrollSnapAlign: 'start' 
+                      scrollSnapAlign: 'start'
                     }}
                   >
                     <button
@@ -422,7 +422,7 @@ export function HomePage() {
               className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-6 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm border border-outline-variant/30 shadow text-primary hover:bg-primary hover:text-on-primary transition-all duration-200"
               aria-label="Scroll left"
             >
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7.5 10L3.5 6l4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M7.5 10L3.5 6l4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
 
             {/* Slider track – full width, arrows overlay edges */}
@@ -476,7 +476,7 @@ export function HomePage() {
               className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-6 h-10 flex items-center justify-center bg-white/90 backdrop-blur-sm border border-outline-variant/30 shadow text-primary hover:bg-primary hover:text-on-primary transition-all duration-200"
               aria-label="Scroll right"
             >
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M4.5 2L8.5 6l-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M4.5 2L8.5 6l-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
           </div>
         </section>
@@ -523,7 +523,7 @@ export function HomePage() {
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
-                  
+
                   <div className="absolute bottom-0 inset-x-0 p-4 pointer-events-none flex flex-col justify-end h-full">
                     <div className="flex gap-3 mt-auto pointer-events-auto items-end">
                       <img src={p.imageSrc} className="w-14 h-18 object-cover border border-white/20 rounded shadow-md shrink-0 bg-white" alt={p.name} />

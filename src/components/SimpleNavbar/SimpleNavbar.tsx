@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
@@ -18,10 +18,22 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 30);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isHomePage = window.location.pathname === '/';
+  const isTransparent = isHomePage && !isScrolled;
 
   return (
     <>
-      <nav className="fixed top-0 left-0 w-full z-50 bg-white/40 backdrop-blur-lg border-b border-outline-variant/20 transition-all duration-300 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4">
+      <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 flex justify-between items-center px-4 md:px-8 py-1.5 md:py-4 ${isTransparent ? 'bg-transparent border-transparent backdrop-blur-none' : 'bg-white/40 backdrop-blur-lg border-b border-outline-variant/20'}`}>
         
         {/* Mobile Hamburger - Left */}
         <div className="flex md:hidden flex-1 justify-start">

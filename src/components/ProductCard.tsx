@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { type Product } from "../data/products";
+import { ImageWithSkeleton } from "./ImageWithSkeleton";
 export type { Product };
 
 export interface ProductCardProps {
@@ -33,10 +34,10 @@ export function ProductCard({
             to={`/product/${product.id || ""}`}
             className="absolute inset-0 z-0 block cursor-pointer"
           >
-            <img
+            <ImageWithSkeleton
               alt={product.imageAlt || product.name}
-              loading="lazy"
-              className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
+              wrapperClassName="absolute inset-0"
+              className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
               src={product.imageSrc}
             />
           </Link>
@@ -128,10 +129,10 @@ export function ProductCard({
               autoPlay loop muted playsInline
             />
           ) : (
-            <img
+            <ImageWithSkeleton
               alt={product.imageAlt || product.name}
-              loading="lazy"
-              className={`w-full h-full object-cover object-center absolute inset-0 transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+              wrapperClassName="absolute inset-0"
+              className={`object-center transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
               src={displayImage}
             />
           )}
@@ -144,10 +145,10 @@ export function ProductCard({
                 autoPlay loop muted playsInline
               />
             ) : (
-              <img
+              <ImageWithSkeleton
                 alt={(product.imageAlt || product.name) + " alternate view"}
-                loading="lazy"
-                className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                wrapperClassName="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                className="object-center"
                 src={product.hoverImageSrc}
               />
             )

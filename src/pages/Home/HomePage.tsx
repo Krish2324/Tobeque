@@ -166,7 +166,6 @@ export function HomePage() {
                   loop
                   muted
                   playsInline
-                  poster={heroBanner}
                   className="w-full h-full object-cover object-top absolute inset-0"
                 >
                   <source src={mediaUrl} type="video/mp4" />

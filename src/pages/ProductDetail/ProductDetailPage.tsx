@@ -12,6 +12,7 @@ import { ShareModal } from '../../components/ShareModal/ShareModal';
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 import { useCurrency } from "../../context/CurrencyContext";
+import { ImageWithSkeleton } from "../../components/ImageWithSkeleton";
 
 const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
 
@@ -157,6 +158,7 @@ export function ProductDetailPage() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [innerZoom, setInnerZoom] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const swipeStartX = useRef<number | null>(null);
   const [askName, setAskName] = useState('');
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
@@ -422,9 +424,9 @@ export function ProductDetailPage() {
                     autoPlay loop muted playsInline
                   />
                 ) : (
-                  <img
+                  <ImageWithSkeleton
                     alt={`${product.name} detail view ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    wrapperClassName="absolute inset-0"
                     src={img}
                   />
                 )}
@@ -788,7 +790,7 @@ export function ProductDetailPage() {
                 {styleItWithProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="snap-start shrink-0 w-[85%] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
+                    className="snap-start shrink-0 w-[calc(50%-4px)] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
                   >
                     <ProductCard
                       product={item}
@@ -834,7 +836,7 @@ export function ProductDetailPage() {
                 {youMightAlsoLikeProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="snap-start shrink-0 w-[85%] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
+                    className="snap-start shrink-0 w-[calc(50%-4px)] md:w-[calc(33.333%-6px)] lg:w-[calc(25%-6px)]"
                   >
                     <ProductCard
                       product={item}
@@ -880,9 +882,37 @@ export function ProductDetailPage() {
       {/* Premium Zoom Modal */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in group/zoommodal"
           onClick={() => { setZoomedImage(null); setInnerZoom(false); }}
         >
+          {(() => {
+            const currentIndex = displayedImages.indexOf(zoomedImage);
+            const hasPrev = currentIndex > 0;
+            const hasNext = currentIndex !== -1 && currentIndex < displayedImages.length - 1;
+            
+            return (
+              <>
+                {hasPrev && !innerZoom && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex - 1]); setInnerZoom(false); }}
+                    className="hidden sm:flex absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
+                    aria-label="Previous image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                  </button>
+                )}
+                {hasNext && !innerZoom && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex + 1]); setInnerZoom(false); }}
+                    className="hidden sm:flex absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
+                    aria-label="Next image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  </button>
+                )}
+              </>
+            );
+          })()}
           <div 
             className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20"
             onClick={(e) => {
@@ -892,6 +922,26 @@ export function ProductDetailPage() {
                }
                e.stopPropagation(); 
                setInnerZoom(!innerZoom); 
+            }}
+            onTouchStart={(e) => {
+              if (!innerZoom) {
+                swipeStartX.current = e.touches[0].clientX;
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (!innerZoom && swipeStartX.current !== null && zoomedImage) {
+                const swipeEndX = e.changedTouches[0].clientX;
+                const diffX = swipeStartX.current - swipeEndX;
+                if (Math.abs(diffX) > 50) {
+                  const currentIndex = displayedImages.indexOf(zoomedImage);
+                  if (diffX > 0 && currentIndex !== -1 && currentIndex < displayedImages.length - 1) {
+                    setZoomedImage(displayedImages[currentIndex + 1]);
+                  } else if (diffX < 0 && currentIndex > 0) {
+                    setZoomedImage(displayedImages[currentIndex - 1]);
+                  }
+                }
+                swipeStartX.current = null;
+              }
             }}
             onMouseMove={(e) => {
               if (!innerZoom) return;

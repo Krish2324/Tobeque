@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
+import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 import api from "../../services/api";
 
@@ -35,7 +35,7 @@ export function StyleJournalPage() {
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary selection:text-on-primary">
-      <SimpleNavbar />
+      <Navbar />
       
       <main className="flex-grow w-full pb-20">
         

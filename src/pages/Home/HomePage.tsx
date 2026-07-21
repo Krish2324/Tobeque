@@ -435,7 +435,7 @@ export function HomePage() {
             ) : onSaleProducts.length > 0 ? (
               <div
                 ref={onSaleScrollRef}
-                className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab"
+                className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab py-4 px-2 -mx-2"
                 style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
                 onMouseDown={onSaleMouseDown}
                 onMouseMove={onSaleMouseMove}

@@ -482,7 +482,7 @@ export function ProductDetailPage() {
                     className="text-[10px] text-secondary/60 hover:text-primary transition-colors underline underline-offset-2"
                     onClick={() => setIsSizeGuideOpen(true)}
                   >
-                    Guide
+                    Size Guide
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-1.5">

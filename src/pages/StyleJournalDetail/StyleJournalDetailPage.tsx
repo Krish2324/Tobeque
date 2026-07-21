@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { SimpleNavbar } from "../../components/SimpleNavbar/SimpleNavbar";
+import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
@@ -82,7 +82,7 @@ export function StyleJournalDetailPage() {
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased min-h-screen flex flex-col font-body-md selection:bg-primary selection:text-on-primary">
-      <SimpleNavbar />
+      <Navbar />
       
       <main className="flex-grow w-full pb-20">
         <div className="w-full max-w-[1200px] mx-auto px-6 md:px-12 py-16">

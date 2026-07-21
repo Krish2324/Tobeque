@@ -113,7 +113,7 @@ export function ProductCard({
   }, [selectedColorName, product.imageSrc, product.galleryImageObjects]);
 
   return (
-    <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02]">
+    <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02] hover:z-10">
       {/* Image Container with Separated Link & Button Layers */}
       <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block">
         {/* Clickable Image Layer */}

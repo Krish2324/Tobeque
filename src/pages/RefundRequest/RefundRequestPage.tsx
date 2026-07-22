@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import { useAuth } from '../../context/AuthContext';
 
+const RETURN_REASONS = [
+  { value: 'wrong_size', label: 'Wrong Size / Fit', icon: 'straighten', desc: 'The item doesn\'t fit as expected' },
+  { value: 'damaged_defective', label: 'Damaged / Defective', icon: 'broken_image', desc: 'The item arrived damaged or has a defect' },
+  { value: 'not_as_described', label: 'Not as Described', icon: 'help_outline', desc: 'The item looks different from the listing' },
+  { value: 'changed_mind', label: 'Changed My Mind', icon: 'sentiment_dissatisfied', desc: 'I no longer need this item' },
+  { value: 'other', label: 'Other', icon: 'more_horiz', desc: 'Something else — please describe below' },
+] as const;
+
 export function RefundRequestPage() {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', orderId: '', reason: '' });
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    orderId: '',
+    returnReason: '' as string,
+    reason: '',
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -31,12 +46,15 @@ export function RefundRequestPage() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
-    // Check localStorage directly to avoid stale React closure state after the modal callback
+
     const currentToken = localStorage.getItem('tobeque_user_token');
-    
     if (!currentToken) {
       openLoginModal(() => handleSubmit());
+      return;
+    }
+
+    if (!form.returnReason) {
+      setError('Please select a reason for the return.');
       return;
     }
 
@@ -45,11 +63,19 @@ export function RefundRequestPage() {
     try {
       const res = await fetch('/api/refund-requests', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${currentToken}` 
+          'Authorization': `Bearer ${currentToken}`
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          orderId: form.orderId,
+          requestType: 'return',
+          returnReason: form.returnReason,
+          reason: form.reason,
+        }),
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to submit request');
@@ -68,10 +94,12 @@ export function RefundRequestPage() {
         {/* Page Header */}
         <div className="border-b border-gray-100 bg-[#fafafa]">
           <div className="max-w-2xl mx-auto px-6 py-8 md:py-12">
+            <Link to="/profile" className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase text-gray-400 font-medium mb-4 hover:text-gray-600 transition-colors">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              Back to Profile
+            </Link>
             <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400 font-medium mb-3">Support</p>
-            <h1 className="text-3xl md:text-4xl font-serif tracking-wide text-[#111] mb-2">
-              Refund Request
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-serif tracking-wide text-[#111] mb-2">Return Request</h1>
             <p className="text-sm text-gray-400">We'll review your request and get back to you within 3–5 business days.</p>
           </div>
         </div>
@@ -79,24 +107,44 @@ export function RefundRequestPage() {
         <div className="max-w-2xl mx-auto px-6 pt-10">
           {success ? (
             <div className="text-center py-16">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6 border border-green-100">
+                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-serif text-[#111] mb-2">Request Submitted</h2>
-              <p className="text-sm text-gray-500 mb-2">Your refund request has been received.</p>
-              <p className="text-sm text-gray-400">Our team will review it and contact you at <strong>{form.email}</strong> within 3–5 business days.</p>
+              <h2 className="text-2xl font-serif text-[#111] mb-3">Return Request Submitted</h2>
+              <p className="text-sm text-gray-500 mb-2">Your return request has been received for order <strong>{form.orderId}</strong>.</p>
+              <p className="text-sm text-gray-400 mb-8">Our team will review it and contact you at <strong>{form.email}</strong> within 3–5 business days.</p>
+              <Link to="/profile" className="inline-flex items-center gap-2 bg-[#111] text-white px-8 py-3 text-xs tracking-widest uppercase font-semibold hover:bg-[#333] transition-colors">
+                Back to My Orders
+              </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-7">
               {/* Info Note */}
-              <div className="border border-amber-200 bg-amber-50 px-5 py-4 mb-2">
+              <div className="border border-amber-200 bg-amber-50 px-5 py-4 rounded-lg">
                 <p className="text-xs text-amber-700 leading-relaxed">
-                  Please ensure your Order ID matches exactly as shown in your order confirmation email or profile page. Refunds are only processed for eligible orders within 7 days of delivery.
+                  Returns are accepted within <strong>7 days of delivery</strong>. Please ensure your Order ID matches exactly as shown in your order confirmation. Only delivered orders are eligible for returns.
                 </p>
               </div>
 
+              {/* Order ID */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
+                  Order ID <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="orderId"
+                  required
+                  placeholder="e.g. ORD-20250101-1234"
+                  value={form.orderId}
+                  onChange={handleChange}
+                  className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300"
+                />
+              </div>
+
+              {/* Contact Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
@@ -126,10 +174,7 @@ export function RefundRequestPage() {
                     className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
                     Phone <span className="text-rose-500">*</span>
                   </label>
@@ -143,30 +188,55 @@ export function RefundRequestPage() {
                     className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
-                    Order ID <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="orderId"
-                    required
-                    placeholder="e.g. ORD-20250101-1234"
-                    value={form.orderId}
-                    onChange={handleChange}
-                    className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300"
-                  />
+              </div>
+
+              {/* Return Reason */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-3 tracking-wide uppercase">
+                  Reason for Return <span className="text-rose-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {RETURN_REASONS.map(reason => (
+                    <button
+                      key={reason.value}
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, returnReason: reason.value }))}
+                      className={`w-full flex items-center gap-4 px-5 py-4 border text-left transition-all ${
+                        form.returnReason === reason.value
+                          ? 'border-[#111] bg-gray-50'
+                          : 'border-gray-200 hover:border-gray-400'
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        form.returnReason === reason.value ? 'bg-[#111] text-white' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        <span className="material-symbols-outlined text-[16px]">{reason.icon}</span>
+                      </div>
+                      <div>
+                        <p className={`text-sm font-medium ${form.returnReason === reason.value ? 'text-[#111]' : 'text-gray-700'}`}>
+                          {reason.label}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">{reason.desc}</p>
+                      </div>
+                      {form.returnReason === reason.value && (
+                        <svg className="ml-auto w-5 h-5 text-[#111] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
 
+              {/* Additional Notes */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
-                  Reason for refund
+                  Additional Details (optional)
                 </label>
                 <textarea
                   name="reason"
                   rows={4}
-                  placeholder="Briefly describe why you're requesting a refund..."
+                  placeholder="Please describe the issue in more detail. Photos can be sent to care@tobeque.com."
                   value={form.reason}
                   onChange={handleChange}
                   className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300 resize-none"
@@ -182,7 +252,7 @@ export function RefundRequestPage() {
                 disabled={loading}
                 className="w-full py-3.5 bg-[#111] text-white text-sm font-semibold tracking-[0.2em] uppercase hover:bg-[#333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Refund Request'}
+                {loading ? 'Submitting...' : 'Submit Return Request'}
               </button>
             </form>
           )}

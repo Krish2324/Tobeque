@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -37,19 +37,34 @@ const STATUS_COLORS: Record<string, string> = {
   returned: 'bg-gray-50 text-gray-600 border border-gray-200',
 };
 
-const REFUND_STATUS_COLORS: Record<string, string> = {
+const REQUEST_STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
   under_review: 'bg-blue-50 text-blue-700 border-blue-200',
   approved: 'bg-green-50 text-green-700 border-green-200',
   rejected: 'bg-red-50 text-red-700 border-red-200',
+  auto_cancelled: 'bg-gray-50 text-gray-600 border-gray-200',
 };
 
-const REFUND_STATUS_LABELS: Record<string, string> = {
-  pending: 'Refund Pending',
+const REQUEST_STATUS_LABELS: Record<string, string> = {
+  pending: 'Request Pending',
   under_review: 'Under Review',
-  approved: 'Refund Approved',
-  rejected: 'Refund Rejected',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  auto_cancelled: 'Cancelled',
 };
+
+const REQUEST_TYPE_LABELS: Record<string, string> = {
+  cancel: 'Cancellation',
+  return: 'Return',
+};
+
+const RETURN_REASONS = [
+  { value: 'wrong_size', label: 'Wrong Size', icon: 'straighten' },
+  { value: 'damaged_defective', label: 'Damaged / Defective', icon: 'broken_image' },
+  { value: 'not_as_described', label: 'Not as Described', icon: 'help_outline' },
+  { value: 'changed_mind', label: 'Changed My Mind', icon: 'sentiment_dissatisfied' },
+  { value: 'other', label: 'Other', icon: 'more_horiz' },
+] as const;
 
 export function ProfilePage() {
   const { user, token, isAuthenticated, logout, updateUser } = useAuth();
@@ -62,8 +77,24 @@ export function ProfilePage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
-  // refund requests keyed by order number for quick lookup
-  const [refundMap, setRefundMap] = useState<Record<string, { status: string }>>({});
+
+  // Request map: keyed by orderNumber → { status, requestType }
+  const [requestMap, setRequestMap] = useState<Record<string, { status: string; requestType: string }>>({});
+
+  // Cancel modal state
+  const [cancelModal, setCancelModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelError, setCancelError] = useState('');
+
+  // Return modal state
+  const [returnModal, setReturnModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
+  const [returnReason, setReturnReason] = useState('');
+  const [returnNote, setReturnNote] = useState('');
+  const [returnLoading, setReturnLoading] = useState(false);
+  const [returnError, setReturnError] = useState('');
+  // Order Details modal state
+  const [orderDetailsModal, setOrderDetailsModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
   
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -143,6 +174,25 @@ export function ProfilePage() {
     }
   }, [isAuthenticated, navigate]);
 
+  // Fetch user's requests and build a map keyed by orderNumber
+  const fetchRequestMap = useCallback(() => {
+    if (!token) return;
+    fetch('/api/refund-requests/my', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const map: Record<string, { status: string; requestType: string }> = {};
+          (data.requests as Array<{ orderId: string; status: string; requestType: string }>).forEach(r => {
+            map[r.orderId] = { status: r.status, requestType: r.requestType };
+          });
+          setRequestMap(map);
+        }
+      })
+      .catch(() => {});
+  }, [token]);
+
   // Fetch orders on mount
   useEffect(() => {
     if (!token || !isAuthenticated) return;
@@ -152,22 +202,8 @@ export function ProfilePage() {
       .catch((err) => setOrdersError(err.message || 'Failed to load orders'))
       .finally(() => setOrdersLoading(false));
 
-    // Fetch user's refund requests and build a map keyed by order number
-    fetch('/api/refund-requests/my', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          const map: Record<string, { status: string }> = {};
-          (data.requests as Array<{ orderId: string; status: string }>).forEach(r => {
-            map[r.orderId] = { status: r.status };
-          });
-          setRefundMap(map);
-        }
-      })
-      .catch(() => {}); // silently ignore refund fetch errors
-  }, [token, isAuthenticated]);
+    fetchRequestMap();
+  }, [token, isAuthenticated, fetchRequestMap]);
 
   if (!isAuthenticated || !user) return null;
 
@@ -184,8 +220,78 @@ export function ProfilePage() {
     setIsCartOpen(true);
   };
 
+  // ── Cancel Order ──────────────────────────────────────────────────────────
+  const handleCancelSubmit = async () => {
+    if (!cancelModal.order || !token || !user) return;
+    setCancelLoading(true);
+    setCancelError('');
+    try {
+      const res = await fetch('/api/refund-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
+          email: user.email || `${user.phone}@guest.local`,
+          phone: user.phone || '',
+          orderId: cancelModal.order.orderNumber,
+          requestType: 'cancel',
+          cancelReason,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to submit cancellation');
+
+      // If auto-cancelled, update the order in the local list immediately
+      if (data.orderStatus === 'cancelled') {
+        setOrders(prev => prev.map(o =>
+          o.orderNumber === cancelModal.order!.orderNumber ? { ...o, orderStatus: 'cancelled' } : o
+        ));
+      }
+      setCancelModal({ open: false, order: null });
+      setCancelReason('');
+      fetchRequestMap();
+    } catch (err: any) {
+      setCancelError(err.message || 'Something went wrong.');
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  // ── Return / Refund ───────────────────────────────────────────────────────
+  const handleReturnSubmit = async () => {
+    if (!returnModal.order || !token || !user) return;
+    if (!returnReason) { setReturnError('Please select a return reason.'); return; }
+    setReturnLoading(true);
+    setReturnError('');
+    try {
+      const res = await fetch('/api/refund-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
+          email: user.email || `${user.phone}@guest.local`,
+          phone: user.phone || '',
+          orderId: returnModal.order.orderNumber,
+          requestType: 'return',
+          returnReason,
+          reason: returnNote,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to submit return request');
+      setReturnModal({ open: false, order: null });
+      setReturnReason('');
+      setReturnNote('');
+      fetchRequestMap();
+    } catch (err: any) {
+      setReturnError(err.message || 'Something went wrong.');
+    } finally {
+      setReturnLoading(false);
+    }
+  };
+
   return (
-    <div className="bg-surface-container-lowest text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+    <div className="bg-surface-container-lowest text-on-surface  antialiased min-h-screen flex flex-col">
       <Navbar />
 
       <main className="flex-grow pt-[88px] max-w-7xl mx-auto px-6 py-12 md:py-16 w-full">
@@ -225,7 +331,7 @@ export function ProfilePage() {
                 accept="image/*" 
                 className="hidden" 
               />
-              <h2 className="font-headline-md text-2xl text-primary text-center tracking-tight">{displayName}</h2>
+              <h2 className="font-light tracking-[0.2em] uppercase text-2xl text-primary text-center tracking-tight">{displayName}</h2>
               <p className="text-xs text-secondary/60 mt-1">{user.email}</p>
             </div>
             
@@ -265,7 +371,7 @@ export function ProfilePage() {
             {/* Orders Tab */}
             {activeTab === 'orders' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
-                <h1 className="text-3xl font-headline-md text-primary mb-8">Order History</h1>
+                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary mb-8">Order History</h1>
                 
                 {ordersLoading ? (
                   <div className="flex flex-col gap-6">
@@ -283,7 +389,7 @@ export function ProfilePage() {
                     <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-6 text-secondary/30">
                       <span className="material-symbols-outlined text-4xl">shopping_basket</span>
                     </div>
-                    <h3 className="font-headline-md text-2xl text-primary mb-3">No orders yet</h3>
+                    <h3 className="font-light tracking-[0.2em] uppercase text-2xl text-primary mb-3">No orders yet</h3>
                     <p className="text-secondary/60 mb-8 max-w-sm">When you place an order, it will appear here so you can track its status.</p>
                     <Link to="/collection" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
                       Start Shopping
@@ -291,64 +397,99 @@ export function ProfilePage() {
                   </div>
                 ) : (
                   <div className="flex flex-col gap-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="bg-surface rounded-3xl border border-outline-variant/30 p-6 sm:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-shadow duration-300">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-outline-variant/40">
-                          <div>
-                            <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-1">Order #{order.orderNumber}</p>
-                            <p className="text-sm text-primary font-medium">Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3">
-                            <div className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
-                              {order.orderStatus}
-                            </div>
-                            <span className="text-lg font-headline-md text-primary">{currencySymbol}{Number(order.totalAmount).toLocaleString('en-IN')}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-4 mb-5">
-                          {order.items?.map((item, idx) => (
-                            <div key={idx} className="flex items-center gap-4 bg-surface-container-lowest rounded-2xl p-3 pr-6 border border-outline-variant/30">
-                              <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container">
-                                {item.product?.thumbnail ? (
-                                  <img src={item.product.thumbnail} alt={item.productName} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-secondary/30">
-                                    <span className="material-symbols-outlined">inventory_2</span>
-                                  </div>
-                                )}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-primary line-clamp-1">{item.productName}</p>
-                                <p className="text-xs text-secondary/70 mt-1">Qty: {item.quantity}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {orders.map((order) => {
+                      const existingRequest = requestMap[order.orderNumber];
+                      const isCancellable = ['pending', 'confirmed', 'processing'].includes(order.orderStatus);
+                      const isReturnable = order.orderStatus === 'delivered';
+                      const isTerminal = ['cancelled', 'returned'].includes(order.orderStatus);
 
-                        {/* Refund status / request refund */}
-                        <div className="pt-4 border-t border-outline-variant/30 flex items-center justify-between">
-                          {refundMap[order.orderNumber] ? (
-                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border ${REFUND_STATUS_COLORS[refundMap[order.orderNumber].status]}`}>
-                              <span className="material-symbols-outlined text-[14px]">receipt_long</span>
-                              {REFUND_STATUS_LABELS[refundMap[order.orderNumber].status]}
+                      return (
+                        <div key={order.id} className="bg-surface rounded-3xl border border-outline-variant/30 p-6 sm:p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-shadow duration-300">
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-6 border-b border-outline-variant/40">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-1">Order #{order.orderNumber}</p>
+                              <p className="text-sm text-primary font-medium">Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                             </div>
-                          ) : (
-                            ['delivered', 'returned', 'cancelled'].includes(order.orderStatus) ? (
-                              <Link
-                                to={`/refund-request?orderId=${order.orderNumber}`}
-                                className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-secondary/60 hover:text-primary transition-colors border border-outline-variant/50 rounded-full px-4 py-2 hover:border-outline-variant"
-                              >
-                                <span className="material-symbols-outlined text-[14px]">undo</span>
-                                Request Refund
-                              </Link>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <div className={`px-4 py-1.5 rounded-full text-[10px] uppercase tracking-widest font-bold ${STATUS_COLORS[order.orderStatus] || STATUS_COLORS.pending}`}>
+                                {order.orderStatus}
+                              </div>
+                              <span className="text-lg font-light tracking-[0.2em] uppercase text-primary">{currencySymbol}{Number(order.totalAmount).toLocaleString('en-IN')}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-4 mb-5">
+                            {order.items?.map((item, idx) => (
+                              <div key={idx} className="flex items-center gap-4 bg-surface-container-lowest rounded-2xl p-3 pr-6 border border-outline-variant/30">
+                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container">
+                                  {item.product?.thumbnail ? (
+                                    <img src={item.product.thumbnail} alt={item.productName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-secondary/30">
+                                      <span className="material-symbols-outlined">inventory_2</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-primary line-clamp-1">{item.productName}</p>
+                                  <p className="text-xs text-secondary/70 mt-1">Qty: {item.quantity}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Action Row */}
+                          <div className="pt-4 border-t border-outline-variant/30 flex flex-wrap items-center gap-3">
+                            <button
+                              onClick={() => setOrderDetailsModal({ open: true, order })}
+                              className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-brand-600 hover:text-brand-700 transition-all border border-brand-200 hover:bg-brand-50 rounded-full px-4 py-2"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">visibility</span>
+                              View Details
+                            </button>
+
+                            {existingRequest ? (
+                              // Show existing request badge
+                              <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border ${REQUEST_STATUS_COLORS[existingRequest.status] || REQUEST_STATUS_COLORS.pending}`}>
+                                <span className="material-symbols-outlined text-[14px]">
+                                  {existingRequest.requestType === 'cancel' ? 'cancel' : 'undo'}
+                                </span>
+                                {REQUEST_TYPE_LABELS[existingRequest.requestType] || ''} — {REQUEST_STATUS_LABELS[existingRequest.status] || existingRequest.status}
+                              </div>
                             ) : (
-                              <span className="text-[10px] text-secondary/40 italic">Refund available after delivery</span>
-                            )
-                          )}
+                              <>
+                                {/* Cancel button */}
+                                {isCancellable && (
+                                  <button
+                                    onClick={() => { setCancelModal({ open: true, order }); setCancelError(''); setCancelReason(''); }}
+                                    className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-red-500 hover:text-white transition-all border border-red-200 hover:bg-red-500 rounded-full px-4 py-2"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">cancel</span>
+                                    Cancel Order
+                                  </button>
+                                )}
+
+                                {/* Return / Refund button */}
+                                {isReturnable && (
+                                  <button
+                                    onClick={() => { setReturnModal({ open: true, order }); setReturnError(''); setReturnReason(''); setReturnNote(''); }}
+                                    className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-secondary/70 hover:text-primary transition-colors border border-outline-variant/50 hover:border-outline-variant rounded-full px-4 py-2"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">undo</span>
+                                    Return / Refund
+                                  </button>
+                                )}
+
+                                {/* Informational message */}
+                                {!isCancellable && !isReturnable && !isTerminal && (
+                                  <span className="text-[10px] text-secondary/40 italic">Actions available once delivered or if not yet shipped</span>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -358,7 +499,7 @@ export function ProfilePage() {
             {activeTab === 'addresses' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
                 <div className="flex justify-between items-end mb-8">
-                  <h1 className="text-3xl font-headline-md text-primary">Saved Addresses</h1>
+                  <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary">Saved Addresses</h1>
                   <button onClick={() => setActiveTab('details')} className="text-xs font-bold text-primary uppercase tracking-widest hover:text-secondary transition-colors underline underline-offset-4">
                     Edit Addresses
                   </button>
@@ -375,7 +516,7 @@ export function ProfilePage() {
                       
                       <address className="not-italic text-sm text-primary leading-relaxed flex flex-col gap-1">
                         {formData.firstName || formData.lastName ? (
-                          <strong className="text-lg font-headline-md block mb-2">{formData.firstName} {formData.lastName}</strong>
+                          <strong className="text-lg font-light tracking-[0.2em] uppercase block mb-2">{formData.firstName} {formData.lastName}</strong>
                         ) : (
                           <span className="italic text-secondary/50">No name provided</span>
                         )}
@@ -399,7 +540,7 @@ export function ProfilePage() {
             {/* Account Details Tab */}
             {activeTab === 'details' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-3xl">
-                <h1 className="text-3xl font-headline-md text-primary mb-2">Account Details</h1>
+                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary mb-2">Account Details</h1>
                 <p className="text-sm text-secondary/70 mb-8">Update your personal information and address details here.</p>
 
                 {saveSuccess && (
@@ -552,7 +693,7 @@ export function ProfilePage() {
             {activeTab === 'wishlist' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
                 <div className="flex justify-between items-end mb-8">
-                  <h1 className="text-3xl font-headline-md text-primary">My Wishlist</h1>
+                  <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary">My Wishlist</h1>
                   <span className="text-xs font-bold text-secondary/50 uppercase tracking-widest">{wishlistItems.length} Items</span>
                 </div>
 
@@ -561,7 +702,7 @@ export function ProfilePage() {
                     <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-6 text-secondary/30">
                       <span className="material-symbols-outlined text-4xl">favorite_border</span>
                     </div>
-                    <h3 className="font-headline-md text-2xl text-primary mb-3">Your wishlist is empty</h3>
+                    <h3 className="font-light tracking-[0.2em] uppercase text-2xl text-primary mb-3">Your wishlist is empty</h3>
                     <p className="text-secondary/60 mb-8 max-w-sm">Save your favorite pieces here to easily find them later or add them to your cart.</p>
                     <Link to="/collection" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
                       Discover Pieces
@@ -613,6 +754,295 @@ export function ProfilePage() {
       </main>
 
       <Footer />
+
+      {/* ── Cancel Order Modal ─────────────────────────────────────────────── */}
+      {cancelModal.open && cancelModal.order && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setCancelModal({ open: false, order: null })}>
+          <div className="bg-surface rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-red-500">cancel</span>
+              </div>
+              <div>
+                <h3 className="font-light tracking-[0.2em] uppercase text-lg text-primary">Cancel Order</h3>
+                <p className="text-xs text-secondary/60 mt-0.5">#{cancelModal.order.orderNumber}</p>
+              </div>
+            </div>
+
+            {cancelModal.order.orderStatus === 'pending' ? (
+              <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  <strong>Heads up:</strong> This will immediately cancel your order since it hasn't been confirmed yet. Your refund (if paid online) will be processed within 5–7 business days.
+                </p>
+              </div>
+            ) : (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Your order is currently <strong>{cancelModal.order.orderStatus}</strong>. A cancellation request will be submitted for admin review, and our team will contact you shortly.
+                </p>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-2">Reason for cancellation (optional)</label>
+              <textarea
+                rows={3}
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder="Let us know why you want to cancel..."
+                className="w-full border border-outline-variant rounded-xl px-4 py-3 text-sm text-primary focus:outline-none focus:border-primary transition-colors resize-none placeholder-secondary/30"
+              />
+            </div>
+
+            {cancelError && (
+              <p className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{cancelError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setCancelModal({ open: false, order: null })}
+                className="flex-1 py-3 rounded-full border border-outline-variant text-sm font-medium text-secondary hover:bg-surface-container transition-colors"
+              >
+                Keep Order
+              </button>
+              <button
+                onClick={handleCancelSubmit}
+                disabled={cancelLoading}
+                className="flex-1 py-3 rounded-full bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancelLoading ? 'Processing...' : 'Confirm Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Return / Refund Modal ──────────────────────────────────────────── */}
+      {returnModal.open && returnModal.order && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setReturnModal({ open: false, order: null })}>
+          <div className="bg-surface rounded-3xl shadow-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                <span className="material-symbols-outlined text-indigo-500">undo</span>
+              </div>
+              <div>
+                <h3 className="font-light tracking-[0.2em] uppercase text-lg text-primary">Return / Refund</h3>
+                <p className="text-xs text-secondary/60 mt-0.5">#{returnModal.order.orderNumber}</p>
+              </div>
+            </div>
+
+            <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl">
+              <p className="text-xs text-indigo-700 leading-relaxed">
+                Returns are accepted within <strong>7 days of delivery</strong>. Our team will review your request and contact you within 3–5 business days.
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-3">Reason for return <span className="text-red-400">*</span></label>
+              <div className="grid grid-cols-1 gap-2">
+                {RETURN_REASONS.map(reason => (
+                  <button
+                    key={reason.value}
+                    type="button"
+                    onClick={() => setReturnReason(reason.value)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all ${
+                      returnReason === reason.value
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-outline-variant text-secondary/70 hover:border-primary/50 hover:text-primary'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">{reason.icon}</span>
+                    {reason.label}
+                    {returnReason === reason.value && (
+                      <span className="ml-auto material-symbols-outlined text-[16px] text-primary">check_circle</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-2">Additional notes (optional)</label>
+              <textarea
+                rows={3}
+                value={returnNote}
+                onChange={e => setReturnNote(e.target.value)}
+                placeholder="Any additional details about the issue..."
+                className="w-full border border-outline-variant rounded-xl px-4 py-3 text-sm text-primary focus:outline-none focus:border-primary transition-colors resize-none placeholder-secondary/30"
+              />
+            </div>
+
+            {returnError && (
+              <p className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{returnError}</p>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setReturnModal({ open: false, order: null })}
+                className="flex-1 py-3 rounded-full border border-outline-variant text-sm font-medium text-secondary hover:bg-surface-container transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReturnSubmit}
+                disabled={returnLoading}
+                className="flex-1 py-3 rounded-full bg-primary text-on-primary text-sm font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {returnLoading ? 'Submitting...' : 'Submit Request'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Order Details Modal ────────────────────────────────────────────── */}
+      {orderDetailsModal.open && orderDetailsModal.order && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setOrderDetailsModal({ open: false, order: null })}>
+          <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-outline-variant/30 flex items-center justify-between sticky top-0 bg-surface z-10">
+              <div>
+                <h3 className="font-light tracking-[0.2em] uppercase text-lg text-primary">Order Details</h3>
+                <p className="text-xs text-secondary/60 mt-0.5 font-mono">#{orderDetailsModal.order.orderNumber}</p>
+              </div>
+              <button 
+                onClick={() => setOrderDetailsModal({ open: false, order: null })}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-container text-secondary hover:text-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-8">
+              {/* Order Status & Info */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-surface-container/50 p-4 rounded-2xl">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/50 mb-1">Date</p>
+                  <p className="text-sm font-medium text-primary">{new Date(orderDetailsModal.order.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/50 mb-1">Status</p>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${orderDetailsModal.order.orderStatus === 'delivered' ? 'text-green-600' : 'text-primary'}`}>
+                    {orderDetailsModal.order.orderStatus}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/50 mb-1">Payment</p>
+                  <p className="text-sm font-medium text-primary capitalize">{orderDetailsModal.order.paymentStatus}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest font-bold text-secondary/50 mb-1">Total</p>
+                  <p className="text-sm font-bold text-primary">{currencySymbol}{Number(orderDetailsModal.order.totalAmount).toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div>
+                <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-secondary mb-4">Items Ordered</h4>
+                <div className="space-y-3">
+                  {orderDetailsModal.order.items?.map((item: any, idx: number) => (
+                    <div key={idx} className="flex gap-4 p-3 rounded-2xl border border-outline-variant/30">
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container shrink-0">
+                        {item.product?.thumbnail ? (
+                          <img src={item.product.thumbnail} alt={item.productName} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-secondary/30">
+                            <span className="material-symbols-outlined">inventory_2</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-primary truncate">{item.productName}</p>
+                        <p className="text-xs text-secondary/70 mt-1">Qty: {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-primary">{currencySymbol}{(Number(item.price || item.unitPrice || 0) * item.quantity).toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl p-5">
+                <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-secondary mb-4">Order Summary</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between text-secondary">
+                    <span>Subtotal</span>
+                    <span>{currencySymbol}{Number((orderDetailsModal.order as any).subtotal || orderDetailsModal.order.totalAmount).toLocaleString('en-IN')}</span>
+                  </div>
+                  {Number((orderDetailsModal.order as any).shippingCost) > 0 && (
+                    <div className="flex justify-between text-secondary">
+                      <span>Shipping</span>
+                      <span>{currencySymbol}{Number((orderDetailsModal.order as any).shippingCost).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {Number((orderDetailsModal.order as any).taxAmount) > 0 && (
+                    <div className="flex justify-between text-secondary">
+                      <span>Tax</span>
+                      <span>{currencySymbol}{Number((orderDetailsModal.order as any).taxAmount).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {Number((orderDetailsModal.order as any).discountAmount) > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount</span>
+                      <span>-{currencySymbol}{Number((orderDetailsModal.order as any).discountAmount).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  <div className="pt-3 mt-3 border-t border-outline-variant/30 flex justify-between font-bold text-primary text-base">
+                    <span>Total</span>
+                    <span>{currencySymbol}{Number(orderDetailsModal.order.totalAmount).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Addresses */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {((orderDetailsModal.order as any).shippingAddress) && (
+                  <div>
+                    <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-secondary mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                      Shipping Address
+                    </h4>
+                    <address className="not-italic text-sm text-secondary leading-relaxed bg-surface-container/30 p-4 rounded-2xl">
+                      <span className="font-medium text-primary block mb-1">
+                        {(orderDetailsModal.order as any).shippingAddress.firstName} {(orderDetailsModal.order as any).shippingAddress.lastName}
+                      </span>
+                      {(orderDetailsModal.order as any).shippingAddress.address}<br />
+                      {(orderDetailsModal.order as any).shippingAddress.city}, {(orderDetailsModal.order as any).shippingAddress.state} {(orderDetailsModal.order as any).shippingAddress.zipCode}<br />
+                      {(orderDetailsModal.order as any).shippingAddress.country}
+                    </address>
+                  </div>
+                )}
+                {((orderDetailsModal.order as any).billingAddress) && (
+                  <div>
+                    <h4 className="text-[11px] uppercase tracking-[0.15em] font-bold text-secondary mb-3 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                      Billing Address
+                    </h4>
+                    <address className="not-italic text-sm text-secondary leading-relaxed bg-surface-container/30 p-4 rounded-2xl">
+                      <span className="font-medium text-primary block mb-1">
+                        {(orderDetailsModal.order as any).billingAddress.firstName} {(orderDetailsModal.order as any).billingAddress.lastName}
+                      </span>
+                      {(orderDetailsModal.order as any).billingAddress.address}<br />
+                      {(orderDetailsModal.order as any).billingAddress.city}, {(orderDetailsModal.order as any).billingAddress.state} {(orderDetailsModal.order as any).billingAddress.zipCode}<br />
+                      {(orderDetailsModal.order as any).billingAddress.country}
+                    </address>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-outline-variant/30 flex justify-end sticky bottom-0 bg-surface z-10">
+              <button
+                onClick={() => setOrderDetailsModal({ open: false, order: null })}
+                className="px-6 py-2.5 bg-primary text-on-primary text-xs font-bold tracking-widest uppercase hover:bg-black transition-colors rounded-full"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

@@ -171,10 +171,10 @@ export function HomePage() {
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
         <section
-          className={`relative w-full h-[90vh] md:h-[92.5vh] mb-4 ${heroBannerData?.bannerLink ? 'cursor-pointer' : ''}`}
+          className={`relative w-full h-[90vh] md:h-[92.5vh] mb-4 ${heroBannerTarget ? 'cursor-pointer' : ''}`}
           onClick={() => {
-            if (heroBannerData?.bannerLink) {
-              openInNewTab(heroBannerData.bannerLink);
+            if (heroBannerTarget) {
+              openInNewTab(heroBannerTarget);
             }
           }}
         >

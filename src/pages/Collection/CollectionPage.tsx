@@ -31,6 +31,8 @@ interface Category {
   id?: string;
   _id?: string;
   name: string;
+  description?: string;
+  descriptionSections?: Array<{ title?: string; content?: string }>;
   subcategories?: Category[];
 }
 
@@ -738,6 +740,67 @@ export function CollectionPage() {
           </button>
         </div>
       </div>
+
+      {/* ── Category SEO & Description Guide (Above Footer) ───────────────── */}
+      {(() => {
+        const activeCat = currentContext || categoriesTree.find(c => String(c.id || c._id) === categoryParam || String(c.name).toLowerCase() === String(categoryParam).toLowerCase());
+        
+        const hasDesc = !!activeCat?.description;
+        const validSections = activeCat?.descriptionSections?.filter(s => s.title?.trim() || s.content?.trim()) || [];
+        const hasSections = validSections.length > 0;
+        
+        if (!activeCat || (!hasDesc && !hasSections)) return null;
+
+        return (
+          <section className="w-full bg-[#FDFDFD] border-t border-slate-200/60 py-16 md:py-20 px-6 md:px-12 mt-12">
+            <div className="max-w-5xl mx-auto space-y-10">
+              
+              {/* Main Category Article Header */}
+              {hasDesc && (
+                <div className="space-y-3 max-w-3xl pb-2">
+                  <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-slate-400 uppercase">
+                    <span className="w-2 h-2 rounded-full bg-slate-900 inline-block" />
+                    <span>Catalog & Styling Journal</span>
+                  </div>
+
+                  <h2 className="text-2xl md:text-3xl font-serif font-medium text-slate-900 tracking-tight leading-snug">
+                    About {activeCat.name}
+                  </h2>
+
+                  <p className="text-sm md:text-base leading-[1.85] font-normal whitespace-pre-line text-slate-600">
+                    {activeCat.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Dynamic Description Sections: 2-Column Alternating Left / Right Layout */}
+              {hasSections && (
+                <div className={`grid grid-cols-1 ${validSections.length > 1 ? 'md:grid-cols-2' : ''} gap-8 md:gap-12 ${hasDesc ? 'border-t border-slate-200/60 pt-8' : ''}`}>
+                  {validSections.map((sec, idx) => (
+                    <div key={idx} className="space-y-3">
+                      {sec.title?.trim() && (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-1 h-4 bg-slate-900 rounded-full shrink-0" />
+                          <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+                            {sec.title}
+                          </h3>
+                        </div>
+                      )}
+
+                      {sec.content?.trim() && (
+                        <p className="text-sm text-slate-600 leading-[1.85] font-normal whitespace-pre-line pl-3.5">
+                          {sec.content}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+            </div>
+          </section>
+        );
+      })()}
 
       <Footer />
 

@@ -21,6 +21,7 @@ export function RefundRequestPage() {
     returnReason: '' as string,
     reason: '',
   });
+  const [proofImage, setProofImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -44,6 +45,12 @@ export function RefundRequestPage() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProofImage(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
@@ -58,24 +65,32 @@ export function RefundRequestPage() {
       return;
     }
 
+    if (!form.reason.trim()) {
+      setError('Please provide additional details in the note field.');
+      return;
+    }
+
     setError('');
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('email', form.email);
+      formData.append('phone', form.phone);
+      formData.append('orderId', form.orderId);
+      formData.append('requestType', 'return');
+      formData.append('returnReason', form.returnReason);
+      formData.append('reason', form.reason);
+      if (proofImage) {
+        formData.append('proofImage', proofImage);
+      }
+
       const res = await fetch('/api/refund-requests', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentToken}`
         },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          orderId: form.orderId,
-          requestType: 'return',
-          returnReason: form.returnReason,
-          reason: form.reason,
-        }),
+        body: formData,
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to submit request');
@@ -231,16 +246,31 @@ export function RefundRequestPage() {
               {/* Additional Notes */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
-                  Additional Details (optional)
+                  Additional Details <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   name="reason"
                   rows={4}
-                  placeholder="Please describe the issue in more detail. Photos can be sent to care@tobeque.com."
+                  required
+                  placeholder="Please describe the issue in more detail."
                   value={form.reason}
                   onChange={handleChange}
                   className="w-full border border-gray-200 px-4 py-3 text-sm text-[#111] focus:outline-none focus:border-[#111] transition-colors placeholder-gray-300 resize-none"
                 />
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5 tracking-wide uppercase">
+                  Proof Image (Optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="w-full border border-gray-200 px-4 py-3 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100 transition-colors"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">Upload a photo showing the issue (e.g. damaged item).</p>
               </div>
 
               {error && (

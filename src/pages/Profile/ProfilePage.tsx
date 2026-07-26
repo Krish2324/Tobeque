@@ -25,6 +25,8 @@ interface Order {
   }>;
 }
 
+const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
+
 type Tab = 'orders' | 'addresses' | 'details' | 'wishlist';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -78,6 +80,13 @@ export function ProfilePage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
 
+  // Sync tab if navigated from Navbar (e.g. clicking wishlist heart icon while already on profile page)
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
+
   // Request map: keyed by orderNumber → { status, requestType }
   const [requestMap, setRequestMap] = useState<Record<string, { status: string; requestType: string }>>({});
 
@@ -91,6 +100,7 @@ export function ProfilePage() {
   const [returnModal, setReturnModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null });
   const [returnReason, setReturnReason] = useState('');
   const [returnNote, setReturnNote] = useState('');
+  const [returnImage, setReturnImage] = useState<File | null>(null);
   const [returnLoading, setReturnLoading] = useState(false);
   const [returnError, setReturnError] = useState('');
   // Order Details modal state
@@ -261,27 +271,33 @@ export function ProfilePage() {
   const handleReturnSubmit = async () => {
     if (!returnModal.order || !token || !user) return;
     if (!returnReason) { setReturnError('Please select a return reason.'); return; }
+    if (!returnNote.trim()) { setReturnError('Please provide additional details in the note field.'); return; }
     setReturnLoading(true);
     setReturnError('');
     try {
+      const formData = new FormData();
+      formData.append('name', `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer');
+      formData.append('email', user.email || `${user.phone}@guest.local`);
+      formData.append('phone', user.phone || '');
+      formData.append('orderId', returnModal.order.orderNumber);
+      formData.append('requestType', 'return');
+      formData.append('returnReason', returnReason);
+      formData.append('reason', returnNote);
+      if (returnImage) {
+        formData.append('proofImage', returnImage);
+      }
+
       const res = await fetch('/api/refund-requests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
-          email: user.email || `${user.phone}@guest.local`,
-          phone: user.phone || '',
-          orderId: returnModal.order.orderNumber,
-          requestType: 'return',
-          returnReason,
-          reason: returnNote,
-        }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to submit return request');
       setReturnModal({ open: false, order: null });
       setReturnReason('');
       setReturnNote('');
+      setReturnImage(null);
       fetchRequestMap();
     } catch (err: any) {
       setReturnError(err.message || 'Something went wrong.');
@@ -371,7 +387,7 @@ export function ProfilePage() {
             {/* Orders Tab */}
             {activeTab === 'orders' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
-                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary mb-8">Order History</h1>
+                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary text-center mt-6 mb-8">Order History</h1>
                 
                 {ordersLoading ? (
                   <div className="flex flex-col gap-6">
@@ -498,9 +514,11 @@ export function ProfilePage() {
             {/* Addresses Tab */}
             {activeTab === 'addresses' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
-                <div className="flex justify-between items-end mb-8">
-                  <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary">Saved Addresses</h1>
-                  <button onClick={() => setActiveTab('details')} className="text-xs font-bold text-primary uppercase tracking-widest hover:text-secondary transition-colors underline underline-offset-4">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 mt-6">
+                  <div className="w-full sm:w-auto text-center sm:text-left flex-1">
+                    <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary text-center">Saved Addresses</h1>
+                  </div>
+                  <button onClick={() => setActiveTab('details')} className="text-xs font-bold text-primary uppercase tracking-widest hover:text-secondary transition-colors underline underline-offset-4 shrink-0">
                     Edit Addresses
                   </button>
                 </div>
@@ -539,9 +557,9 @@ export function ProfilePage() {
 
             {/* Account Details Tab */}
             {activeTab === 'details' && (
-              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-3xl">
-                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary mb-2">Account Details</h1>
-                <p className="text-sm text-secondary/70 mb-8">Update your personal information and address details here.</p>
+              <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 max-w-3xl mx-auto">
+                <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary text-center mt-6 mb-2">Account Details</h1>
+                <p className="text-sm text-secondary/70 text-center mb-8">Update your personal information and address details here.</p>
 
                 {saveSuccess && (
                   <div className="mb-8 p-4 bg-green-50 rounded-2xl border border-green-100 text-green-700 text-sm flex items-center gap-3 animate-in fade-in">
@@ -692,9 +710,11 @@ export function ProfilePage() {
             {/* Wishlist Tab */}
             {activeTab === 'wishlist' && (
               <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 w-full">
-                <div className="flex justify-between items-end mb-8">
-                  <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary">My Wishlist</h1>
-                  <span className="text-xs font-bold text-secondary/50 uppercase tracking-widest">{wishlistItems.length} Items</span>
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 mt-6">
+                  <div className="w-full sm:w-auto text-center sm:text-left flex-1">
+                    <h1 className="text-3xl font-light tracking-[0.2em] uppercase text-primary text-center">My Wishlist</h1>
+                  </div>
+                  <span className="text-xs font-bold text-secondary/50 uppercase tracking-widest shrink-0">{wishlistItems.length} Items</span>
                 </div>
 
                 {wishlistItems.length === 0 ? (
@@ -720,13 +740,24 @@ export function ProfilePage() {
                           <span className="material-symbols-outlined text-sm">close</span>
                         </button>
                         
-                        {/* Image */}
+                        {/* Image / Video */}
                         <Link to={`/product/${item.id}`} className="aspect-[3/4] overflow-hidden bg-surface-container block">
-                          <img 
-                            src={item.imageSrc} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
-                          />
+                          {isVideo(item.imageSrc) ? (
+                            <video
+                              src={item.imageSrc}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                            />
+                          ) : (
+                            <img 
+                              src={item.imageSrc} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
+                            />
+                          )}
                         </Link>
                         
                         {/* Content */}
@@ -862,13 +893,24 @@ export function ProfilePage() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-2">Additional notes (optional)</label>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-2">Additional notes <span className="text-red-400">*</span></label>
               <textarea
                 rows={3}
+                required
                 value={returnNote}
                 onChange={e => setReturnNote(e.target.value)}
                 placeholder="Any additional details about the issue..."
                 className="w-full border border-outline-variant rounded-xl px-4 py-3 text-sm text-primary focus:outline-none focus:border-primary transition-colors resize-none placeholder-secondary/30"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-secondary/60 mb-2">Proof Image (Optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => setReturnImage(e.target.files && e.target.files[0] ? e.target.files[0] : null)}
+                className="w-full border border-outline-variant rounded-xl px-4 py-3 text-sm text-secondary/70 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-surface-container file:text-primary hover:file:bg-outline-variant/30 transition-colors cursor-pointer"
               />
             </div>
 

@@ -62,6 +62,7 @@ export function Footer() {
             <Link to="/style-journal" className="text-[13px] text-[#555] hover:text-primary transition-colors">Style Journal</Link>
             <Link to="/career" className="text-[13px] text-[#555] hover:text-primary transition-colors">Career</Link>
             <Link to="/faq" className="text-[13px] text-[#555] hover:text-primary transition-colors">FAQs</Link>
+            <Link to="/contact" className="text-[13px] text-[#555] hover:text-primary transition-colors">Contact Us</Link>
             <Link to="/steal-the-style" className="text-[13px] text-[#555] hover:text-primary transition-colors">Steal the Style</Link>
           </div>
 

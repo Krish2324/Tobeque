@@ -19,6 +19,29 @@ const PLACEHOLDER_IMAGES = [
   'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80'
 ];
 
+const isVideo = (url: string | undefined) => url && typeof url === 'string' && !!url.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
+
+const openInNewTab = (url: string | undefined) => {
+  if (!url || !url.trim()) return;
+  let finalUrl = url.trim();
+
+  if (finalUrl.startsWith('http://') || finalUrl.startsWith('https://')) {
+    // Full URL
+  } else if (finalUrl.startsWith('www.')) {
+    finalUrl = `https://${finalUrl}`;
+  } else if (finalUrl.startsWith('/')) {
+    finalUrl = `${window.location.origin}${finalUrl}`;
+  } else {
+    if (finalUrl.includes('.')) {
+      finalUrl = `https://${finalUrl}`;
+    } else {
+      finalUrl = `${window.location.origin}/${finalUrl}`;
+    }
+  }
+
+  window.open(finalUrl, '_blank', 'noopener,noreferrer');
+};
+
 interface SeasonCollectionItem {
   id: string;
   categoryId: string;
@@ -103,7 +126,6 @@ export function HomePage() {
       .then(res => {
         if (res.data.success && Array.isArray(res.data.banners)) {
           const activeBanners = res.data.banners.filter((b: any) => b.status);
-          // Prefer home_slider over promo_top, or fallback to first
           const promo = activeBanners.find((b: any) => b.position === 'home_slider') ||
             activeBanners.find((b: any) => b.position === 'promo_top') ||
             activeBanners[0];
@@ -121,7 +143,6 @@ export function HomePage() {
   const [collectionItems, setCollectionItems] = useState<SeasonCollectionItem[]>([]);
   const [collectionLoading, setCollectionLoading] = useState(true);
 
-
   useEffect(() => {
     api.get('/api/season-collection')
       .then(res => {
@@ -136,10 +157,12 @@ export function HomePage() {
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
-    const exists = wishlistItems.find((p) => p.name === product.name);
-    if (exists) removeFromWishlist(product.name);
+    const exists = wishlistItems.find((p) => (p.id && product.id && String(p.id) === String(product.id)) || p.name === product.name);
+    if (exists) removeFromWishlist(product.id || product.name);
     else addToWishlist(product);
   };
+
+  const heroBannerTarget = heroBannerData?.bannerLink || heroBannerData?.linkUrl;
 
   return (
     <div className="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
@@ -147,7 +170,14 @@ export function HomePage() {
 
       <main>
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative w-full h-[90vh] md:h-[92.5vh] mb-4">
+        <section
+          className={`relative w-full h-[90vh] md:h-[92.5vh] mb-4 ${heroBannerData?.bannerLink ? 'cursor-pointer' : ''}`}
+          onClick={() => {
+            if (heroBannerData?.bannerLink) {
+              openInNewTab(heroBannerData.bannerLink);
+            }
+          }}
+        >
           <div className="w-full h-full relative overflow-hidden bg-surface-container">
             {bannersLoading ? (
               <div className="w-full h-full bg-surface-container animate-pulse absolute inset-0" />
@@ -156,10 +186,10 @@ export function HomePage() {
               const mediaUrl = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`)
                 : heroBanner;
-              const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
+              const isVideoContent = isVideo(mediaUrl);
               const titleText = heroBannerData?.title || "Cinematic fashion campaign showing a model in spring collection.";
 
-              return isVideo ? (
+              return isVideoContent ? (
                 <video
                   key={mediaUrl}
                   autoPlay
@@ -192,10 +222,18 @@ export function HomePage() {
                   {heroBannerData.subtitle}
                 </p>
               )}
-              {(heroBannerData?.linkUrl || heroBannerData?.title) && (
+              {heroBannerData?.linkUrl && (
                 <button
-                  onClick={() => navigate(heroBannerData?.linkUrl || '/collection')}
-                  className="px-8 py-3 bg-white text-black text-sm font-semibold tracking-widest uppercase hover:bg-black hover:text-white transition-colors duration-500 pointer-events-auto"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const btnTarget = heroBannerData.linkUrl;
+                    if (btnTarget.startsWith('http://') || btnTarget.startsWith('https://') || btnTarget.startsWith('www.')) {
+                      openInNewTab(btnTarget);
+                    } else {
+                      navigate(btnTarget);
+                    }
+                  }}
+                  className="px-8 py-3 bg-white text-black text-sm font-semibold tracking-widest uppercase hover:bg-black hover:text-white transition-colors duration-500 pointer-events-auto cursor-pointer"
                 >
                   Shop Now
                 </button>
@@ -206,7 +244,6 @@ export function HomePage() {
 
         {/* ── Season Collection — Category Cards ────────────────────────────── */}
         <section className="w-full px-1 md:px-2 mb-8">
-          {/* Editorial heading */}
           <div className="flex items-center justify-center gap-5 mb-5">
             <span className="flex-1 h-px bg-gradient-to-r from-transparent to-outline-variant max-w-[120px]" />
             <div className="text-center">
@@ -347,7 +384,14 @@ export function HomePage() {
 
         {/* ── Home Bottom Banner ───────────────────────────────────────────── */}
         {bottomBannerData && (
-          <section className="relative w-full h-[52vh] md:h-[86vh] mb-8 cursor-pointer" onClick={() => bottomBannerData.linkUrl && navigate(bottomBannerData.linkUrl)}>
+          <section
+            className={`relative w-full h-[52vh] md:h-[86vh] mb-8 ${bottomBannerData?.bannerLink ? 'cursor-pointer' : ''}`}
+            onClick={() => {
+              if (bottomBannerData?.bannerLink) {
+                openInNewTab(bottomBannerData.bannerLink);
+              }
+            }}
+          >
             <div className="w-full h-full relative overflow-hidden bg-surface-container">
               {(() => {
                 const rawUrl = bottomBannerData?.imageUrl ? bottomBannerData.imageUrl.replace(/\\/g, '/') : '';
@@ -387,15 +431,20 @@ export function HomePage() {
                     {bottomBannerData.subtitle}
                   </p>
                 )}
-                {(bottomBannerData?.linkUrl || bottomBannerData?.title) && (
+                {bottomBannerData?.linkUrl && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(bottomBannerData?.linkUrl || '/collection');
+                      const btnTarget = bottomBannerData.linkUrl;
+                      if (btnTarget.startsWith('http://') || btnTarget.startsWith('https://') || btnTarget.startsWith('www.')) {
+                        openInNewTab(btnTarget);
+                      } else {
+                        navigate(btnTarget);
+                      }
                     }}
-                    className="px-6 py-2.5 bg-white text-black text-xs font-semibold tracking-widest uppercase hover:bg-black hover:text-white transition-colors duration-500 pointer-events-auto"
+                    className="px-6 py-2.5 bg-white text-black text-xs font-semibold tracking-widest uppercase hover:bg-black hover:text-white transition-colors duration-500 pointer-events-auto cursor-pointer"
                   >
-                    Discover More
+                    Shop Now
                   </button>
                 )}
               </div>
@@ -483,7 +532,7 @@ export function HomePage() {
       </main>
 
       {/* ── Hot Right Now ─────────────────────────────────────────────────────── */}
-      <section className="w-full px-2 mb-12">
+      <section className="w-full px-1.5 mb-12">
         <div className="flex items-center justify-center gap-5 mb-5">
           <span className="flex-1 h-px bg-outline-variant max-w-[120px]" />
           <div className="text-center">
@@ -493,13 +542,13 @@ export function HomePage() {
         </div>
 
         {hotRightNowLoading ? (
-          <div className="flex gap-[3px] overflow-hidden">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="shrink-0 aspect-[9/16] bg-surface-container animate-pulse" style={{ width: 'calc((100% - 12px) / 5)' }} />
+          <div className="flex gap-1.5 sm:gap-[3px] overflow-hidden">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="shrink-0 w-[calc((100%-6px)/2)] sm:w-[calc((100%-12px)/5)] aspect-[9/16] bg-surface-container animate-pulse rounded-none" />
             ))}
           </div>
         ) : hotRightNowProducts.length > 0 ? (
-          <div className="flex gap-[3px] overflow-x-auto no-scrollbar" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-1.5 sm:gap-[3px] overflow-x-auto no-scrollbar py-1" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
             {hotRightNowProducts.map((p, idx) => {
               const mediaUrl = p.hotRightNowMedia || p.imageSrc;
               const isVid = mediaUrl && !!mediaUrl.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
@@ -508,7 +557,12 @@ export function HomePage() {
               const savePercent = oPriceVal && oPriceVal > priceVal ? Math.round((1 - priceVal / oPriceVal) * 100) : 0;
 
               return (
-                <div key={idx} className="shrink-0 aspect-[9/16] relative group cursor-pointer overflow-hidden" style={{ width: 'calc((100% - 12px) / 5)', minWidth: '240px', scrollSnapAlign: 'start' }} onClick={() => navigate(`/product/${p.id}`)}>
+                <div
+                  key={idx}
+                  className="shrink-0 w-[calc((100%-6px)/2)] sm:w-[calc((100%-12px)/5)] aspect-[9/16] relative group cursor-pointer overflow-hidden rounded-none shadow-sm"
+                  style={{ scrollSnapAlign: 'start' }}
+                  onClick={() => navigate(`/product/${p.id}`)}
+                >
                   {isVid ? (
                     <video
                       src={mediaUrl}
@@ -522,21 +576,20 @@ export function HomePage() {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
 
-                  <div className="absolute bottom-0 inset-x-0 p-4 pointer-events-none flex flex-col justify-end h-full">
-                    <div className="flex gap-3 mt-auto pointer-events-auto items-end">
-                      <img src={p.imageSrc} className="w-14 h-18 object-cover border border-white/20 rounded shadow-md shrink-0 bg-white" alt={p.name} />
-                      <div className="flex flex-col text-left mb-1">
-                        <h3 className="text-white text-xs font-semibold leading-tight line-clamp-2 mb-1">{p.name}</h3>
-                        <p className="text-white/80 text-[10px] line-clamp-2 mb-1">{p.description}</p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-white font-bold text-sm">{p.price}</span>
-                          {p.originalPrice && <span className="text-white/60 line-through text-[10px]">{p.originalPrice}</span>}
-                          {savePercent > 0 && (
-                            <span className="text-emerald-400 font-bold text-[10px]">Save {savePercent}% off</span>
-                          )}
+                  <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-4 pointer-events-none flex flex-col justify-end h-full">
+                    <div className="flex gap-2 sm:gap-3 mt-auto pointer-events-auto items-end">
+                      <img src={p.imageSrc} className="w-12 h-16 sm:w-14 sm:h-18 object-cover border border-white/30 rounded-md shadow-md shrink-0 bg-white" alt={p.name} />
+                      <div className="flex flex-col text-left mb-0.5 sm:mb-1 min-w-0">
+                        <h3 className="text-white text-xs font-semibold leading-tight line-clamp-2 mb-0.5">{p.name}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <span className="text-white font-bold text-xs sm:text-sm">{p.price}</span>
+                          {p.originalPrice && <span className="text-white/60 line-through text-[10px] sm:text-[11px]">{p.originalPrice}</span>}
                         </div>
+                        {savePercent > 0 && (
+                          <span className="text-emerald-400 font-bold text-[10px] sm:text-[11px] whitespace-nowrap mt-0.5 block">Save {savePercent}% off</span>
+                        )}
                       </div>
                     </div>
                   </div>

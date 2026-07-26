@@ -28,6 +28,13 @@ interface BackendProduct {
   isHotRightNow?: boolean;
   hotRightNowMedia?: string | null;
   styleItWith?: BackendProduct[];
+  show7DayReturn?: boolean;
+  showFreeShipping?: boolean;
+  showCodAvailable?: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  seoSchema?: string;
 }
 
 interface UseProductsOptions {
@@ -191,6 +198,14 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     taxRate: bp.taxRate,
     hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,
     styleItWith: bp.styleItWith ? bp.styleItWith.map(p => mapBackendProduct(p, currencySymbol)) : undefined,
+    show7DayReturn: bp.show7DayReturn,
+    showFreeShipping: bp.showFreeShipping,
+    showCodAvailable: bp.showCodAvailable,
+    slug: bp.slug,
+    seoTitle: bp.seoTitle,
+    seoDescription: bp.seoDescription,
+    seoKeywords: bp.seoKeywords,
+    seoSchema: bp.seoSchema,
   };
 }
 

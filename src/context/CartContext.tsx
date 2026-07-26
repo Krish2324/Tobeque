@@ -39,6 +39,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const CART_STORAGE_KEY = 'tobeque_cart_data_v2';
 
+const WISHLIST_STORAGE_KEY = 'tobeque_wishlist_data_v1';
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   
@@ -67,7 +69,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
-  const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
+  // Initialize wishlist from localStorage
+  const [wishlistItems, setWishlistItems] = useState<Product[]>(() => {
+    try {
+      const savedWishlist = localStorage.getItem(WISHLIST_STORAGE_KEY);
+      if (savedWishlist) {
+        return JSON.parse(savedWishlist);
+      }
+    } catch (err) {
+      console.error('Failed to parse wishlist from localStorage', err);
+    }
+    return [];
+  });
+
+  // Save wishlist to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistItems));
+  }, [wishlistItems]);
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
 
@@ -83,14 +101,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addToWishlist = (product: Product) => {
     setWishlistItems((prev) => {
-      const exists = prev.find((p) => p.name === product.name);
+      const exists = prev.find((p) => (p.id && product.id && String(p.id) === String(product.id)) || p.name === product.name);
       if (exists) return prev;
       return [...prev, product];
     });
   };
 
-  const removeFromWishlist = (productName: string) => {
-    setWishlistItems((prev) => prev.filter((p) => p.name !== productName));
+  const removeFromWishlist = (productIdentifier: string) => {
+    setWishlistItems((prev) => prev.filter((p) => String(p.id) !== String(productIdentifier) && p.name !== productIdentifier));
   };
 
   const updateCartItemQty = (cartId: string, quantity: number) => {

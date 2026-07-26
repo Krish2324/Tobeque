@@ -102,58 +102,135 @@ export function ProductCard({
   // ── Color-image swap state ───────────────────────────────────────────────
   const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
 
-  // Find image URL for the active color, falling back to default thumbnail
+  // Display image for desktop webpage (respects selected color or default imageSrc)
   const displayImage = React.useMemo(() => {
-    if (!selectedColorName) return product.imageSrc;
-    // Match against galleryImageObjects which carry a `color` tag from backend
-    const match = product.galleryImageObjects?.find(
-      (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
-    );
-    return match?.url ?? product.imageSrc;
-  }, [selectedColorName, product.imageSrc, product.galleryImageObjects]);
+    if (selectedColorName) {
+      const match = product.galleryImageObjects?.find(
+        (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
+      );
+      if (match) return match.url;
+    }
+    return product.imageSrc;
+  }, [product, selectedColorName]);
+
+  const images = React.useMemo(() => {
+    if (selectedColorName) {
+      const match = product.galleryImageObjects?.find(
+        (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
+      );
+      if (match) return [match.url];
+    }
+    
+    if (product.galleryImages && product.galleryImages.length > 0) {
+       return product.galleryImages;
+    }
+    
+    if (product.hoverImageSrc) {
+       return [product.imageSrc, product.hoverImageSrc];
+    }
+    return [product.imageSrc];
+  }, [product, selectedColorName]);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const scrollPosition = scrollRef.current.scrollLeft;
+      const width = scrollRef.current.clientWidth;
+      const currentIndex = Math.round(scrollPosition / width);
+      setActiveImageIndex(currentIndex);
+    }
+  };
 
   return (
     <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02] hover:z-10">
       {/* Image Container with Separated Link & Button Layers */}
-      <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block">
-        {/* Clickable Image Layer */}
-        <Link 
-          to={`/product/${product.id || ""}`}
-          className="absolute inset-0 z-0 block cursor-pointer hover:opacity-100"
+      <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block group/carousel">
+        {/* Mobile View: Swipable Image Gallery Layer */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="sm:hidden absolute inset-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth z-0"
         >
-          {/* Primary Image */}
-          {isVideo(displayImage) ? (
-            <video
-              className={`w-full h-full object-cover object-center absolute inset-0 transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
-              src={displayImage}
-              autoPlay loop muted playsInline
-            />
-          ) : (
-            <ImageWithSkeleton
-              alt={product.imageAlt || product.name}
-              wrapperClassName="absolute inset-0"
-              className={`object-center transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
-              src={displayImage}
-            />
-          )}
-          {/* Alternate hover image — only shown if no color is actively selected */}
-          {!selectedColorName && product.hoverImageSrc && (
-            isVideo(product.hoverImageSrc) ? (
+          {images.map((img, idx) => (
+            <Link
+              key={`${img}-${idx}`}
+              to={`/product/${product.id || ""}`}
+              className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
+            >
+              {isVideo(img) ? (
+                <video
+                  className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
+                  src={img}
+                  autoPlay loop muted playsInline
+                />
+              ) : (
+                <ImageWithSkeleton
+                  alt={`${product.imageAlt || product.name} view ${idx + 1}`}
+                  wrapperClassName="absolute inset-0"
+                  className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
+                  src={img}
+                />
+              )}
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop View: Old Webpage Flow (Primary Image + Hover Image Transition) */}
+        <div className="hidden sm:block absolute inset-0 z-0">
+          <Link
+            to={`/product/${product.id || ""}`}
+            className="absolute inset-0 block cursor-pointer"
+          >
+            {isVideo(displayImage) ? (
               <video
-                className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
-                src={product.hoverImageSrc}
+                className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
+                src={displayImage}
                 autoPlay loop muted playsInline
               />
             ) : (
               <ImageWithSkeleton
-                alt={(product.imageAlt || product.name) + " alternate view"}
-                wrapperClassName="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
-                className="object-center"
-                src={product.hoverImageSrc}
+                alt={product.imageAlt || product.name}
+                wrapperClassName="absolute inset-0"
+                className={`object-center transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
+                src={displayImage}
               />
-            )
-          )}
-        </Link>
+            )}
+
+            {/* Old Flow Hover Image Overlay on Webpage */}
+            {!selectedColorName && product.hoverImageSrc && (
+              isVideo(product.hoverImageSrc) ? (
+                <video
+                  className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                  src={product.hoverImageSrc}
+                  autoPlay loop muted playsInline
+                />
+              ) : (
+                <ImageWithSkeleton
+                  alt={(product.imageAlt || product.name) + " alternate view"}
+                  wrapperClassName="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
+                  className="object-center"
+                  src={product.hoverImageSrc}
+                />
+              )
+            )}
+          </Link>
+        </div>
+
+        {/* Mobile-Only Pagination Dots */}
+        {images.length > 1 && (
+          <div className="sm:hidden absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 pointer-events-none transition-opacity duration-300 opacity-100">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`h-1 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+                  activeImageIndex === index ? 'bg-white w-3' : 'bg-white/50 w-1'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Badge Overlay */}
         {product.badge && (
@@ -253,58 +330,66 @@ export function ProductCard({
           <p className="font-body-md text-[11px] font-medium text-primary/80">
             {product.price}
           </p>
-          {(product.detailedColors && product.detailedColors.length > 0) ? (
-            <div className="flex items-center gap-1">
-              {product.detailedColors.slice(0, 4).map((color, idx) => {
-                const isSelected = selectedColorName === color.name;
-                return (
-                  <div
-                    key={idx}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // Toggle off if already selected, otherwise select
-                      setSelectedColorName(isSelected ? null : color.name);
-                    }}
-                    className={`w-3.5 h-3.5 rounded-full border shadow-sm cursor-pointer hover:scale-110 transition-all duration-200 relative ${
-                      isSelected
-                        ? 'ring-2 ring-offset-1 ring-primary scale-110'
-                        : color.name.toLowerCase() === 'white' ? 'border-outline-variant/60' : 'border-black/10'
-                    }`}
-                    style={color.bgStyle}
-                    title={color.name}
-                  >
-                    {!color.inStock && (
-                      <div className="absolute inset-0 w-full h-full border border-red-500/50 rounded-full" />
-                    )}
-                  </div>
-                );
-              })}
-              {product.detailedColors.length > 4 && (
-                <span className="text-[9px] text-secondary font-medium ml-0.5">
-                  +{product.detailedColors.length - 4}
-                </span>
-              )}
-            </div>
-          ) : product.colors && product.colors.length > 0 ? (
-            <div className="flex items-center gap-1">
-              {product.colors.slice(0, 4).map((colorClass, idx) => (
-                <div
-                  key={idx}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className={`w-3.5 h-3.5 rounded-full ${colorClass} border border-outline-variant shadow-sm cursor-pointer hover:scale-110 transition-transform`}
-                ></div>
-              ))}
-              {product.colors.length > 4 && (
-                <span className="text-[9px] text-secondary font-medium ml-0.5">
-                  +{product.colors.length - 4}
-                </span>
-              )}
-            </div>
-          ) : null}
+          {(() => {
+            const maxColors = compact ? 1 : 4;
+            if (product.detailedColors && product.detailedColors.length > 0) {
+              return (
+                <div className="flex items-center gap-1 shrink-0">
+                  {product.detailedColors.slice(0, maxColors).map((color, idx) => {
+                    const isSelected = selectedColorName === color.name;
+                    return (
+                      <div
+                        key={idx}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // Toggle off if already selected, otherwise select
+                          setSelectedColorName(isSelected ? null : color.name);
+                        }}
+                        className={`w-3.5 h-3.5 rounded-full border shadow-sm cursor-pointer hover:scale-110 transition-all duration-200 relative ${
+                          isSelected
+                            ? 'ring-2 ring-offset-1 ring-primary scale-110'
+                            : color.name.toLowerCase() === 'white' ? 'border-outline-variant/60' : 'border-black/10'
+                        }`}
+                        style={color.bgStyle}
+                        title={color.name}
+                      >
+                        {!color.inStock && (
+                          <div className="absolute inset-0 w-full h-full border border-red-500/50 rounded-full" />
+                        )}
+                      </div>
+                    );
+                  })}
+                  {product.detailedColors.length > maxColors && (
+                    <span className="text-[9px] text-secondary font-medium ml-0.5 whitespace-nowrap">
+                      +{product.detailedColors.length - maxColors}
+                    </span>
+                  )}
+                </div>
+              );
+            } else if (product.colors && product.colors.length > 0) {
+              return (
+                <div className="flex items-center gap-1 shrink-0">
+                  {product.colors.slice(0, maxColors).map((colorClass, idx) => (
+                    <div
+                      key={idx}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      className={`w-3.5 h-3.5 rounded-full ${colorClass} border border-outline-variant shadow-sm cursor-pointer hover:scale-110 transition-transform`}
+                    ></div>
+                  ))}
+                  {product.colors.length > maxColors && (
+                    <span className="text-[9px] text-secondary font-medium ml-0.5 whitespace-nowrap">
+                      +{product.colors.length - maxColors}
+                    </span>
+                  )}
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
     </div>

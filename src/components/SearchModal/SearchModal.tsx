@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useNavigate } from "react-router-dom";
+import api from "../../services/api";
 
 export interface SearchModalProps {
   isOpen: boolean;
@@ -7,9 +9,13 @@ export interface SearchModalProps {
   onProductSelect?: (product: any) => void;
 }
 
-const isVideo = (url: string | undefined) => url && typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i);
+const isVideo = (url: string | undefined) => url && typeof url === 'string' && !!url.match(/\.(mp4|webm|ogg|mov)$/i);
 
-import { useNavigate } from "react-router-dom";
+function resolveImageUrl(path: string | null | undefined): string {
+  if (!path) return 'https://via.placeholder.com/400x500?text=No+Image';
+  if (path.startsWith('http')) return path;
+  return path;
+}
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { currencySymbol } = useCurrency();
@@ -32,10 +38,10 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const delayDebounceFn = setTimeout(() => {
       if (query.trim()) {
         setLoading(true);
-        fetch(`/api/products?search=${encodeURIComponent(query)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.success && data.data && data.data.products) {
+        api.get('/api/products', { params: { search: query.trim(), status: 'published', limit: 20 } })
+          .then((res) => {
+            const data = res.data;
+            if (data.success && data.data && Array.isArray(data.data.products)) {
               setResults(data.data.products);
             } else {
               setResults([]);
@@ -49,7 +55,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       } else {
         setResults([]);
       }
-    }, 500);
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
@@ -81,7 +87,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-primary"
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-primary cursor-pointer"
           >
             <span className="material-symbols-outlined text-2xl">close</span>
           </button>
@@ -99,34 +105,40 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
             {results.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6">
-                {results.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => {
-                      onClose();
-                      navigate(`/product/${product.id}`);
-                    }}
-                    className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
-                  >
-                    <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative">
-                      {isVideo(product.thumbnail) ? (
-                        <video
-                          src={product.thumbnail}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          autoPlay loop muted playsInline
-                        />
-                      ) : (
-                        <img
-                          src={product.thumbnail || '/placeholder.png'}
-                          alt={product.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      )}
-                    </div>
-                    <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>
-                    <p className="font-bold text-primary text-sm">{currencySymbol}{product.price}</p>
-                  </button>
-                ))}
+                {results.map((product) => {
+                  const thumbUrl = resolveImageUrl(product.thumbnail);
+                  const displayPrice = typeof product.price === 'number' ? product.price.toFixed(2) : product.price;
+                  const productId = product.id || product._id;
+
+                  return (
+                    <button
+                      key={productId}
+                      onClick={() => {
+                        onClose();
+                        navigate(`/product/${productId}`);
+                      }}
+                      className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
+                    >
+                      <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative rounded-md">
+                        {isVideo(thumbUrl) ? (
+                          <video
+                            src={thumbUrl}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            autoPlay loop muted playsInline
+                          />
+                        ) : (
+                          <img
+                            src={thumbUrl}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )}
+                      </div>
+                      <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>
+                      <p className="font-bold text-primary text-sm">{currencySymbol}{displayPrice}</p>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

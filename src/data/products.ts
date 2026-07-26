@@ -25,9 +25,17 @@ export type Product = {
   galleryImageObjects?: { url: string; color?: string }[];
   taxRate?: number;
   sku?: string; // Product SKU from admin panel
+  slug?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  seoSchema?: string;
   rawVariants?: any[]; // For frontend price/stock logic based on selections
   hotRightNowMedia?: string;
   styleItWith?: Product[];
+  show7DayReturn?: boolean;
+  showFreeShipping?: boolean;
+  showCodAvailable?: boolean;
 };
 
 export const productsData: Product[] = [

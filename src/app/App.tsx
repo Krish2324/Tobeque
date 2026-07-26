@@ -15,6 +15,7 @@ import { CookiePolicyPage } from "../pages/CookiePolicy/CookiePolicyPage";
 import { CookieSettingsPage } from "../pages/CookieSettings/CookieSettingsPage";
 import { CareerPage } from "../pages/Career/CareerPage";
 import { FAQPage } from "../pages/FAQ/FAQPage";
+import { ContactPage } from "../pages/Contact/ContactPage";
 import { StealTheStylePage } from "../pages/StealTheStyle/StealTheStylePage";
 import { RefundRequestPage } from "../pages/RefundRequest/RefundRequestPage";
 import { CartProvider } from "../context/CartContext";
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="/faq" element={<FAQPage />} />
               <Route path="/steal-the-style" element={<StealTheStylePage />} />
               <Route path="/refund-request" element={<RefundRequestPage />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/cart" element={<CartPage />} />
             </Routes>

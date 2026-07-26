@@ -6,6 +6,8 @@ import { validateCouponAPI } from '../../services/userAuthService';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useProducts } from '../../hooks/useProducts';
 
+const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
+
 export function CartDrawer() {
   const { currencySymbol } = useCurrency();
   const { 
@@ -131,7 +133,11 @@ export function CartDrawer() {
                     <button onClick={() => removeFromCart(item.cartId)} className="absolute top-6 right-6 text-secondary hover:text-primary transition-opacity">
                       <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
-                    <img src={item.imageSrc} alt={item.name} className="w-24 h-32 object-cover bg-surface-container" />
+                    {isVideo(item.imageSrc) ? (
+                      <video src={item.imageSrc} autoPlay loop muted playsInline className="w-24 h-32 object-cover bg-surface-container" />
+                    ) : (
+                      <img src={item.imageSrc} alt={item.name} className="w-24 h-32 object-cover bg-surface-container" />
+                    )}
                     <div className="flex-1 flex flex-col justify-between pr-4">
                       <div>
                         <h3 className="font-body-md text-[13px] font-bold text-primary leading-tight uppercase">{item.name}</h3>
@@ -286,7 +292,11 @@ export function CartDrawer() {
                   {wishlistItems.map((p, idx) => (
                     <div key={idx} className="flex flex-col gap-2">
                       <div className="aspect-[2/3] relative bg-surface-container">
-                        <img src={p.imageSrc} alt={p.name} className="w-full h-full object-cover" />
+                        {isVideo(p.imageSrc) ? (
+                          <video src={p.imageSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={p.imageSrc} alt={p.name} className="w-full h-full object-cover" />
+                        )}
                         <button
                           onClick={() => removeFromWishlist(p.name)}
                           className="absolute top-2 right-2 w-6 h-6 bg-surface/90 rounded-full flex items-center justify-center text-primary"

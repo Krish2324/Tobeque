@@ -170,6 +170,17 @@ export function ProductDetailPage() {
   // Random Viewer Count
   const [viewers] = useState(() => Math.floor(Math.random() * 40) + 10);
 
+  // Mobile Gallery Scroll State
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const handleGalleryScroll = () => {
+    if (galleryScrollRef.current) {
+      const scrollPosition = galleryScrollRef.current.scrollLeft;
+      const width = galleryScrollRef.current.clientWidth;
+      const currentIndex = Math.round(scrollPosition / width);
+      setActiveImageIndex(currentIndex);
+    }
+  };
+
   useEffect(() => {
     api.get('/api/settings/public')
       .then(res => {
@@ -191,6 +202,72 @@ export function ProductDetailPage() {
         setDeliveryEstimate(`${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`);
       });
   }, []);
+
+  // Dynamic Head SEO Metadata Management
+  useEffect(() => {
+    if (!product) return;
+
+    const originalTitle = document.title;
+    document.title = product.seoTitle || `${product.name} | Tobeque`;
+
+    // Meta Description Tag
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    const oldDesc = metaDesc.getAttribute('content') || '';
+    metaDesc.setAttribute('content', product.seoDescription || product.description || product.name);
+
+    // Meta Keywords Tag
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    const oldKeywords = metaKeywords.getAttribute('content') || '';
+    if (product.seoKeywords) {
+      metaKeywords.setAttribute('content', product.seoKeywords);
+    }
+
+    // JSON-LD Structured Data Schema Injection
+    let scriptTag = document.getElementById('product-schema-jsonld') as HTMLScriptElement | null;
+    if (!scriptTag) {
+      scriptTag = document.createElement('script');
+      scriptTag.id = 'product-schema-jsonld';
+      scriptTag.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(scriptTag);
+    }
+
+    if (product.seoSchema) {
+      scriptTag.textContent = product.seoSchema;
+    } else {
+      const defaultSchema = {
+        "@context": "https://schema.org/",
+        "@type": "Product",
+        "name": product.name,
+        "image": product.galleryImages || [product.imageSrc],
+        "description": product.description || product.name,
+        "sku": product.sku || product.id,
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "INR",
+          "price": product.price ? product.price.replace(/[^0-9.]/g, '') : "0",
+          "availability": "https://schema.org/InStock"
+        }
+      };
+      scriptTag.textContent = JSON.stringify(defaultSchema);
+    }
+
+    return () => {
+      document.title = originalTitle;
+      if (metaDesc) metaDesc.setAttribute('content', oldDesc);
+      if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
+      if (scriptTag) scriptTag.remove();
+    };
+  }, [product]);
 
   // Carousel scroll refs
   const styleItCarouselRef = useDragScroll();
@@ -407,31 +484,48 @@ export function ProductDetailPage() {
         <section className="flex flex-col lg:flex-row w-full mb-6 md:mb-8">
 
           {/* Left: Split Image Gallery */}
-          <div
-            ref={galleryScrollRef}
-            className="w-full lg:w-[70%] flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar h-[calc(100svh-64px)] lg:h-auto scroll-smooth"
-          >
-            {displayedImages.map((img, index) => (
-              <div
-                key={`${img}-${index}`}
-                onClick={() => { setZoomedImage(img); setInnerZoom(false); }}
-                className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container cursor-zoom-in group"
-              >
-                {isVideo(img) ? (
-                  <video
-                    className="w-full h-full object-cover"
-                    src={img}
-                    autoPlay loop muted playsInline
+          <div className="w-full lg:w-[70%] relative">
+            <div
+              ref={galleryScrollRef}
+              onScroll={handleGalleryScroll}
+              className="w-full h-[calc(100svh-64px)] lg:h-auto flex lg:grid lg:grid-cols-2 gap-0 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory no-scrollbar scroll-smooth"
+            >
+              {displayedImages.map((img, index) => (
+                <div
+                  key={`${img}-${index}`}
+                  onClick={() => { setZoomedImage(img); setInnerZoom(false); }}
+                  className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container cursor-zoom-in group"
+                >
+                  {isVideo(img) ? (
+                    <video
+                      className="w-full h-full object-cover"
+                      src={img}
+                      autoPlay loop muted playsInline
+                    />
+                  ) : (
+                    <ImageWithSkeleton
+                      alt={`${product.name} detail view ${index + 1}`}
+                      wrapperClassName="absolute inset-0"
+                      src={img}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Dots for Mobile */}
+            {displayedImages.length > 1 && (
+              <div className="lg:hidden absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none">
+                {displayedImages.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`h-1.5 rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+                      activeImageIndex === index ? 'bg-white w-4' : 'bg-white/50 w-1.5'
+                    }`}
                   />
-                ) : (
-                  <ImageWithSkeleton
-                    alt={`${product.name} detail view ${index + 1}`}
-                    wrapperClassName="absolute inset-0"
-                    src={img}
-                  />
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           {/* Right: Minimal editorial product info — quiet, refined, secondary to imagery */}
@@ -621,20 +715,75 @@ export function ProductDetailPage() {
               )}
             </div>
 
-            {/* Payment Trust Badge — very subtle */}
-            <div className="border border-outline-variant/40 rounded px-3 py-2.5 mb-4">
-              <div className="flex items-center gap-2 justify-center mb-1">
-                {/* Visa */}
-                <svg viewBox="0 0 48 32" width="30" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#1a1f71"/><path d="M20 22L22.5 10H26L23.5 22H20ZM35 10.4C34.2 10.1 33 9.8 31.5 9.8C28.5 9.8 26.4 11.3 26.4 13.4C26.4 15 27.8 15.9 28.9 16.4C30 16.9 30.4 17.3 30.4 17.8C30.4 18.6 29.3 19 28.3 19C27 19 26.3 18.8 25.2 18.4L24.8 18.2L24.3 21.1C25.3 21.5 27 21.9 28.8 21.9C32 21.9 34 20.4 34 18.1C34 16.9 33.2 16 31.6 15.2C30.6 14.7 29.9 14.4 29.9 13.8C29.9 13.3 30.5 12.7 31.8 12.7C32.9 12.7 33.7 12.9 34.3 13.2L34.6 13.3L35 10.4ZM40.5 10H38.1C37.3 10 36.7 10.2 36.4 11L32 22H35.2L35.9 20H39.7L40.1 22H43L40.5 10ZM36.8 17.5L38.2 13.6L39 17.5H36.8ZM17.5 10L14.5 18.3L14.2 16.9C13.6 15 11.8 12.9 9.8 11.8L12.5 22H15.8L21 10H17.5Z" fill="white"/><path d="M11.4 10H6L5.9 10.3C10.1 11.4 13 13.9 14.2 16.9L13 11C12.7 10.2 12.1 10 11.4 10Z" fill="#f9a51a"/></svg>
-                {/* Mastercard */}
-                <svg viewBox="0 0 48 32" width="30" height="20" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="9" fill="#eb001b"/><circle cx="29" cy="16" r="9" fill="#f79e1b"/><path d="M24 9.57A9 9 0 0 1 28.43 16 9 9 0 0 1 24 22.43 9 9 0 0 1 19.57 16 9 9 0 0 1 24 9.57Z" fill="#ff5f00"/></svg>
-                {/* UPI */}
-                <div className="bg-neutral-100 rounded px-1 py-0.5 text-[8px] font-bold text-[#097939]">UPI</div>
-                {/* COD */}
-                <div className="bg-neutral-100 rounded px-1 py-0.5 text-[8px] font-bold text-gray-600">COD</div>
-              </div>
-              <p className="text-center text-[9px] text-secondary/50 tracking-wide">Guaranteed safe &amp; secure checkout</p>
-            </div>
+            {/* Elegant Soft Light Guarantee & Trust Card */}
+            {(() => {
+              const isBadgeEnabled = (val: any) => {
+                if (val === false || val === 'false' || val === 0 || val === '0') return false;
+                return true;
+              };
+              const show7Day = isBadgeEnabled(product.show7DayReturn);
+              const showFree = isBadgeEnabled(product.showFreeShipping);
+              const showCod = isBadgeEnabled(product.showCodAvailable);
+              const activeCount = (show7Day ? 1 : 0) + (showFree ? 1 : 0) + (showCod ? 1 : 0);
+
+              return (
+                <div className="bg-[#f7faf8] dark:bg-neutral-900/60 border border-[#dce8df] dark:border-neutral-800 rounded-xl p-3 mb-4 shadow-none">
+                  {/* Top: 3 Guarantees with soft icons and high contrast crisp text */}
+                  {activeCount > 0 && (
+                    <div className={`grid ${activeCount === 1 ? 'grid-cols-1' : activeCount === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-1.5 text-center divide-x divide-[#cce0d2] dark:divide-neutral-800`}>
+                      {show7Day && (
+                        <div className="flex flex-col items-center justify-center px-1 py-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                            <path d="M3 3v5h5"/>
+                          </svg>
+                          <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 dark:text-gray-100 leading-tight">7 Day Return</span>
+                          <span className="text-[8px] sm:text-[9px] font-medium text-gray-600 dark:text-gray-300 mt-0.5 leading-tight">No Questions Asked</span>
+                        </div>
+                      )}
+                      {showFree && (
+                        <div className="flex flex-col items-center justify-center px-1 py-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="1" y="3" width="15" height="13"/>
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                            <circle cx="5.5" cy="18.5" r="2.5"/>
+                            <circle cx="18.5" cy="18.5" r="2.5"/>
+                          </svg>
+                          <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 dark:text-gray-100 leading-tight">Free Shipping</span>
+                          <span className="text-[8px] sm:text-[9px] font-medium text-gray-600 dark:text-gray-300 mt-0.5 leading-tight">on pre-paid orders</span>
+                        </div>
+                      )}
+                      {showCod && (
+                        <div className="flex flex-col items-center justify-center px-1 py-0.5">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-emerald-700 dark:text-emerald-400 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="2" y="6" width="20" height="12" rx="2"/>
+                            <circle cx="12" cy="12" r="2"/>
+                            <path d="M6 12h.01M18 12h.01"/>
+                          </svg>
+                          <span className="text-[10px] sm:text-[11px] font-bold text-gray-900 dark:text-gray-100 leading-tight">COD Available</span>
+                          <span className="text-[8px] sm:text-[9px] font-medium text-gray-600 dark:text-gray-300 mt-0.5 leading-tight">On All Orders</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bottom: Subtle Payment Icons + Trust text */}
+                  <div className="flex items-center justify-between border-t border-[#dce8df] dark:border-neutral-800/80 pt-2 mt-2 text-[9px] text-gray-500 dark:text-gray-400">
+                    <span className="tracking-wide font-medium">Guaranteed safe checkout</span>
+                    <div className="flex items-center gap-1.5">
+                      {/* Visa */}
+                      <svg viewBox="0 0 48 32" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="3" fill="#1a1f71"/><path d="M20 22L22.5 10H26L23.5 22H20ZM35 10.4C34.2 10.1 33 9.8 31.5 9.8C28.5 9.8 26.4 11.3 26.4 13.4C26.4 15 27.8 15.9 28.9 16.4C30 16.9 30.4 17.3 30.4 17.8C30.4 18.6 29.3 19 28.3 19C27 19 26.3 18.8 25.2 18.4L24.8 18.2L24.3 21.1C25.3 21.5 27 21.9 28.8 21.9C32 21.9 34 20.4 34 18.1C34 16.9 33.2 16 31.6 15.2C30.6 14.7 29.9 14.4 29.9 13.8C29.9 13.3 30.5 12.7 31.8 12.7C32.9 12.7 33.7 12.9 34.3 13.2L34.6 13.3L35 10.4ZM40.5 10H38.1C37.3 10 36.7 10.2 36.4 11L32 22H35.2L35.9 20H39.7L40.1 22H43L40.5 10ZM36.8 17.5L38.2 13.6L39 17.5H36.8ZM17.5 10L14.5 18.3L14.2 16.9C13.6 15 11.8 12.9 9.8 11.8L12.5 22H15.8L21 10H17.5Z" fill="white"/><path d="M11.4 10H6L5.9 10.3C10.1 11.4 13 13.9 14.2 16.9L13 11C12.7 10.2 12.1 10 11.4 10Z" fill="#f9a51a"/></svg>
+                      {/* Mastercard */}
+                      <svg viewBox="0 0 48 32" width="24" height="16" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="32" rx="3" fill="#252525"/><circle cx="19" cy="16" r="9" fill="#eb001b"/><circle cx="29" cy="16" r="9" fill="#f79e1b"/><path d="M24 9.57A9 9 0 0 1 28.43 16 9 9 0 0 1 24 22.43 9 9 0 0 1 19.57 16 9 9 0 0 1 24 9.57Z" fill="#ff5f00"/></svg>
+                      {/* UPI */}
+                      <span className="bg-white dark:bg-neutral-800 text-[7.5px] font-bold tracking-wider text-[#097939] border border-[#cce0d2] dark:border-neutral-700 px-1 py-0.5 rounded">UPI</span>
+                      {/* COD */}
+                      <span className="bg-white dark:bg-neutral-800 text-[7.5px] font-bold tracking-wider text-gray-600 dark:text-gray-300 border border-[#cce0d2] dark:border-neutral-700 px-1 py-0.5 rounded">COD</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Expandable Accordions — ultra-minimal */}
             <div className="flex flex-col border-t border-outline-variant/50">

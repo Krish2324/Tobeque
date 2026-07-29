@@ -157,16 +157,22 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     });
   }
 
-  // Extract gallery images
+  // Extract gallery images, always ensuring the primary thumbnail is first
+  const thumbnailUrl = resolveImageUrl(bp.thumbnail);
   const galleryImages: string[] = [];
   const galleryImageObjects: { url: string; color?: string }[] = [];
   if (bp.images && bp.images.length > 0) {
     bp.images.forEach((img) => {
       const url = resolveImageUrl(img.imageUrl);
+      // Skip if this gallery image is the same as the thumbnail (avoid duplicates)
+      if (url === thumbnailUrl) return;
       galleryImages.push(url);
       galleryImageObjects.push({ url, color: (img as any).color });
     });
   }
+  // Always put the thumbnail first so videos uploaded as thumbnail always show in gallery
+  galleryImages.unshift(thumbnailUrl);
+  galleryImageObjects.unshift({ url: thumbnailUrl });
 
   // Badge logic
   let badge: string | undefined;
@@ -181,16 +187,16 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     name: bp.name,
     price: displayPrice,
     originalPrice,
-    imageSrc: resolveImageUrl(bp.thumbnail),
-    hoverImageSrc: galleryImages[0] ?? resolveImageUrl(bp.thumbnail),
+    imageSrc: thumbnailUrl,
+    hoverImageSrc: galleryImages[1] ?? thumbnailUrl,
     imageAlt: bp.name,
     badge,
     badgeClass,
     detailedColors: detailedColors.length > 0 ? detailedColors : undefined,
     sizes: sizes.length > 0 ? sizes : undefined,
     description: bp.fullDescription ?? bp.shortDescription ?? '',
-    galleryImages: galleryImages.length > 0 ? galleryImages : [resolveImageUrl(bp.thumbnail)],
-    galleryImageObjects: galleryImageObjects.length > 0 ? galleryImageObjects : [{ url: resolveImageUrl(bp.thumbnail) }],
+    galleryImages,
+    galleryImageObjects,
     rawVariants: (bp.variants && Array.isArray(bp.variants)) ? bp.variants : undefined,
     fabricCare: '',
     shippingReturns: 'Orders are processed within 1-2 business days.',
@@ -207,6 +213,27 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     seoKeywords: bp.seoKeywords,
     seoSchema: bp.seoSchema,
   };
+}
+
+// ─── Module-level cache (persists across React navigation) ───────────────────
+// Cache survives component unmount/remount so navigating back is instant.
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const productsCache = new Map<string, CacheEntry<{ products: any[]; total: number }>>();
+const productCache = new Map<string, CacheEntry<any>>();
+
+function buildCacheKey(options: Record<string, any>): string {
+  return JSON.stringify(options, Object.keys(options).sort());
+}
+
+function isCacheValid<T>(entry: CacheEntry<T> | undefined): entry is CacheEntry<T> {
+  return !!entry && Date.now() - entry.timestamp < CACHE_TTL;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -233,6 +260,19 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
   const { currencySymbol } = useCurrency();
 
   const fetchProducts = useCallback(async (isLoadMore = false, currentPage = 1) => {
+    const cacheKey = buildCacheKey({ status, featured, limit, page: currentPage, category, isOnSaleSection, isHotRightNow, sortBy, sortDir, currencySymbol });
+
+    // Serve from cache instantly if fresh (only for first page, not load-more)
+    if (!isLoadMore) {
+      const cached = productsCache.get(cacheKey);
+      if (isCacheValid(cached)) {
+        setProducts(cached.data.products);
+        setTotal(cached.data.total);
+        setLoading(false);
+        return;
+      }
+    }
+
     if (isLoadMore) setLoadingMore(true);
     else setLoading(true);
     
@@ -255,6 +295,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
 
       if (data.success && data.data?.products) {
         const mapped = (data.data.products as BackendProduct[]).map((bp) => mapBackendProduct(bp, currencySymbol));
+        const newTotal = data.data.pagination?.total ?? mapped.length;
         if (isLoadMore) {
           setProducts(prev => {
             // Deduplicate products by id
@@ -268,8 +309,13 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsResult
           });
         } else {
           setProducts(mapped);
+          setTotal(newTotal);
+          // Save to cache
+          productsCache.set(cacheKey, { data: { products: mapped, total: newTotal }, timestamp: Date.now() });
         }
-        setTotal(data.data.pagination?.total ?? (isLoadMore ? products.length + mapped.length : mapped.length));
+        if (isLoadMore) {
+          setTotal(data.data.pagination?.total ?? (products.length + mapped.length));
+        }
       } else {
         if (!isLoadMore) {
           setProducts([]);
@@ -330,6 +376,15 @@ export function useProduct(id: string | undefined): UseProductResult {
       return;
     }
 
+    // Serve from cache instantly if fresh
+    const cacheKey = `product:${id}:${currencySymbol}`;
+    const cached = productCache.get(cacheKey);
+    if (isCacheValid(cached)) {
+      setProduct(cached.data);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -337,7 +392,10 @@ export function useProduct(id: string | undefined): UseProductResult {
       const data = response.data;
 
       if (data.success && data.product) {
-        setProduct(mapBackendProduct(data.product as BackendProduct, currencySymbol));
+        const mapped = mapBackendProduct(data.product as BackendProduct, currencySymbol);
+        setProduct(mapped);
+        // Save to cache
+        productCache.set(cacheKey, { data: mapped, timestamp: Date.now() });
       } else {
         setProduct(null);
         setError('Product not found.');

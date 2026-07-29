@@ -14,7 +14,43 @@ import { Footer } from "../../components/Footer/Footer";
 import { useCurrency } from "../../context/CurrencyContext";
 import { ImageWithSkeleton } from "../../components/ImageWithSkeleton";
 
-const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i);
+const isVideo = (url: string | undefined) => {
+  if (!url) return false;
+  return !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) || url.includes('/video/upload/');
+};
+
+const AutoPlayVideo = ({ src, className }: { src: string; className?: string }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      videoRef.current.playsInline = true;
+      // Force play to bypass mobile browser restrictions when possible
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => console.log('Autoplay prevented:', err));
+      }
+    }
+  }, [src]);
+
+  return (
+    <video
+      ref={videoRef}
+      className={className}
+      autoPlay
+      loop
+      muted
+      defaultMuted
+      playsInline
+      preload="auto"
+    >
+      <source src={src} type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  );
+};
 
 // Delivery estimate will be fetched from settings
 
@@ -293,10 +329,19 @@ export function ProductDetailPage() {
   // Derived state for gallery images based on selected color
   const displayedImages = React.useMemo(() => {
     if (!product) return [];
+    
+    // We want the primary thumbnail to always be the first image in the gallery.
+    const primaryImg = product.imageSrc;
+    const hoverImg = product.hoverImageSrc;
+    
     if (!product.galleryImageObjects || product.galleryImageObjects.length === 0) {
-      return product.galleryImages && product.galleryImages.length > 0
-        ? product.galleryImages
-        : [product.imageSrc, product.hoverImageSrc || product.imageSrc];
+      if (product.galleryImages && product.galleryImages.length > 0) {
+        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
+        return [primaryImg, ...uniqueGallery].filter(Boolean);
+      }
+      return hoverImg && hoverImg !== primaryImg 
+        ? [primaryImg, hoverImg].filter(Boolean) 
+        : [primaryImg].filter(Boolean);
     }
 
     const currentSelectedColorName = selectedColor.name.toLowerCase();
@@ -305,6 +350,8 @@ export function ProductDetailPage() {
     const others: string[] = [];
     
     product.galleryImageObjects.forEach((imgObj) => {
+      if (imgObj.url === primaryImg) return; // Don't duplicate primary image
+      
       const imgColor = (imgObj.color || "").toLowerCase();
       if (imgColor && (imgColor === currentSelectedColorName || currentSelectedColorName.includes(imgColor))) {
         colorMatches.push(imgObj.url);
@@ -314,11 +361,13 @@ export function ProductDetailPage() {
     });
 
     if (colorMatches.length > 0) {
-      return [...colorMatches, ...others];
+      return [primaryImg, ...colorMatches, ...others].filter(Boolean);
     } else {
-      return product.galleryImages && product.galleryImages.length > 0
-        ? product.galleryImages
-        : [product.imageSrc, product.hoverImageSrc || product.imageSrc];
+      if (product.galleryImages && product.galleryImages.length > 0) {
+        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
+        return [primaryImg, ...uniqueGallery].filter(Boolean);
+      }
+      return [primaryImg].filter(Boolean);
     }
   }, [product, selectedColor]);
 
@@ -497,10 +546,9 @@ export function ProductDetailPage() {
                   className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container cursor-zoom-in group"
                 >
                   {isVideo(img) ? (
-                    <video
-                      className="w-full h-full object-cover"
+                    <AutoPlayVideo
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                       src={img}
-                      autoPlay loop muted playsInline
                     />
                   ) : (
                     <ImageWithSkeleton
@@ -529,7 +577,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* Right: Minimal editorial product info — quiet, refined, secondary to imagery */}
-          <div className="w-full lg:w-[30%] flex flex-col py-6 px-5 lg:pl-10 lg:pr-6 lg:sticky top-0 self-start gap-0">
+          <div className="w-full lg:w-[30%] flex flex-col pb-6 pt-10 lg:pt-16 px-5 lg:pl-10 lg:pr-6 lg:sticky top-0 self-start gap-0">
 
             {/* Brand label / category hint */}
             {product.badge && (

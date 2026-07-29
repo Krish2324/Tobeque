@@ -42,7 +42,6 @@ const AutoPlayVideo = ({ src, className }: { src: string; className?: string }) 
       autoPlay
       loop
       muted
-      defaultMuted
       playsInline
       preload="auto"
     >

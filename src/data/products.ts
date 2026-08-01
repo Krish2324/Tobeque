@@ -37,6 +37,7 @@ export type Product = {
   show7DayReturn?: boolean;
   showFreeShipping?: boolean;
   showCodAvailable?: boolean;
+  sizeChart?: any;
 };
 
 export const productsData: Product[] = [

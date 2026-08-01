@@ -31,6 +31,7 @@ interface BackendProduct {
   show7DayReturn?: boolean;
   showFreeShipping?: boolean;
   showCodAvailable?: boolean;
+  sizeChart?: any;
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string;
@@ -207,6 +208,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     show7DayReturn: bp.show7DayReturn,
     showFreeShipping: bp.showFreeShipping,
     showCodAvailable: bp.showCodAvailable,
+    sizeChart: bp.sizeChart,
     slug: bp.slug,
     seoTitle: bp.seoTitle,
     seoDescription: bp.seoDescription,

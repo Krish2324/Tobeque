@@ -328,36 +328,51 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             </div>
           )}
 
-          {/* Size Selection */}
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="mt-5">
-              <div className="flex justify-between items-center mb-2">
-                <p className="font-label-caps text-xs tracking-widest text-primary font-bold">
-                  SIZE : <span className="font-bold">{selectedSize}</span>
-                </p>
-                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsSizeGuideOpen(true); }} className="font-body-md text-sm text-secondary flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
-                  <span className="material-symbols-outlined text-[16px]">straighten</span>
-                  Size Guide
-                </button>
+          {/* Size Selection & Size Guide */}
+          {(() => {
+            const hasSizes = product.sizes && product.sizes.length > 0;
+            const hasSizeGuide = product.sizeChart ? product.sizeChart.disabled !== true : false;
+            
+            if (!hasSizes && !hasSizeGuide) return null;
+
+            return (
+              <div className="mt-5">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="font-label-caps text-xs tracking-widest text-primary font-bold">
+                    {hasSizes ? (
+                      <>SIZE : <span className="font-bold">{selectedSize}</span></>
+                    ) : (
+                      <span>SIZE GUIDE</span>
+                    )}
+                  </p>
+                  {hasSizeGuide && (
+                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsSizeGuideOpen(true); }} className="font-body-md text-sm text-secondary flex items-center gap-1 hover:text-primary transition-colors cursor-pointer">
+                      <span className="material-symbols-outlined text-[16px]">straighten</span>
+                      Size Guide
+                    </button>
+                  )}
+                </div>
+                {hasSizes && (
+                  <div className="grid grid-cols-5 gap-2">
+                    {product.sizes.map((sz) => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSize(sz); }}
+                        className={`border py-2 font-label-caps text-xs transition-colors ${
+                          selectedSize === sz
+                            ? 'border-primary bg-primary text-on-primary font-bold'
+                            : 'border-outline-variant text-primary hover:border-primary'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {product.sizes.map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedSize(sz); }}
-                    className={`border py-2 font-label-caps text-xs transition-colors ${
-                      selectedSize === sz
-                        ? 'border-primary bg-primary text-on-primary font-bold'
-                        : 'border-outline-variant text-primary hover:border-primary'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Actions */}
           <div className="mt-6 flex flex-col md:flex-row gap-3">
@@ -413,8 +428,8 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
       {/* ─── Size Guide Modal ─── */}
       {isSizeGuideOpen && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50" onClick={(e) => { e.stopPropagation(); setIsSizeGuideOpen(false); }}>
-          <div className="bg-white max-w-lg w-full mx-4 p-8 relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 overflow-y-auto p-4" onClick={(e) => { e.stopPropagation(); setIsSizeGuideOpen(false); }}>
+          <div className="bg-white max-w-lg w-full p-6 md:p-8 relative shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <button
               type="button"
               className="absolute top-4 right-4 w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-neutral-50 transition-colors"
@@ -424,32 +439,49 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
             </button>
             <h2 className="text-center text-xl font-light tracking-widest mb-6">Size Chart</h2>
             <h3 className="font-semibold text-sm mb-4">Size Guide</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-outline-variant">
-                  {['Size', 'Bust', 'Waist', 'Hip'].map(h => (
-                    <th key={h} className="text-center py-2 text-xs font-medium text-secondary tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { size: 'XS', bust: '30.5', waist: '24.5', hip: '34' },
-                  { size: 'S',  bust: '32',   waist: '26',   hip: '35.5' },
-                  { size: 'M',  bust: '33.5', waist: '27',   hip: '37' },
-                  { size: 'L',  bust: '35',   waist: '29',   hip: '38' },
-                  { size: 'XL', bust: '36.5', waist: '30.5', hip: '40' },
-                ].map(row => (
-                  <tr key={row.size} className="border-b border-outline-variant hover:bg-surface-container/50">
-                    <td className="text-center py-3 font-medium text-primary">{row.size}</td>
-                    <td className="text-center py-3 text-secondary">{row.bust}</td>
-                    <td className="text-center py-3 text-secondary">{row.waist}</td>
-                    <td className="text-center py-3 text-secondary">{row.hip}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="text-[11px] text-secondary mt-4">All measurements are in inches. If you're between sizes, we recommend sizing up.</p>
+
+            {(() => {
+              const chart = product?.sizeChart;
+              const headers = (chart && Array.isArray(chart.headers) && chart.headers.length > 0) 
+                ? chart.headers 
+                : ['Size', 'Bust', 'Waist', 'Hip'];
+              const rows = (chart && Array.isArray(chart.rows) && chart.rows.length > 0)
+                ? chart.rows
+                : [
+                    { Size: 'XS', Bust: '30.5', Waist: '24.5', Hip: '34' },
+                    { Size: 'S',  Bust: '32',   Waist: '26',   Hip: '35.5' },
+                    { Size: 'M',  Bust: '33.5', Waist: '27',   Hip: '37' },
+                    { Size: 'L',  Bust: '35',   Waist: '29',   Hip: '38' },
+                    { Size: 'XL', Bust: '36.5', Waist: '30.5', Hip: '40' },
+                  ];
+              const note = chart?.note !== undefined ? chart.note : "All measurements are in inches. If you're between sizes, we recommend sizing up.";
+
+              return (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-outline-variant">
+                          {headers.map((h: string) => (
+                            <th key={h} className="text-center py-2 text-xs font-medium text-secondary tracking-wider uppercase">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row: any, rIdx: number) => (
+                          <tr key={rIdx} className="border-b border-outline-variant hover:bg-surface-container/50">
+                            {headers.map((h: string) => (
+                              <td key={h} className="text-center py-3 text-secondary font-medium">{row[h] !== undefined ? row[h] : (row[h.toLowerCase()] !== undefined ? row[h.toLowerCase()] : '-')}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {note && <p className="text-[11px] text-secondary mt-4">{note}</p>}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

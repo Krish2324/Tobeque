@@ -61,6 +61,14 @@ export function HomePage() {
   const { setIsCartOpen, addToWishlist, wishlistItems, removeFromWishlist, addToCart } = useCart();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Fetch live featured products
   const [featuredLimit, setFeaturedLimit] = useState(10);
   const { products: featuredProducts, loading: featuredLoading } = useProducts({
@@ -154,6 +162,66 @@ export function HomePage() {
       .finally(() => setCollectionLoading(false));
   }, []);
 
+  // Season Collection slider drag state
+  const collectionScrollRef = useRef<HTMLDivElement>(null);
+  const collectionDragging = useRef(false);
+  const collectionIsDragging = useRef(false);
+  const collectionDragStartX = useRef(0);
+  const collectionDragScrollLeft = useRef(0);
+
+  const collectionMouseDown = (e: React.MouseEvent) => {
+    collectionDragging.current = true;
+    collectionIsDragging.current = false;
+    collectionDragStartX.current = e.pageX - (collectionScrollRef.current?.offsetLeft || 0);
+    collectionDragScrollLeft.current = collectionScrollRef.current?.scrollLeft || 0;
+    if (collectionScrollRef.current) collectionScrollRef.current.style.cursor = 'grabbing';
+  };
+  const collectionMouseMove = (e: React.MouseEvent) => {
+    if (!collectionDragging.current || !collectionScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - (collectionScrollRef.current.offsetLeft || 0);
+    const walk = (x - collectionDragStartX.current) * 1.5;
+    if (Math.abs(walk) > 5) {
+      collectionIsDragging.current = true;
+    }
+    collectionScrollRef.current.scrollLeft = collectionDragScrollLeft.current - walk;
+  };
+  const collectionMouseUp = () => {
+    collectionDragging.current = false;
+    if (collectionScrollRef.current) collectionScrollRef.current.style.cursor = 'grab';
+  };
+
+  // Season Collection continuous infinite auto-scroll
+  const animationRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!collectionScrollRef.current || collectionItems.length <= 1) return;
+    const container = collectionScrollRef.current;
+    let scrollSpeed = 0.5; // pixels per frame
+
+    const animate = () => {
+      if (!collectionDragging.current) {
+        container.scrollLeft += scrollSpeed;
+
+        // Since we render the items 3 times, one set's width is scrollWidth / 3
+        const oneSetWidth = container.scrollWidth / 3;
+
+        // If we have scrolled past the first set, reset seamlessly
+        if (container.scrollLeft >= oneSetWidth) {
+          container.scrollLeft -= oneSetWidth;
+        } else if (container.scrollLeft <= 0 && scrollSpeed < 0) {
+          // In case of backwards scroll/drag, though drag handles its own bounds
+        }
+      }
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [collectionItems]);
+
   const handleWishlist = (e: React.MouseEvent, product: Product) => {
     e.preventDefault();
     e.stopPropagation();
@@ -178,14 +246,20 @@ export function HomePage() {
             }
           }}
         >
-          <div className="w-full h-full relative overflow-hidden bg-surface-container">
+          <div className="w-full h-full relative overflow-hidden bg-black">
             {bannersLoading ? (
-              <div className="w-full h-full bg-surface-container animate-pulse absolute inset-0" />
+              <div className="w-full h-full bg-black animate-pulse absolute inset-0" />
             ) : (() => {
               const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
-              const mediaUrl = rawUrl
+              let mediaUrl = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`)
                 : heroBanner;
+              
+              if (isMobile && heroBannerData?.mobileImageUrl) {
+                 const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
+                 mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+              }
+
               const isVideoContent = isVideo(mediaUrl);
               const titleText = heroBannerData?.title || "Cinematic fashion campaign showing a model in spring collection.";
 
@@ -196,14 +270,14 @@ export function HomePage() {
                   loop
                   muted
                   playsInline
-                  className="w-full h-full object-cover object-top absolute inset-0"
+                  className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                 >
                   <source src={mediaUrl} type="video/mp4" />
                 </video>
               ) : (
                 <img
                   alt={titleText}
-                  className="w-full h-full object-cover object-top absolute inset-0"
+                  className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                   src={mediaUrl}
                 />
               );
@@ -265,31 +339,45 @@ export function HomePage() {
               ))}
             </div>
           ) : collectionItems.length > 0 ? (
-            <div className="flex gap-[3px] overflow-x-auto no-scrollbar" style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
-              {collectionItems.map((item, idx) => {
+            <div
+              ref={collectionScrollRef}
+              className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+              onMouseDown={collectionMouseDown}
+              onMouseMove={collectionMouseMove}
+              onMouseUp={collectionMouseUp}
+              onMouseLeave={collectionMouseUp}
+              onTouchStart={() => { collectionDragging.current = true; }}
+              onTouchEnd={() => { collectionDragging.current = false; }}
+              onTouchCancel={() => { collectionDragging.current = false; }}
+            >
+              {[...collectionItems, ...collectionItems, ...collectionItems].map((item, idx) => {
                 const displayName = item.displayLabel || item.category?.name || 'Category';
                 const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
                 const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
 
                 return (
                   <div
-                    key={item.id}
+                    key={`${item.id}-${idx}`}
                     className="shrink-0 aspect-[3/4] w-[calc((100%-3px)/2)] md:w-[calc((100%-15px)/6)]"
-                    style={{
-                      scrollSnapAlign: 'start'
-                    }}
                   >
                     <button
                       className="group relative w-full h-full overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block rounded"
-                      onClick={() =>
-                        navigate(`/collection?category=${item.categoryId}&name=${encodeURIComponent(displayName)}`)
-                      }
+                      onClick={(e) => {
+                        if (collectionIsDragging.current) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return;
+                        }
+                        navigate(`/product-category/${item.category?.slug || 'all'}`);
+                      }}
                     >
                       {/* Background image */}
                       <img
+                        draggable={false}
                         src={imageUrl || fallbackUrl}
                         alt={displayName}
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
                       />
 
                       {/* Dark gradient overlay */}
@@ -395,7 +483,13 @@ export function HomePage() {
             <div className="w-full h-full relative overflow-hidden bg-surface-container">
               {(() => {
                 const rawUrl = bottomBannerData?.imageUrl ? bottomBannerData.imageUrl.replace(/\\/g, '/') : '';
-                const mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                
+                if (isMobile && bottomBannerData?.mobileImageUrl) {
+                   const mobileRawUrl = bottomBannerData.mobileImageUrl.replace(/\\/g, '/');
+                   mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+                }
+
                 const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
                 const titleText = bottomBannerData?.title || "Bottom Banner";
 
@@ -561,7 +655,7 @@ export function HomePage() {
                   key={idx}
                   className="shrink-0 w-[calc((100%-6px)/2)] sm:w-[calc((100%-12px)/5)] aspect-[9/16] relative group cursor-pointer overflow-hidden rounded-none shadow-sm"
                   style={{ scrollSnapAlign: 'start' }}
-                  onClick={() => navigate(`/product/${p.id}`)}
+                  onClick={() => navigate(`/product-category/${p.categorySlug || 'all'}/${p.slug || p.id}`)}
                 >
                   {isVid ? (
                     <video

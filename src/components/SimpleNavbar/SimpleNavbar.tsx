@@ -28,7 +28,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection' || window.location.pathname.startsWith('/product/');
+  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection' || window.location.pathname.startsWith('/product-category/');
   const isTransparent = isTopTransparentPage && !isScrolled;
 
   return (
@@ -54,12 +54,12 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
 
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex flex-1 justify-center space-x-8">
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection">NEW ARRIVAL</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Tops">TOPS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Dresses">DRESSES</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Jeans and Pants">JEANS AND PANTS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection?category=Skirts and Shorts">SKIRTS AND SHORTS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/collection">BEST SELLERS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/all">NEW ARRIVAL</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/tops">TOPS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/dresses">DRESSES</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/jeans-and-pants">JEANS AND PANTS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/skirts-and-shorts">SKIRTS AND SHORTS</Link>
+          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/all">BEST SELLERS</Link>
         </div>
 
         {/* Trailing Actions - Right (Desktop) */}
@@ -154,7 +154,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
 
               {/* Navigation Links */}
               <div className="flex flex-col gap-6">
-                <Link to="/collection" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
+                <Link to="/product-category/all" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
                   New Arrival
                   <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
                 </Link>
@@ -165,22 +165,22 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
                     <span className="w-8 h-[1px] bg-gray-400"></span> Shop By Category
                   </h4>
                   <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
-                    <Link to="/collection?category=Tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Tops
                     </Link>
-                    <Link to="/collection?category=Dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Dresses
                     </Link>
-                    <Link to="/collection?category=Jeans and Pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/jeans-and-pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Jeans and Pants
                     </Link>
-                    <Link to="/collection?category=Skirts and Shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/skirts-and-shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Skirts and Shorts
                     </Link>
                   </div>
                 </div>
 
-                <Link to="/collection" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-4">
+                <Link to="/product-category/all" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-4">
                   Best Sellers
                   <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
                 </Link>

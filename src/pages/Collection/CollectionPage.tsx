@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
@@ -51,8 +51,9 @@ export function CollectionPage() {
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
 
+  const { categorySlug } = useParams<{ categorySlug?: string }>();
   const [searchParams] = useSearchParams();
-  const categoryParam = searchParams.get('category');
+  const categoryParam = categorySlug || searchParams.get('category');
   const categoryNameParam = searchParams.get('name');
 
   // ── Live categories tree ──────────────────────────────────────────────────
@@ -62,6 +63,14 @@ export function CollectionPage() {
   // ── Hero Banner State ────────────────────────────────────────────────────
   const [heroBannerData, setHeroBannerData] = useState<any>(null);
   const [bannersLoading, setBannersLoading] = useState(true);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     api.get('/api/banners')
@@ -246,23 +255,30 @@ export function CollectionPage() {
           {bannersLoading ? (
             <div className="absolute inset-0 w-full h-full animate-pulse bg-surface-container" />
           ) : heroBannerData ? (
-            <div className="absolute inset-0 w-full h-full">
+            <div className="absolute inset-0 w-full h-full bg-black">
               {(() => {
                 const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
-                const mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                
+                if (isMobile && heroBannerData.mobileImageUrl) {
+                  const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
+                  mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+                }
+
                 const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
 
                 return isVideo ? (
                   <video
+                    key={mediaUrl}
                     autoPlay loop muted playsInline
-                    className="w-full h-full object-cover object-top absolute inset-0"
+                    className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                   >
                     <source src={mediaUrl} type="video/mp4" />
                   </video>
                 ) : (
                   <img
                     alt={heroBannerData.title || displayTitle}
-                    className="w-full h-full object-cover object-top absolute inset-0"
+                    className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                     src={mediaUrl}
                   />
                 );
@@ -332,12 +348,12 @@ export function CollectionPage() {
                   onClick={() => {
                     if (currentContext) {
                       const id = currentContext.id || currentContext._id;
-                      navigate(`/collection?category=${id}&name=${encodeURIComponent(currentContext.name)}`);
+                      navigate(`/product-category/${encodeURIComponent(String(currentContext.name).toLowerCase())}?category=${id}&name=${encodeURIComponent(currentContext.name)}`);
                     } else {
-                      navigate('/collection');
+                      navigate('/product-category/all');
                     }
                   }}
-                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || (currentContext && (categoryParam === String(currentContext.id || currentContext._id) || String(currentContext.name).toLowerCase() === String(categoryParam).toLowerCase())))
+                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || categoryParam === 'all' || (currentContext && (categoryParam === String(currentContext.id || currentContext._id) || String(currentContext.name).toLowerCase() === String(categoryParam).toLowerCase())))
                       ? 'border-primary text-primary'
                       : 'border-transparent text-secondary hover:text-primary'
                     }`}
@@ -352,7 +368,7 @@ export function CollectionPage() {
                     <button
                       key={catId}
                       onClick={() =>
-                        navigate(`/collection?category=${catId}&name=${encodeURIComponent(cat.name)}`)
+                        navigate(`/product-category/${encodeURIComponent(String(cat.name).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`)
                       }
                       className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase())
                           ? 'border-primary text-primary'
@@ -623,7 +639,7 @@ export function CollectionPage() {
                     <button
                       key={catId}
                       onClick={() => {
-                        navigate(`/collection?category=${catId}&name=${encodeURIComponent(cat.name)}`);
+                        navigate(`/product-category/${encodeURIComponent(String(cat.name).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`);
                         setIsFilterOpen(false);
                       }}
                       className={`text-left text-xs uppercase tracking-wider py-1 hover:text-primary transition-colors cursor-pointer ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase()) ? 'text-primary font-bold border-l-2 border-primary pl-2' : 'text-secondary pl-2'}`}
@@ -725,7 +741,7 @@ export function CollectionPage() {
               setMinPrice('');
               setMaxPrice('');
               setCurrentSort('FEATURED');
-              navigate('/collection');
+              navigate('/product-category/all');
               setIsFilterOpen(false);
             }}
             className="w-1/2 py-4 border border-outline-variant text-secondary text-[10px] tracking-widest font-bold hover:text-red-600 hover:border-red-600 transition-colors uppercase font-label-caps cursor-pointer"

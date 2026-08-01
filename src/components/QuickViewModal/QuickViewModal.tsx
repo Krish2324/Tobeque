@@ -94,16 +94,55 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
 
-  const currentImage = useMemo(() => {
-    if (!product) return '';
-    if (selectedColor && product.galleryImageObjects) {
-      const matchedImg = product.galleryImageObjects.find(
-        img => img.color && img.color.toLowerCase() === selectedColor.toLowerCase()
-      );
-      if (matchedImg) return matchedImg.url;
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
+
+  const displayedImages = useMemo(() => {
+    if (!product) return [];
+    const primaryImg = product.imageSrc;
+    const hoverImg = product.hoverImageSrc;
+    let list: string[] = [];
+
+    if (selectedColor && product.galleryImageObjects && product.galleryImageObjects.length > 0) {
+      const colorMatches: string[] = [];
+      const others: string[] = [];
+      product.galleryImageObjects.forEach(imgObj => {
+        if (!imgObj.url || imgObj.url === primaryImg) return;
+        if (imgObj.color && imgObj.color.toLowerCase() === selectedColor.toLowerCase()) {
+          colorMatches.push(imgObj.url);
+        } else {
+          others.push(imgObj.url);
+        }
+      });
+      if (colorMatches.length > 0) {
+        list = [primaryImg, ...colorMatches, ...others];
+      }
     }
-    return product.imageSrc || '';
+
+    if (list.length === 0) {
+      if (product.galleryImages && product.galleryImages.length > 0) {
+        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
+        list = [primaryImg, ...uniqueGallery];
+      } else if (hoverImg && hoverImg !== primaryImg) {
+        list = [primaryImg, hoverImg];
+      } else {
+        list = [primaryImg];
+      }
+    }
+
+    const uniqueList: string[] = [];
+    list.forEach(img => {
+      if (img && !uniqueList.includes(img)) {
+        uniqueList.push(img);
+      }
+    });
+    return uniqueList;
   }, [product, selectedColor]);
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [selectedColor, product]);
+
+  const currentImage = displayedImages[activeImageIndex] || product?.imageSrc || '';
 
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -147,16 +186,52 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
-          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-surface hover:bg-surface-container transition-colors z-10 border border-outline-variant"
+          className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-surface hover:bg-surface-container transition-colors z-30 border border-outline-variant shadow-sm"
         >
           <span className="material-symbols-outlined text-primary">close</span>
         </button>
 
-        {/* Left Image Section */}
-        <div className="w-full md:w-1/2 relative bg-surface-container aspect-[3/4] overflow-hidden">
-          <div className="absolute top-4 left-4 bg-surface text-primary px-3 py-1 text-xs font-bold font-label-caps border border-outline-variant z-20">
+        {/* Left Image Section with Image Slider */}
+        <div className="w-full md:w-1/2 relative bg-surface-container aspect-[3/4] overflow-hidden group">
+          <div className="absolute top-4 left-4 bg-surface text-primary px-3 py-1 text-xs font-bold font-label-caps border border-outline-variant z-20 shadow-sm">
             NEW IN
           </div>
+
+          {/* Image Counter Pill */}
+          {displayedImages.length > 1 && (
+            <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] font-bold px-2.5 py-1 rounded-full z-20 backdrop-blur-sm tracking-wider">
+              {activeImageIndex + 1} / {displayedImages.length}
+            </div>
+          )}
+
+          {/* Navigation Arrows */}
+          {displayedImages.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  setActiveImageIndex(prev => (prev === 0 ? displayedImages.length - 1 : prev - 1));
+                }}
+                aria-label="Previous Image"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg z-30 transition-all opacity-90 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault(); e.stopPropagation();
+                  setActiveImageIndex(prev => (prev === displayedImages.length - 1 ? 0 : prev + 1));
+                }}
+                aria-label="Next Image"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-primary flex items-center justify-center shadow-lg z-30 transition-all opacity-90 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
+            </>
+          )}
 
           {!imageLoaded && (
             <div className="absolute inset-0 bg-surface-container animate-pulse z-10" />
@@ -176,6 +251,33 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
               className={`w-full h-full object-cover object-top transition-opacity duration-500 relative z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
             />
+          )}
+
+          {/* Bottom Thumbnail Strip */}
+          {displayedImages.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 z-30 flex items-center justify-center gap-2 px-4">
+              <div className="flex items-center gap-1.5 p-1.5 bg-black/40 backdrop-blur-md rounded-xl max-w-full overflow-x-auto">
+                {displayedImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault(); e.stopPropagation();
+                      setActiveImageIndex(idx);
+                    }}
+                    className={`relative w-8 h-11 rounded-lg overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                      activeImageIndex === idx ? 'border-white scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    {isVideo(img) ? (
+                      <video src={img} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
@@ -418,7 +520,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           isOpen={isShareModalOpen} 
           onClose={() => setIsShareModalOpen(false)} 
           productName={product.name}
-          url={`${window.location.origin}/product/${product.id}`}
+          url={`${window.location.origin}/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
         />
       )}
 

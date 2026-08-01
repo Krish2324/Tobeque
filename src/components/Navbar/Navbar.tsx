@@ -7,24 +7,24 @@ import type { Product } from '../ProductCard';
 import logoImage from '../../assets/Tobeque-Logo-290x57.webp';
 
 const CATEGORIES = [
-  { name: 'Tops', path: '/collection?category=Tops&name=Tops' },
-  { name: 'Dresses', path: '/collection?category=Dresses&name=Dresses' },
-  { name: 'Shirts and Blouses', path: '/collection?category=Shirts and Blouses&name=Shirts and Blouses' },
-  { name: 'T-Shirts and Vests', path: '/collection?category=T-Shirts and Vests&name=T-Shirts and Vests' },
-  { name: 'Jeans and Pants', path: '/collection?category=Jeans and Pants&name=Jeans and Pants' },
-  { name: 'Skirts and Shorts', path: '/collection?category=Skirts and Shorts&name=Skirts and Shorts' },
+  { name: 'Tops', path: '/product-category/tops' },
+  { name: 'Dresses', path: '/product-category/dresses' },
+  { name: 'Shirts and Blouses', path: '/product-category/shirts-and-blouses' },
+  { name: 'T-Shirts and Vests', path: '/product-category/t-shirts-and-vests' },
+  { name: 'Jeans and Pants', path: '/product-category/jeans-and-pants' },
+  { name: 'Skirts and Shorts', path: '/product-category/skirts-and-shorts' },
 ];
 
 const NEW_COLLECTION = [
-  { name: 'New In', path: '/collection?category=New In&name=New In' },
-  { name: 'Summer-26', path: '/collection?category=Summer-26&name=Summer-26' },
-  { name: 'Customisable', path: '/collection?category=Customisable&name=Customisable' },
-  { name: 'Collaboration', path: '/collection?category=Collaboration&name=Collaboration' },
+  { name: 'New In', path: '/product-category/new-in' },
+  { name: 'Summer-26', path: '/product-category/summer-26' },
+  { name: 'Customisable', path: '/product-category/customisable' },
+  { name: 'Collaboration', path: '/product-category/collaboration' },
 ];
 
 const RECOMMENDED = [
-  { name: 'Style Journal', path: '/collection?category=Style Journal&name=Style Journal' },
-  { name: 'Steal The Style', path: '/collection?category=Steal The Style&name=Steal The Style' },
+  { name: 'Style Journal', path: '/product-category/style-journal' },
+  { name: 'Steal The Style', path: '/product-category/steal-the-style' },
 ];
 
 interface NavbarProps {
@@ -33,7 +33,7 @@ interface NavbarProps {
 
 export function Navbar({ onSearchProductSelect }: NavbarProps) {
   const navigate = useNavigate();
-  const { setIsCartOpen, wishlistItems } = useCart();
+  const { setIsCartOpen, cartCount } = useCart();
   const { isAuthenticated, openLoginModal, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -48,7 +48,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection' || window.location.pathname.startsWith('/product/');
+  const isTopTransparentPage = window.location.pathname === '/' || window.location.pathname === '/collection' || window.location.pathname.startsWith('/product-category/');
   const isTransparent = isTopTransparentPage && !isScrolled;
 
   return (
@@ -72,7 +72,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             {/* Shop — Mega Menu trigger */}
             <div className="relative group py-4">
               <button 
-                onClick={() => navigate('/collection')}
+                onClick={() => navigate('/product-category/all')}
                 className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-pointer"
               >
                 Shop
@@ -146,7 +146,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                     {/* View All CTA at bottom */}
                     <div className="mt-auto pt-6 border-t border-outline-variant">
                       <Link
-                        to="/collection"
+                        to="/product-category/all"
                         className="text-[9px] font-label-caps tracking-widest uppercase text-primary hover:opacity-70 transition-opacity flex items-center gap-1"
                       >
                         View All
@@ -234,21 +234,6 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
               </button>
             )}
             <button
-              aria-label="Wishlist"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
-              onClick={() => {
-                if (isAuthenticated) {
-                  navigate('/profile', { state: { activeTab: 'wishlist' } });
-                } else {
-                  openLoginModal();
-                }
-              }}
-            >
-              <span className="material-symbols-outlined !text-[18px]" data-icon="favorite">
-                favorite
-              </span>
-            </button>
-            <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag"
               className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative cursor-pointer flex items-center"
@@ -259,21 +244,32 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
               >
                 shopping_bag
               </span>
-              <span className="absolute -top-1.5 -right-1.5 bg-primary text-on-primary text-[8px] w-3 h-3 rounded-full flex items-center justify-center font-bold">
-                {wishlistItems?.length || 0}
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-on-primary text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
+                {cartCount}
               </span>
             </button>
           </div>
 
-          {/* Mobile Cart Icon - Right (Visible only on mobile) */}
-          <div className="flex md:hidden flex-1 items-center justify-end">
+          {/* Mobile Right Icons (Search & Cart) - Visible only on mobile */}
+          <div className="flex md:hidden flex-1 items-center justify-end gap-2.5">
+            {/* Search Button */}
+            <button
+              onClick={() => setIsSearchOpen(true)}
+              aria-label="Search"
+              className="text-secondary p-1 transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined font-light !text-[20px]">search</span>
+            </button>
+
+            {/* Shopping Bag Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer"
+              aria-label="Shopping Bag"
+              className="text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
             >
               <span className="material-symbols-outlined font-light !text-[20px]">shopping_bag</span>
-              <span className="absolute top-0.5 right-0.5 bg-red-500 text-white text-[8px] w-2.5 h-2.5 rounded-full flex items-center justify-center font-bold">
-                {wishlistItems?.length || 0}
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold shadow-md">
+                {cartCount}
               </span>
             </button>
           </div>
@@ -299,83 +295,80 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             </div>
             
             {/* Scrollable Content */}
-            <div className="flex-1 overflow-y-auto py-6 px-6 flex flex-col gap-8">
+            <div className="flex-1 overflow-y-auto py-5 px-6 flex flex-col gap-6">
               
+              {/* Professional Account / Profile Card */}
+              {isAuthenticated ? (
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); navigate('/profile'); }}
+                  className="w-full flex items-center justify-between bg-surface-container/60 hover:bg-surface-container border border-outline-variant/40 p-3.5 rounded-2xl transition-all cursor-pointer shadow-sm group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs shadow-sm">
+                      <span className="material-symbols-outlined text-[18px]">person</span>
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-primary">My Account</span>
+                      <span className="text-[9px] text-secondary/70">Orders & Profile Details</span>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-[16px] text-secondary group-hover:text-primary group-hover:translate-x-0.5 transition-all">chevron_right</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setIsMobileMenuOpen(false); openLoginModal(); }}
+                  className="w-full flex items-center justify-between bg-primary text-on-primary p-3.5 rounded-2xl transition-all cursor-pointer shadow-md hover:opacity-90 active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-[20px]">person</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest">Sign In / Register</span>
+                  </div>
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+              )}
+
               {/* Navigation Links */}
-              <div className="flex flex-col gap-6">
-                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
+              <div className="flex flex-col gap-5 pt-1">
+                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-primary flex items-center justify-between">
                   New Arrivals
                   <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
                 </Link>
                 
                 {/* Categories */}
-                <div className="flex flex-col gap-4 mt-2">
+                <div className="flex flex-col gap-3 mt-1">
                   <h4 className="text-[10px] uppercase tracking-[0.25em] text-gray-800 font-bold flex items-center gap-2">
-                    <span className="w-8 h-[1px] bg-gray-400"></span> Shop By Category
+                    <span className="w-6 h-[1px] bg-gray-400"></span> Shop By Category
                   </h4>
-                  <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
-                    <Link to="/collection?category=Tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                  <div className="grid grid-cols-1 gap-2.5 pl-4 border-l-2 border-outline-variant/30">
+                    <Link to="/product-category/tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Tops
                     </Link>
-                    <Link to="/collection?category=Dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Dresses
                     </Link>
-                    <Link to="/collection?category=Jeans and Pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/jeans-and-pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Jeans and Pants
                     </Link>
-                    <Link to="/collection?category=Skirts and Shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
+                    <Link to="/product-category/skirts-and-shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
                       Skirts and Shorts
                     </Link>
                   </div>
                 </div>
 
-                <Link to="/collection" onClick={() => setIsMobileMenuOpen(false)} className="text-[13px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-4">
+                <Link to="/product-category/all" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-primary flex items-center justify-between mt-2">
                   Best Sellers
                   <span className="material-symbols-outlined text-[16px] text-secondary">chevron_right</span>
                 </Link>
               </div>
 
-              {/* Quick Icons */}
-              <div className="flex items-center justify-between bg-slate-50/50 p-4 rounded-2xl border border-outline-variant/30">
-                <button
-                  onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[24px]">search</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">Search</span>
-                </button>
-                <button
-                  onClick={() => { 
-                    setIsMobileMenuOpen(false);
-                    if (isAuthenticated) navigate('/profile');
-                    else openLoginModal();
-                  }}
-                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[24px]">person</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">{isAuthenticated ? 'Profile' : 'Login'}</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    if (isAuthenticated) navigate('/profile', { state: { activeTab: 'wishlist' } });
-                    else openLoginModal();
-                  }}
-                  className="flex flex-col items-center gap-1.5 text-secondary hover:text-primary transition-colors cursor-pointer"
-                >
-                  <span className="material-symbols-outlined text-[24px]">favorite</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest">Wishlist</span>
-                </button>
-              </div>
-              
-              {/* Logout Button */}
+              {/* Logout Button (if logged in) */}
               {isAuthenticated && (
                 <button 
                   onClick={() => { logout?.(); setIsMobileMenuOpen(false); }}
-                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50/50 py-3.5 rounded-xl uppercase tracking-widest text-[11px] font-bold cursor-pointer active:scale-95 transition-transform"
+                  className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-200 bg-red-50/50 py-3 rounded-xl uppercase tracking-widest text-[10px] font-bold cursor-pointer active:scale-95 transition-transform"
                 >
-                  <span className="material-symbols-outlined text-[18px]">logout</span>
-                  Logout
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
+                  Sign Out
                 </button>
               )}
             </div>

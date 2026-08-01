@@ -46,7 +46,8 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/collection" element={<CollectionPage />} />
-              <Route path="/product/:id" element={<ProductDetailPage />} />
+              <Route path="/product-category/:categorySlug" element={<CollectionPage />} />
+              <Route path="/product-category/:categorySlug/:productSlug" element={<ProductDetailPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/style-journal" element={<StyleJournalPage />} />

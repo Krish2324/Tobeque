@@ -1,5 +1,21 @@
-const API_BASE = (import.meta.env.VITE_API_URL || '') + '/api/user-auth';
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api/user-auth`;
 
+const parseResponse = async (res: Response, defaultErrMsg: string) => {
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || data.message || defaultErrMsg);
+    }
+    return data;
+  } catch (err: any) {
+    if (err.message && !err.message.includes('JSON') && !err.message.includes('SyntaxError')) {
+      throw err;
+    }
+    throw new Error(`Connection Error (${res.status}): Server endpoint not found or unreachable.`);
+  }
+};
 
 export interface UserAuthData {
   id: number;
@@ -28,9 +44,7 @@ export const sendOtp = async (phone: string): Promise<{ success: boolean; messag
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone })
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to send OTP');
-  return data;
+  return parseResponse(res, 'Failed to send OTP');
 };
 
 export const verifyOtp = async (phone: string, otp: string): Promise<OtpVerifyResponse> => {
@@ -39,17 +53,14 @@ export const verifyOtp = async (phone: string, otp: string): Promise<OtpVerifyRe
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phone, otp })
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Invalid OTP');
-  return data;
+  return parseResponse(res, 'Invalid OTP');
 };
 
 export const getUserProfile = async (token: string): Promise<UserAuthData> => {
   const res = await fetch(`${API_BASE}/profile`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error || 'Failed to fetch profile');
+  const data = await parseResponse(res, 'Failed to fetch profile');
   return data.user;
 };
 

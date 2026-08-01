@@ -95,7 +95,7 @@ export function CartPage() {
                         {/* Name + remove */}
                         <div className="flex items-start justify-between gap-3">
                           <Link
-                            to={`/product/${item.id}`}
+                            to={`/product-category/${item.categorySlug || 'all'}/${item.slug || item.id}`}
                             className="text-[12px] font-medium text-gray-900 uppercase tracking-wide leading-snug hover:text-gray-500 transition-colors line-clamp-2"
                           >
                             {item.name}

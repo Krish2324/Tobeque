@@ -31,7 +31,7 @@ export function ProductCard({
         {/* Left Side: Responsive Image Container */}
         <div className="relative w-28 sm:w-56 md:w-72 lg:w-[280px] shrink-0 aspect-[4/5] bg-surface-container overflow-hidden rounded-md">
           <Link 
-            to={`/product/${product.id || ""}`}
+            to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
             className="absolute inset-0 z-0 block cursor-pointer"
           >
             <ImageWithSkeleton
@@ -56,7 +56,7 @@ export function ProductCard({
         {/* Right Side: Info & Actions */}
         <div className="flex-1 flex flex-col justify-center gap-3 sm:gap-4 md:gap-5 min-w-0 py-1">
           <div className="flex flex-col gap-1 sm:gap-2">
-            <Link to={`/product/${product.id || ""}`} className="hover:text-primary cursor-pointer transition-colors inline-block">
+            <Link to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`} className="hover:text-primary cursor-pointer transition-colors inline-block">
               <h2 className="font-body-md text-xs sm:text-sm text-secondary uppercase tracking-[0.1em] font-medium truncate sm:whitespace-normal">
                 {product.name}
               </h2>
@@ -156,7 +156,7 @@ export function ProductCard({
           {images.map((img, idx) => (
             <Link
               key={`${img}-${idx}`}
-              to={`/product/${product.id || ""}`}
+              to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
               className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
             >
               {isVideo(img) ? (
@@ -180,7 +180,7 @@ export function ProductCard({
         {/* Desktop View: Old Webpage Flow (Primary Image + Hover Image Transition) */}
         <div className="hidden sm:block absolute inset-0 z-0">
           <Link
-            to={`/product/${product.id || ""}`}
+            to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
             className="absolute inset-0 block cursor-pointer"
           >
             {isVideo(displayImage) ? (
@@ -319,7 +319,7 @@ export function ProductCard({
       <div className="flex flex-col gap-0 px-0.5 mt-1.5 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
         {/* Clickable Title */}
         <Link 
-          to={`/product/${product.id || ""}`} 
+          to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`} 
           className="hover:underline cursor-pointer block text-left"
         >
           <h3 className="font-body-md text-[10px] text-secondary truncate tracking-wide leading-tight">

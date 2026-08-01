@@ -130,11 +130,11 @@ function useDragScroll() {
 }
 
 export function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { productSlug } = useParams<{ categorySlug?: string; productSlug: string }>();
   const { currencySymbol } = useCurrency();
 
   // Fetch specific product from backend
-  const { product, loading, error } = useProduct(id);
+  const { product, loading, error } = useProduct(productSlug);
 
   // Fetch related products (e.g. latest 12 published products)
   const { products: relatedProducts } = useProducts({ limit: 12, status: 'published' });
@@ -144,7 +144,7 @@ export function ProductDetailPage() {
   
   // 2. Filter out explicit products and the current product from related products
   const explicitIds = new Set(explicitStyleItWith.map(p => p.id));
-  const otherProducts = relatedProducts.filter(p => p.id !== id && !explicitIds.has(p.id));
+  const otherProducts = relatedProducts.filter(p => p.slug !== productSlug && p.id !== productSlug && !explicitIds.has(p.id));
   
   // 3. Merge them for "Style It With" (show up to 8)
   const styleItWithProducts = [...explicitStyleItWith, ...otherProducts].slice(0, 8);
@@ -156,13 +156,29 @@ export function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });
   const [selectedSize, setSelectedSize] = useState<string>("S");
 
-  const { addToCart, setIsCartOpen } = useCart();
+  const { addToCart, setIsCartOpen, wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const navigate = useNavigate();
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [buttonText, setButtonText] = useState("ADD TO CART");
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+
+  const isWishlisted = !!(product && wishlistItems?.some(item => (item.id && product.id && String(item.id) === String(product.id)) || item.name === product.name));
+
+  const [isHeartPopping, setIsHeartPopping] = useState(false);
+
+  const handleToggleWishlist = () => {
+    if (!product) return;
+    setIsHeartPopping(true);
+    setTimeout(() => setIsHeartPopping(false), 400);
+
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
 
   const currentVariant = React.useMemo(() => {
     if (!product?.rawVariants) return null;
@@ -585,10 +601,83 @@ export function ProductDetailPage() {
               </span>
             )}
 
-            {/* Product Name — refined, light weight */}
-            <h1 className="text-[17px] font-light text-primary mb-2 leading-snug tracking-[0.01em]">
-              {product.name}
-            </h1>
+            {/* Product Name & Wishlist Heart Button */}
+            {/* Wishlist Particle Keyframes */}
+            <style>{`
+              @keyframes wishlistFloatUp {
+                0% { opacity: 1; transform: translate(-50%, 0) scale(0.7); }
+                60% { opacity: 1; transform: translate(-50%, -20px) scale(1.3); }
+                100% { opacity: 0; transform: translate(-50%, -34px) scale(0.9); }
+              }
+              @keyframes wishlistParticle {
+                0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+              }
+            `}</style>
+
+            {/* Product Name & Wishlist Heart Button */}
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h1 className="text-[17px] font-light text-primary leading-snug tracking-[0.01em]">
+                {product.name}
+              </h1>
+              
+              <button
+                type="button"
+                onClick={handleToggleWishlist}
+                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                className="relative p-1 bg-transparent cursor-pointer shrink-0 group select-none"
+              >
+                {/* Main Heart Icon with Elastic Spring & Rotation */}
+                <span 
+                  className={`material-symbols-outlined text-[19px] block transition-all duration-300 transform ${
+                    isWishlisted 
+                      ? 'text-red-500 drop-shadow-[0_2px_10px_rgba(239,68,68,0.5)]' 
+                      : 'text-secondary/60 group-hover:text-red-500 group-hover:scale-110'
+                  } ${isHeartPopping ? 'scale-[1.45] -rotate-12' : 'scale-100 rotate-0'}`}
+                  style={{ fontVariationSettings: isWishlisted ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  favorite
+                </span>
+
+                {/* Micro Sparkle Explosion & Floating Heart Animation */}
+                {isHeartPopping && (
+                  <>
+                    {/* Floating Mini Heart */}
+                    <span 
+                      className="absolute top-0 left-1/2 text-red-500 pointer-events-none z-10"
+                      style={{ animation: 'wishlistFloatUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
+                    >
+                      <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                        favorite
+                      </span>
+                    </span>
+
+                    {/* Radial Particle Explosion */}
+                    {[
+                      { tx: '0px', ty: '-24px', color: 'bg-rose-500' },
+                      { tx: '17px', ty: '-17px', color: 'bg-pink-400' },
+                      { tx: '24px', ty: '0px', color: 'bg-red-500' },
+                      { tx: '17px', ty: '17px', color: 'bg-rose-400' },
+                      { tx: '0px', ty: '24px', color: 'bg-pink-500' },
+                      { tx: '-17px', ty: '17px', color: 'bg-red-400' },
+                      { tx: '-24px', ty: '0px', color: 'bg-rose-500' },
+                      { tx: '-17px', ty: '-17px', color: 'bg-pink-400' },
+                    ].map((p, idx) => (
+                      <span
+                        key={idx}
+                        className={`absolute top-1/2 left-1/2 w-1.5 h-1.5 rounded-full ${p.color} pointer-events-none shadow-sm`}
+                        style={{
+                          animation: 'wishlistParticle 0.55s ease-out forwards',
+                          '--tx': p.tx,
+                          '--ty': p.ty,
+                        } as React.CSSProperties}
+                      />
+                    ))}
+                  </>
+                )}
+              </button>
+            </div>
 
             {/* Price Row — compact */}
             <div className="flex items-baseline gap-2 mb-3">

@@ -27,6 +27,7 @@ export type Product = {
   sku?: string; // Product SKU from admin panel
   slug?: string;
   seoTitle?: string;
+  categorySlug?: string;
   seoDescription?: string;
   seoKeywords?: string;
   seoSchema?: string;

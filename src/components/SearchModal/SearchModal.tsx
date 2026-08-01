@@ -115,7 +115,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                       key={productId}
                       onClick={() => {
                         onClose();
-                        navigate(`/product/${productId}`);
+                        navigate(`/product-category/${product.categorySlug || 'all'}/${product.slug || productId}`);
                       }}
                       className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                     >

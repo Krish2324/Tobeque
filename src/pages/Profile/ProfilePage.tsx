@@ -724,7 +724,7 @@ export function ProfilePage() {
                     </div>
                     <h3 className="font-light tracking-[0.2em] uppercase text-2xl text-primary mb-3">Your wishlist is empty</h3>
                     <p className="text-secondary/60 mb-8 max-w-sm">Save your favorite pieces here to easily find them later or add them to your cart.</p>
-                    <Link to="/collection" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+                    <Link to="/product-category/all" className="bg-primary text-on-primary px-8 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:scale-105 transition-transform shadow-lg shadow-primary/20">
                       Discover Pieces
                     </Link>
                   </div>
@@ -741,7 +741,7 @@ export function ProfilePage() {
                         </button>
                         
                         {/* Image / Video */}
-                        <Link to={`/product/${item.id}`} className="aspect-[3/4] overflow-hidden bg-surface-container block">
+                        <Link to={`/product-category/${item.categorySlug || 'all'}/${item.slug || item.id}`} className="aspect-[3/4] overflow-hidden bg-surface-container block">
                           {isVideo(item.imageSrc) ? (
                             <video
                               src={item.imageSrc}

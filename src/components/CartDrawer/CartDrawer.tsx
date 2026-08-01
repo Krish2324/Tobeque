@@ -219,7 +219,7 @@ export function CartDrawer() {
                       {crossSellProducts.map((p) => (
                         <div key={p.id} className="w-[110px] shrink-0 flex flex-col gap-1.5 group">
                           <Link
-                            to={`/product/${p.id}`}
+                            to={`/product-category/${p.categorySlug || 'all'}/${p.slug || p.id}`}
                             onClick={() => setIsCartOpen(false)}
                             className="block w-[110px] h-[140px] bg-surface-container overflow-hidden"
                           >
@@ -285,6 +285,23 @@ export function CartDrawer() {
             </>
           ) : (
             <div className="p-6">
+              <div className="mb-5 p-3 bg-surface-container/60 border border-outline-variant/40 flex items-center justify-between text-xs font-body-md text-secondary">
+                <span className="text-[11px] font-medium">Looking for all saved items?</span>
+                <button
+                  onClick={() => {
+                    setIsCartOpen(false);
+                    if (isAuthenticated) {
+                      navigate('/profile', { state: { activeTab: 'wishlist' } });
+                    } else {
+                      openLoginModal();
+                    }
+                  }}
+                  className="font-label-caps text-[10px] font-bold text-primary hover:text-secondary uppercase tracking-wider flex items-center gap-1 cursor-pointer underline"
+                >
+                  View Profile Wishlist
+                  <span className="material-symbols-outlined text-[13px]">arrow_forward</span>
+                </button>
+              </div>
               {wishlistItems.length === 0 ? (
                 <div className="text-center text-secondary py-12">Your wishlist is empty.</div>
               ) : (

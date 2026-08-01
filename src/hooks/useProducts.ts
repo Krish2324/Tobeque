@@ -22,7 +22,7 @@ interface BackendProduct {
   colors?: string[];
   variants: Array<{ size?: string; color?: string; stock?: number; price?: number; sku?: string }> | null;
   images?: Array<{ id: number; imageUrl: string }>;
-  category?: { id: number; name: string } | null;
+  category?: { id: number; name: string; slug?: string } | null;
   brand?: { id: number; name: string } | null;
   isOnSaleSection?: boolean;
   isHotRightNow?: boolean;
@@ -212,6 +212,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     seoDescription: bp.seoDescription,
     seoKeywords: bp.seoKeywords,
     seoSchema: bp.seoSchema,
+    categorySlug: bp.category?.slug || bp.category?.name?.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-') || undefined,
   };
 }
 

@@ -725,7 +725,7 @@ export function ProductDetailPage() {
                   </div>
                   {hasSizes && (
                     <div className="flex flex-wrap gap-1.5">
-                      {product.sizes.map((sz) => (
+                      {product.sizes?.map((sz) => (
                         <button
                           key={sz}
                           onClick={() => setSelectedSize(sz)}

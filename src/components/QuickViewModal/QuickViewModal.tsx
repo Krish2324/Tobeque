@@ -354,7 +354,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                 </div>
                 {hasSizes && (
                   <div className="grid grid-cols-5 gap-2">
-                    {product.sizes.map((sz) => (
+                    {product.sizes?.map((sz) => (
                       <button
                         key={sz}
                         type="button"

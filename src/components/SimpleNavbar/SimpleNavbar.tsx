@@ -6,6 +6,15 @@ import { SearchModal } from "../SearchModal/SearchModal";
 import type { Product } from "../ProductCard";
 import logoImage from "../../assets/Tobeque-Logo-290x57.webp";
 
+const CATEGORIES = [
+  { name: 'Tops', path: '/product-category/tops' },
+  { name: 'Dresses', path: '/product-category/dresses' },
+  { name: 'Shirts and Blouses', path: '/product-category/shirts-and-blouses' },
+  { name: 'T-Shirts and Vests', path: '/product-category/t-shirts-and-vests' },
+  { name: 'Jeans and Pants', path: '/product-category/jeans-and-pants' },
+  { name: 'Skirts and Shorts', path: '/product-category/skirts-and-shorts' },
+];
+
 interface SimpleNavbarProps {
   onSearchProductSelect?: (product: Product) => void;
 }
@@ -165,18 +174,16 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
                     <span className="w-8 h-[1px] bg-gray-400"></span> Shop By Category
                   </h4>
                   <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
-                    <Link to="/product-category/tops" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
-                      Tops
-                    </Link>
-                    <Link to="/product-category/dresses" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
-                      Dresses
-                    </Link>
-                    <Link to="/product-category/jeans-and-pants" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
-                      Jeans and Pants
-                    </Link>
-                    <Link to="/product-category/skirts-and-shorts" onClick={() => setIsMobileMenuOpen(false)} className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary">
-                      Skirts and Shorts
-                    </Link>
+                    {CATEGORIES.map(cat => (
+                      <Link 
+                        key={cat.name} 
+                        to={cat.path} 
+                        onClick={() => setIsMobileMenuOpen(false)} 
+                        className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary transition-colors"
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
                   </div>
                 </div>
 

@@ -145,10 +145,12 @@ export function CollectionPage() {
     sortDirParam = 'DESC';
   }
 
+  const effectiveCategory = (categoryParam && categoryParam.toLowerCase() !== 'all') ? categoryParam : undefined;
+
   const { products: liveProducts, loading, loadingMore, error, total, hasMore, loadMore } = useProducts({
     status: 'published',
     limit: 20,
-    category: categoryParam || undefined,
+    category: effectiveCategory,
     sortBy: sortByParam,
     sortDir: sortDirParam,
   });

@@ -567,7 +567,7 @@ export function ProductDetailPage() {
                     />
                   ) : (
                     <ImageWithSkeleton
-                      alt={`${product.name} detail view ${index + 1}`}
+                      alt={`${product.imageAltTag || product.imageAlt || product.name} detail view ${index + 1}`}
                       wrapperClassName="absolute inset-0"
                       src={img}
                     />

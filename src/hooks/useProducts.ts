@@ -36,6 +36,7 @@ interface BackendProduct {
   seoDescription?: string;
   seoKeywords?: string;
   seoSchema?: string;
+  imageAltTag?: string;
 }
 
 interface UseProductsOptions {
@@ -214,6 +215,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     seoDescription: bp.seoDescription,
     seoKeywords: bp.seoKeywords,
     seoSchema: bp.seoSchema,
+    imageAltTag: bp.imageAltTag,
     categorySlug: bp.category?.slug || bp.category?.name?.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-') || undefined,
   };
 }

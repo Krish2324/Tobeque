@@ -35,7 +35,7 @@ export function ProductCard({
             className="absolute inset-0 z-0 block cursor-pointer"
           >
             <ImageWithSkeleton
-              alt={product.imageAlt || product.name}
+              alt={product.imageAltTag || product.imageAlt || product.name}
               wrapperClassName="absolute inset-0"
               className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
               src={product.imageSrc}
@@ -167,7 +167,7 @@ export function ProductCard({
                 />
               ) : (
                 <ImageWithSkeleton
-                  alt={`${product.imageAlt || product.name} view ${idx + 1}`}
+                  alt={`${product.imageAltTag || product.imageAlt || product.name} view ${idx + 1}`}
                   wrapperClassName="absolute inset-0"
                   className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
                   src={img}
@@ -191,7 +191,7 @@ export function ProductCard({
               />
             ) : (
               <ImageWithSkeleton
-                alt={product.imageAlt || product.name}
+                alt={product.imageAltTag || product.imageAlt || product.name}
                 wrapperClassName="absolute inset-0"
                 className={`object-center transition-all duration-500 ease-in-out ${!selectedColorName && product.hoverImageSrc ? '' : 'group-hover:scale-105'}`}
                 src={displayImage}
@@ -208,7 +208,7 @@ export function ProductCard({
                 />
               ) : (
                 <ImageWithSkeleton
-                  alt={(product.imageAlt || product.name) + " alternate view"}
+                  alt={(product.imageAltTag || product.imageAlt || product.name) + " alternate view"}
                   wrapperClassName="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
                   className="object-center"
                   src={product.hoverImageSrc}

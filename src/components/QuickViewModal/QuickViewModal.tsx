@@ -247,7 +247,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
           ) : (
             <img
               src={currentImage}
-              alt={product.imageAlt || product.name}
+              alt={product.imageAltTag || product.imageAlt || product.name}
               className={`w-full h-full object-cover object-top transition-opacity duration-500 relative z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
             />
@@ -272,7 +272,7 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                     {isVideo(img) ? (
                       <video src={img} className="w-full h-full object-cover" muted />
                     ) : (
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={img} alt={product.imageAltTag || product.imageAlt || product.name} className="w-full h-full object-cover" />
                     )}
                   </button>
                 ))}

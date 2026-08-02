@@ -13,6 +13,7 @@ export type Product = {
   imageSrc: string;
   hoverImageSrc?: string;
   imageAlt?: string;
+  imageAltTag?: string;
   badge?: string;
   badgeClass?: string;
   colors?: string[]; // Simplified colors for general cards

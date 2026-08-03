@@ -120,6 +120,10 @@ export function ProfilePage() {
     city: '',
     state: '',
     zipCode: '',
+    shippingAddress: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingZipCode: '',
     gender: '',
   });
 
@@ -137,6 +141,10 @@ export function ProfilePage() {
         city: user.city || '',
         state: user.state || '',
         zipCode: user.zipCode || '',
+        shippingAddress: user.shippingAddress || '',
+        shippingCity: user.shippingCity || '',
+        shippingState: user.shippingState || '',
+        shippingZipCode: user.shippingZipCode || '',
         gender: user.gender || '',
       });
     }
@@ -527,33 +535,48 @@ export function ProfilePage() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {['Billing', 'Shipping'].map((type) => (
-                    <div key={type} className="bg-surface rounded-3xl border border-outline-variant/30 p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] relative overflow-hidden group">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-bl-[100px] -z-10 group-hover:scale-110 transition-transform duration-500" />
-                      <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">local_shipping</span>
-                        {type} Address
-                      </h3>
-                      
-                      <address className="not-italic text-sm text-primary leading-relaxed flex flex-col gap-1">
-                        {formData.firstName || formData.lastName ? (
-                          <strong className="text-lg font-light tracking-[0.2em] uppercase block mb-2">{formData.firstName} {formData.lastName}</strong>
-                        ) : (
-                          <span className="italic text-secondary/50">No name provided</span>
-                        )}
+                  {[
+                    { type: 'Billing', prefix: '' },
+                    { type: 'Shipping', prefix: 'shipping' }
+                  ].map(({ type, prefix }) => {
+                    const addressKey = prefix ? `${prefix}Address` : 'address';
+                    const cityKey = prefix ? `${prefix}City` : 'city';
+                    const stateKey = prefix ? `${prefix}State` : 'state';
+                    const zipKey = prefix ? `${prefix}ZipCode` : 'zipCode';
+                    
+                    const addressVal = formData[addressKey as keyof typeof formData];
+                    const cityVal = formData[cityKey as keyof typeof formData];
+                    const stateVal = formData[stateKey as keyof typeof formData];
+                    const zipVal = formData[zipKey as keyof typeof formData];
+
+                    return (
+                      <div key={type} className="bg-surface rounded-3xl border border-outline-variant/30 p-8 shadow-[0_4px_20px_rgb(0,0,0,0.02)] relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/[0.02] rounded-bl-[100px] -z-10 group-hover:scale-110 transition-transform duration-500" />
+                        <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6 flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px]">local_shipping</span>
+                          {type} Address
+                        </h3>
                         
-                        {formData.address ? (
-                          <>
-                            <span className="text-secondary">{formData.address}</span>
-                            {formData.city && <span className="text-secondary">{formData.city}</span>}
-                            {formData.state && <span className="text-secondary">{formData.state}, {formData.zipCode}</span>}
-                          </>
-                        ) : (
-                          <span className="italic block mt-4 text-secondary/40">This address hasn't been set up yet.</span>
-                        )}
-                      </address>
-                    </div>
-                  ))}
+                        <address className="not-italic text-sm text-primary leading-relaxed flex flex-col gap-1">
+                          {formData.firstName || formData.lastName ? (
+                            <strong className="text-lg font-light tracking-[0.2em] uppercase block mb-2">{formData.firstName} {formData.lastName}</strong>
+                          ) : (
+                            <span className="italic text-secondary/50">No name provided</span>
+                          )}
+                          
+                          {addressVal ? (
+                            <>
+                              <span className="text-secondary">{addressVal}</span>
+                              {cityVal && <span className="text-secondary">{cityVal}</span>}
+                              {stateVal && <span className="text-secondary">{stateVal}, {zipVal}</span>}
+                            </>
+                          ) : (
+                            <span className="italic block mt-4 text-secondary/40">This address hasn't been set up yet.</span>
+                          )}
+                        </address>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -639,9 +662,9 @@ export function ProfilePage() {
 
                   <div className="h-px w-full bg-outline-variant/40" />
 
-                  {/* Address Section */}
+                  {/* Billing Address Section */}
                   <div>
-                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6">Address Details</h3>
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6">Billing Address</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 gap-y-8">
                       <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
                         <input
@@ -693,6 +716,66 @@ export function ProfilePage() {
                           placeholder="ZIP / Postal Code"
                         />
                         <label htmlFor="zipCode" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">ZIP / Postal Code</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px w-full bg-outline-variant/40" />
+
+                  {/* Shipping Address Section */}
+                  <div>
+                    <h3 className="text-[10px] uppercase tracking-widest font-bold text-secondary/60 mb-6">Shipping Address</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 gap-y-8">
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="text"
+                          name="shippingAddress"
+                          id="shippingAddress"
+                          value={formData.shippingAddress}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="Street Address"
+                        />
+                        <label htmlFor="shippingAddress" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">Street Address</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="shippingCity"
+                          id="shippingCity"
+                          value={formData.shippingCity}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="City"
+                        />
+                        <label htmlFor="shippingCity" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">City</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative pt-2">
+                        <input
+                          type="text"
+                          name="shippingState"
+                          id="shippingState"
+                          value={formData.shippingState}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="State / Province"
+                        />
+                        <label htmlFor="shippingState" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">State / Province</label>
+                      </div>
+
+                      <div className="flex flex-col gap-2 relative md:col-span-2 pt-2">
+                        <input
+                          type="text"
+                          name="shippingZipCode"
+                          id="shippingZipCode"
+                          value={formData.shippingZipCode}
+                          onChange={handleInputChange}
+                          className="peer w-full bg-transparent border-b border-outline-variant py-2 text-primary text-sm focus:border-primary focus:outline-none transition-colors placeholder-transparent"
+                          placeholder="ZIP / Postal Code"
+                        />
+                        <label htmlFor="shippingZipCode" className="absolute left-0 -top-3.5 text-[10px] font-bold tracking-widest uppercase text-secondary/50 transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-secondary/70 peer-placeholder-shown:top-2 peer-placeholder-shown:normal-case peer-placeholder-shown:tracking-normal peer-placeholder-shown:font-normal peer-focus:-top-3.5 peer-focus:text-[10px] peer-focus:font-bold peer-focus:tracking-widest peer-focus:uppercase peer-focus:text-primary">ZIP / Postal Code</label>
                       </div>
                     </div>
                   </div>
@@ -1049,10 +1132,10 @@ export function ProfilePage() {
                     </h4>
                     <address className="not-italic text-sm text-secondary leading-relaxed bg-surface-container/30 p-4 rounded-2xl">
                       <span className="font-medium text-primary block mb-1">
-                        {(orderDetailsModal.order as any).shippingAddress.firstName} {(orderDetailsModal.order as any).shippingAddress.lastName}
+                        {(orderDetailsModal.order as any).shippingAddress.name}
                       </span>
-                      {(orderDetailsModal.order as any).shippingAddress.address}<br />
-                      {(orderDetailsModal.order as any).shippingAddress.city}, {(orderDetailsModal.order as any).shippingAddress.state} {(orderDetailsModal.order as any).shippingAddress.zipCode}<br />
+                      {(orderDetailsModal.order as any).shippingAddress.street}<br />
+                      {(orderDetailsModal.order as any).shippingAddress.city}, {(orderDetailsModal.order as any).shippingAddress.state} {(orderDetailsModal.order as any).shippingAddress.zip}<br />
                       {(orderDetailsModal.order as any).shippingAddress.country}
                     </address>
                   </div>
@@ -1065,10 +1148,10 @@ export function ProfilePage() {
                     </h4>
                     <address className="not-italic text-sm text-secondary leading-relaxed bg-surface-container/30 p-4 rounded-2xl">
                       <span className="font-medium text-primary block mb-1">
-                        {(orderDetailsModal.order as any).billingAddress.firstName} {(orderDetailsModal.order as any).billingAddress.lastName}
+                        {(orderDetailsModal.order as any).billingAddress.name}
                       </span>
-                      {(orderDetailsModal.order as any).billingAddress.address}<br />
-                      {(orderDetailsModal.order as any).billingAddress.city}, {(orderDetailsModal.order as any).billingAddress.state} {(orderDetailsModal.order as any).billingAddress.zipCode}<br />
+                      {(orderDetailsModal.order as any).billingAddress.street}<br />
+                      {(orderDetailsModal.order as any).billingAddress.city}, {(orderDetailsModal.order as any).billingAddress.state} {(orderDetailsModal.order as any).billingAddress.zip}<br />
                       {(orderDetailsModal.order as any).billingAddress.country}
                     </address>
                   </div>

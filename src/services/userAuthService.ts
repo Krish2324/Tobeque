@@ -28,6 +28,10 @@ export interface UserAuthData {
   city?: string | null;
   state?: string | null;
   zipCode?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingZipCode?: string | null;
   gender?: string | null;
   profilePhoto?: string | null;
 }

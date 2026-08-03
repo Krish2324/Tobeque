@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { createOrder, validateCouponAPI, getRazorpayConfig, createRazorpayOrder, verifyRazorpayPayment } from '../../services/userAuthService';
+import { createOrder, validateCouponAPI, getRazorpayConfig, createRazorpayOrder, verifyRazorpayPayment, updateUserProfile } from '../../services/userAuthService';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -159,7 +159,7 @@ export function CheckoutPage() {
     applyCoupon,
     removeCoupon,
   } = useCart();
-  const { isAuthenticated, openLoginModal, logout, user, token } = useAuth();
+  const { isAuthenticated, openLoginModal, logout, user, token, updateUser } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
 
   useEffect(() => {
@@ -233,8 +233,14 @@ export function CheckoutPage() {
   /* ─── UI state ─── */
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [successProgress, setSuccessProgress] = useState(0);
+  const [iconVisible, setIconVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
+
+  /* ─── Address Toggle ─── */
+  const [addressSource, setAddressSource] = useState<'profile' | 'new'>('profile');
+  const [saveAddressToProfile, setSaveAddressToProfile] = useState(true);
 
   /* ─── Shipping state ─── */
   const [shippingCost, setShippingCost] = useState<number>(0);
@@ -255,6 +261,28 @@ export function CheckoutPage() {
       .catch(() => { });
   }, []);
 
+  /* ─── Success screen progress timer ─── */
+  useEffect(() => {
+    if (!checkoutSuccess) return;
+    setSuccessProgress(0);
+    setIconVisible(false);
+    // Slight delay so DOM is ready, then show icon
+    const iconTimer = setTimeout(() => setIconVisible(true), 50);
+    const TOTAL_MS = 10000;
+    const TICK_MS = 50;
+    let elapsed = 0;
+    const interval = setInterval(() => {
+      elapsed += TICK_MS;
+      const pct = Math.min((elapsed / TOTAL_MS) * 100, 100);
+      setSuccessProgress(pct);
+      if (elapsed >= TOTAL_MS) clearInterval(interval);
+    }, TICK_MS);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(iconTimer);
+    };
+  }, [checkoutSuccess]);
+
   /* ─── Coupon state ─── */
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
@@ -263,7 +291,7 @@ export function CheckoutPage() {
 
   /* ─── Sync user data on open ─── */
   useEffect(() => {
-    if (user) {
+    if (user && addressSource === 'profile') {
       setBillingName(
         user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : ''
       );
@@ -275,8 +303,31 @@ export function CheckoutPage() {
       setBillingState(user.state || '');
       setPincodeAreas([]);
       setBillingArea('');
+      
+      if (user.shippingAddress || user.shippingCity || user.shippingState || user.shippingZipCode) {
+        setShipDifferent(true);
+        setShippingName(user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '');
+        setShippingStreet(user.shippingAddress || '');
+        setShippingCity(user.shippingCity || '');
+        setShippingState(user.shippingState || '');
+        setShippingPincode(user.shippingZipCode || '');
+      } else {
+        setShipDifferent(false);
+      }
     }
-  }, [user]);
+  }, [user, addressSource]);
+
+  const handleAddressSourceChange = (type: 'profile' | 'new') => {
+    setAddressSource(type);
+    if (type === 'new') {
+      setBillingStreet('');
+      setBillingPincode('');
+      setBillingCity('');
+      setBillingState('');
+      setPincodeAreas([]);
+      setBillingArea('');
+    }
+  };
 
   /* ─── Auth gate ─── */
   useEffect(() => {
@@ -531,8 +582,13 @@ export function CheckoutPage() {
       }
       : billingAddressObj;
 
-    if (!billingName || !billingStreet || !billingPincode) {
+    if (!billingName || !billingPhone || !billingEmail || !billingStreet || !billingPincode || !billingCity || !billingState) {
       setErrorMessage('Please fill in all required billing fields.');
+      return;
+    }
+
+    if (shipDifferent && (!shippingName || !shippingStreet || !shippingPincode || !shippingCity || !shippingState)) {
+      setErrorMessage('Please fill in all required shipping fields.');
       return;
     }
 
@@ -540,6 +596,23 @@ export function CheckoutPage() {
     setErrorMessage('');
 
     try {
+      if (addressSource === 'new' && saveAddressToProfile) {
+        try {
+          const updatedUser = await updateUserProfile(token, {
+            firstName: billingName.split(' ')[0] || '',
+            lastName: billingName.split(' ').slice(1).join(' ') || '',
+            email: billingEmail || '',
+            address: billingStreet || '',
+            city: billingCity || '',
+            state: billingState || '',
+            zipCode: billingPincode || '',
+          });
+          updateUser(updatedUser);
+        } catch (err) {
+          console.error("Failed to save address to profile", err);
+        }
+      }
+
       const items = cart.map((item) => {
         const priceStr = String(item.price || '').replace(/[^0-9.-]+/g, '');
         return {
@@ -569,7 +642,7 @@ export function CheckoutPage() {
           clearCart();
           setCheckoutSuccess(false);
           navigate('/');
-        }, 3500);
+        }, 10000);
       } else {
         const keyId = await getRazorpayConfig();
         const rpOrder = await createRazorpayOrder(token, {
@@ -607,7 +680,7 @@ export function CheckoutPage() {
                 clearCart();
                 setCheckoutSuccess(false);
                 navigate('/');
-              }, 3500);
+              }, 10000);
             } catch (err: any) {
               setIsSubmittingOrder(false);
               setErrorMessage(err.message || 'Payment verification failed.');
@@ -701,17 +774,53 @@ export function CheckoutPage() {
 
           {/* ── Success Overlay ── */}
           {checkoutSuccess && (
-            <div className="absolute inset-0 bg-white z-50 flex flex-col items-center justify-center p-10 text-center animate-in fade-in duration-300 rounded-2xl">
-              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-5 text-green-500 shadow-sm border border-green-100">
-                <span className="material-symbols-outlined text-[48px]">check_circle</span>
+            <div className="fixed inset-0 bg-white z-[9999] flex flex-col items-center justify-center p-6 text-center">
+
+              {/* Icon — pops in via inline keyframe */}
+              <div
+                className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-7 text-green-500 shadow-md border border-green-200"
+                style={{
+                  transform: iconVisible ? 'scale(1)' : 'scale(0.3)',
+                  opacity: iconVisible ? 1 : 0,
+                  transition: 'transform 0.6s cubic-bezier(0.175,0.885,0.32,1.275), opacity 0.4s ease'
+                }}
+              >
+                <span className="material-symbols-outlined text-[64px]">check_circle</span>
               </div>
-              <h3 className="font-headline-md text-2xl text-primary mb-3 font-bold tracking-tight">
-                Order Placed!
+
+              <h3 className="font-headline-md text-3xl text-primary mb-3 font-bold tracking-tight">
+                Order Placed Successfully!
               </h3>
-              <p className="text-sm text-secondary/70 max-w-xs leading-relaxed">
-                Thank you, <strong>{billingName.split(' ')[0]}</strong>! Your order is confirmed and will be processed shortly.
+              <p className="text-base text-secondary/80 max-w-sm leading-relaxed mb-10">
+                Thank you, <strong>{billingName.split(' ')[0]}</strong>! Your order has been confirmed and will be processed shortly.
               </p>
-              <div className="w-10 h-1 bg-primary mt-6 animate-pulse rounded-full" />
+
+              {/* JS-driven progress bar */}
+              <div className="w-full max-w-[280px] flex flex-col gap-2 mb-8">
+                <div className="flex justify-between text-[10px] font-bold tracking-widest uppercase text-secondary/50">
+                  <span>Redirecting to home</span>
+                  <span>{Math.round(10 - (successProgress / 100) * 10)}s</span>
+                </div>
+                <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary rounded-full"
+                    style={{ width: `${successProgress}%`, transition: 'width 0.05s linear' }}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  clearCart();
+                  setCheckoutSuccess(false);
+                  navigate('/');
+                }}
+                className="px-8 py-3 rounded-full border border-outline-variant text-[11px] font-bold tracking-widest uppercase text-secondary hover:text-primary hover:border-primary/30 transition-colors flex items-center gap-2"
+              >
+                Return to Home Now
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
+
             </div>
           )}
 
@@ -752,7 +861,9 @@ export function CheckoutPage() {
 
                 {/* ─── BILLING DETAILS ─── */}
                 <div>
-                  <SectionLabel>Billing Details</SectionLabel>
+                  <div className="flex items-center justify-between mb-2">
+                    <SectionLabel>Delivery Details</SectionLabel>
+                  </div>
 
                   <div className="flex flex-col gap-5">
                     {/* Full Name */}
@@ -778,6 +889,7 @@ export function CheckoutPage() {
                         id="billing-email"
                         label="Email"
                         type="email"
+                        required
                         value={billingEmail}
                         onChange={setBillingEmail}
                       />
@@ -803,6 +915,31 @@ export function CheckoutPage() {
                       </div>
                     )}
 
+                    {user && (
+                      <div className="flex gap-4 mb-2 mt-4">
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="addressSource"
+                            checked={addressSource === 'profile'}
+                            onChange={() => handleAddressSourceChange('profile')}
+                            className="w-4 h-4 text-primary border-gray-300 focus:ring-primary accent-primary"
+                          />
+                          <span className="text-sm text-secondary group-hover:text-primary transition-colors">Use Saved Address</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer group">
+                          <input
+                            type="radio"
+                            name="addressSource"
+                            checked={addressSource === 'new'}
+                            onChange={() => handleAddressSourceChange('new')}
+                            className="w-4 h-4 text-primary border-gray-300 focus:ring-primary accent-primary"
+                          />
+                          <span className="text-sm text-secondary group-hover:text-primary transition-colors">Enter New Address</span>
+                        </label>
+                      </div>
+                    )}
+
                     {/* Street Address */}
                     <FloatingInput
                       id="billing-street"
@@ -811,6 +948,22 @@ export function CheckoutPage() {
                       value={billingStreet}
                       onChange={setBillingStreet}
                     />
+
+                    {/* Show save to profile option if entering a new address */}
+                    {addressSource === 'new' && user && (
+                      <div className="flex items-center gap-2 mt-[-10px] mb-2 animate-in fade-in slide-in-from-top-2">
+                        <input
+                          type="checkbox"
+                          id="save-address"
+                          checked={saveAddressToProfile}
+                          onChange={(e) => setSaveAddressToProfile(e.target.checked)}
+                          className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary accent-primary"
+                        />
+                        <label htmlFor="save-address" className="text-[11px] font-medium text-secondary/80 cursor-pointer">
+                          Save this as my default profile address
+                        </label>
+                      </div>
+                    )}
 
                     {/* Pincode */}
                     <div>

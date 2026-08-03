@@ -81,7 +81,7 @@ export function HomePage() {
   const { products: onSaleProducts, loading: onSaleLoading } = useProducts({
     status: 'published',
     isOnSaleSection: true,
-    limit: 50,
+    limit: 15,
   });
 
   // Fetch Hot Right Now products

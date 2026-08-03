@@ -8,6 +8,9 @@ import { Navbar } from '../../components/Navbar/Navbar';
 import { getUserOrders, updateUserProfile, uploadProfilePhoto } from '../../services/userAuthService';
 import { useCurrency } from '../../context/CurrencyContext';
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 interface Order {
   id: number;
   orderNumber: string;
@@ -187,7 +190,7 @@ export function ProfilePage() {
   // Fetch user's requests and build a map keyed by orderNumber
   const fetchRequestMap = useCallback(() => {
     if (!token) return;
-    fetch('/api/refund-requests/my', {
+    fetch(`${API_BASE}/refund-requests/my`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(r => r.json())
@@ -236,7 +239,7 @@ export function ProfilePage() {
     setCancelLoading(true);
     setCancelError('');
     try {
-      const res = await fetch('/api/refund-requests', {
+      const res = await fetch(`${API_BASE}/refund-requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -287,7 +290,7 @@ export function ProfilePage() {
         formData.append('proofImage', returnImage);
       }
 
-      const res = await fetch('/api/refund-requests', {
+      const res = await fetch(`${API_BASE}/refund-requests`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,

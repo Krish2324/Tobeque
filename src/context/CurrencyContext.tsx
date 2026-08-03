@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 interface CurrencyContextType {
   currencySymbol: string;
   storeCurrency: string;
@@ -29,7 +32,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('/api/settings/public');
+        const res = await fetch(`${API_BASE}/settings/public`);
         const data = await res.json();
         if (data.success && data.settings?.storeCurrency) {
           const curr = data.settings.storeCurrency;

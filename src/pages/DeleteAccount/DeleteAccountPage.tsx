@@ -4,6 +4,9 @@ import { Footer } from '../../components/Footer/Footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 export function DeleteAccountPage() {
   const { token, logout, isAuthenticated, openLoginModal } = useAuth();
   const navigate = useNavigate();
@@ -30,7 +33,7 @@ export function DeleteAccountPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/user-auth/account', {
+      const res = await fetch(`${API_BASE}/user-auth/account`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

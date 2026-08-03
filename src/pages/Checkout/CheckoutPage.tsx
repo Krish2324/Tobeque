@@ -21,6 +21,8 @@ interface PincodeApiResponse {
 }
 
 /* ─── Helpers ─── */
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
 const COUNTRY = 'India';
 
 /* ════════════════════════════════════════════════════════════════
@@ -184,7 +186,7 @@ export function CheckoutPage() {
 
     Promise.all(
       idsToFetch.map(id =>
-        fetch(`/api/products/${id}`)
+        fetch(`${API_BASE}/products/${id}`)
           .then(r => r.json())
           .then(data => ({ id: String(id), taxRate: data?.product?.taxRate ?? 0 }))
           .catch(() => ({ id: String(id), taxRate: 0 }))
@@ -243,7 +245,7 @@ export function CheckoutPage() {
 
   // Fetch public settings on mount to get free shipping threshold
   useEffect(() => {
-    fetch('/api/settings/public')
+    fetch(`${API_BASE}/settings/public`)
       .then(r => r.json())
       .then(data => {
         if (data?.settings?.freeShippingThreshold) {
@@ -453,7 +455,7 @@ export function CheckoutPage() {
 
     let cancelled = false;
     setIsCalculatingShipping(true);
-    fetch('/api/shipping/calculate', {
+    fetch(`${API_BASE}/shipping/calculate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pincode, paymentMethod, weight: 0.5 })

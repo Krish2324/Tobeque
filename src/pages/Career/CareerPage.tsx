@@ -4,6 +4,9 @@ import { Navbar } from "../../components/Navbar/Navbar";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../services/api";
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 interface ApplicationForm {
   fullName: string;
   email: string;
@@ -88,7 +91,7 @@ function ApplyModal({ jobTitle, onClose }: ApplyModalProps) {
       const headers: Record<string, string> = {};
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/job-applications", {
+      const res = await fetch(`${API_BASE}/job-applications`, {
         method: "POST",
         headers,
         body: formData,

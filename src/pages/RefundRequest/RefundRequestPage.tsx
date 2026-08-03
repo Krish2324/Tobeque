@@ -4,6 +4,9 @@ import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import { useAuth } from '../../context/AuthContext';
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 const RETURN_REASONS = [
   { value: 'wrong_size', label: 'Wrong Size / Fit', icon: 'straighten', desc: 'The item doesn\'t fit as expected' },
   { value: 'damaged_defective', label: 'Damaged / Defective', icon: 'broken_image', desc: 'The item arrived damaged or has a defect' },
@@ -85,7 +88,7 @@ export function RefundRequestPage() {
         formData.append('proofImage', proofImage);
       }
 
-      const res = await fetch('/api/refund-requests', {
+      const res = await fetch(`${API_BASE}/refund-requests`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${currentToken}`

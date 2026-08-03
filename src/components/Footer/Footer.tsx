@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { SocialLinks } from "../SocialLinks/SocialLinks";
 
+const rawEnvUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+const API_BASE = `${rawEnvUrl}/api`;
+
 export function Footer() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -15,7 +18,7 @@ export function Footer() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/subscribers", {
+      const res = await fetch(`${API_BASE}/subscribers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

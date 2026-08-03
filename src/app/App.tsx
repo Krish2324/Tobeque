@@ -25,6 +25,7 @@ import { CartDrawer } from "../components/CartDrawer/CartDrawer";
 import { CheckoutPage } from "../pages/Checkout/CheckoutPage";
 import { CartPage } from "../pages/Cart/CartPage";
 import { OtpLoginModal } from "../components/OtpLoginModal/OtpLoginModal";
+import { NotFoundPage } from "../pages/NotFound/NotFoundPage";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
             <CartDrawer />
             {/* OTP Login Modal lives at root so it can appear from any page */}

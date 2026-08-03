@@ -25,10 +25,10 @@ interface MainCategoryItem {
 const FALLBACK_CATEGORIES: MainCategoryItem[] = [
   { id: 'tops', name: 'TOPS', slug: 'tops', path: '/product-category/tops' },
   { id: 'dresses', name: 'DRESSES', slug: 'dresses', path: '/product-category/dresses' },
-  { id: 'shirts-and-blouses', name: 'SHIRTS AND BLOUSES', slug: 'shirts-and-blouses', path: '/product-category/shirts-and-blouses' },
-  { id: 't-shirts-and-vests', name: 'T-SHIRTS AND VESTS', slug: 't-shirts-and-vests', path: '/product-category/t-shirts-and-vests' },
+  { id: 'shirt-and-blouses', name: 'SHIRT AND BLOUSES', slug: 'shirt-and-blouses', path: '/product-category/shirt-and-blouses' },
+  { id: 't-shirt-and-vests', name: 'T-SHIRT AND VESTS', slug: 't-shirt-and-vests', path: '/product-category/t-shirt-and-vests' },
   { id: 'jeans-and-pants', name: 'JEANS AND PANTS', slug: 'jeans-and-pants', path: '/product-category/jeans-and-pants' },
-  { id: 'skirts-and-shorts', name: 'SKIRTS AND SHORTS', slug: 'skirts-and-shorts', path: '/product-category/skirts-and-shorts' },
+  { id: 'skirt-and-shorts', name: 'SKIRT AND SHORTS', slug: 'skirt-and-shorts', path: '/product-category/skirt-and-shorts' },
 ];
 
 const NEW_COLLECTION = [
@@ -79,25 +79,33 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
     api.get('/api/categories/public')
       .then(res => {
         if (res.data.success && Array.isArray(res.data.categories)) {
-          const items: MainCategoryItem[] = res.data.categories.map((cat: any) => {
+          const items: MainCategoryItem[] = [];
+          
+          const processCategory = (cat: any) => {
             const catId = cat.id || cat._id;
             const catSlug = cat.slug || cat.name;
             const path = `/product-category/${encodeURIComponent(String(catSlug).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`;
             
-            return {
+            items.push({
               id: catId,
               name: cat.name,
               slug: catSlug,
               path
-            };
-          });
+            });
+
+            if (cat.subcategories && Array.isArray(cat.subcategories)) {
+              cat.subcategories.forEach(processCategory);
+            }
+          };
+
+          res.data.categories.forEach(processCategory);
           setMainCategories(items);
         }
       })
       .catch(() => {});
   }, []);
 
-  const combinedList = [...FALLBACK_CATEGORIES, ...mainCategories];
+  const combinedList = [...mainCategories, ...FALLBACK_CATEGORIES];
   const displayMainCategories: MainCategoryItem[] = [];
   const seenNames = new Set<string>();
 

@@ -4,17 +4,10 @@ import { Footer } from "../../components/Footer/Footer";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 
-interface Category {
-  id?: string;
-  _id?: string;
-  name: string;
-}
-
 export function StyleJournalDetailPage() {
   const { id } = useParams();
   const [post, setPost] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [recentPosts, setRecentPosts] = useState<any[]>([]);
   
   useEffect(() => {
@@ -46,16 +39,6 @@ export function StyleJournalDetailPage() {
       })
       .catch(() => {});
   }, [id]);
-
-  useEffect(() => {
-    api.get('/api/categories/public')
-      .then(res => {
-        if (res.data.success && Array.isArray(res.data.categories)) {
-          setDbCategories(res.data.categories);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   if (loading) {
     return (
@@ -120,38 +103,8 @@ export function StyleJournalDetailPage() {
               />
             </div>
 
-            {/* Sidebar */}
             <div className="w-full lg:w-1/3">
               <div className="sticky top-24 space-y-12">
-                
-                {/* Categories */}
-                <div>
-                  <h3 className="font-display text-xl font-medium text-primary mb-6">Categories</h3>
-                  <ul className="space-y-3">
-                    {dbCategories.map((category) => {
-                      const catId = category.id || category._id || "";
-                      return (
-                        <li key={catId || category.name} className="flex items-center justify-between group">
-                          <Link 
-                            to={`/collection?category=${catId}&name=${encodeURIComponent(category.name)}`}
-                            className="text-secondary group-hover:text-primary transition-colors text-sm w-full block"
-                          >
-                            {category.name}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                    {dbCategories.length === 0 && (
-                      <li className="text-secondary text-sm italic">No categories found.</li>
-                    )}
-                  </ul>
-                </div>
-
-                {/* Recent Comments */}
-                <div>
-                  <h3 className="font-display text-xl font-medium text-primary mb-6">Recent Comments</h3>
-                  <p className="text-sm text-secondary italic">No comments to show.</p>
-                </div>
 
                 {/* Recent Posts */}
                 <div>
@@ -185,7 +138,7 @@ export function StyleJournalDetailPage() {
           <div className="mt-20 pt-10 border-t border-outline-variant/20 flex items-center justify-between">
             <div className="w-1/2 pr-4 border-r border-outline-variant/20">
               {prevPost && (
-                <Link to={`/style-journal/${prevPost.id}`} className="group flex items-center gap-4">
+                <Link to={`/style-journal/${prevPost.slug || prevPost.id || prevPost._id}`} className="group flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center group-hover:border-primary transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
                   </div>
@@ -198,7 +151,7 @@ export function StyleJournalDetailPage() {
             </div>
             <div className="w-1/2 pl-4 flex justify-end text-right">
               {nextPost && (
-                <Link to={`/style-journal/${nextPost.id}`} className="group flex items-center justify-end gap-4">
+                <Link to={`/style-journal/${nextPost.slug || nextPost.id || nextPost._id}`} className="group flex items-center justify-end gap-4">
                   <div className="flex-1 hidden md:block">
                     <span className="text-[10px] tracking-widest text-secondary uppercase block mb-1">Next</span>
                     <h4 className="font-display text-sm font-medium text-primary line-clamp-1 group-hover:underline underline-offset-2">{nextPost.title}</h4>

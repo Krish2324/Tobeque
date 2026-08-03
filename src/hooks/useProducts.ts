@@ -179,10 +179,8 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
   // Badge logic
   let badge: string | undefined;
   let badgeClass: string | undefined;
-  if (bp.isFeatured) {
-    badge = 'Featured';
-    badgeClass = 'bg-primary text-on-primary';
-  }
+  
+  // Featured badge is hidden as requested
 
   return {
     id: String(bp.id),

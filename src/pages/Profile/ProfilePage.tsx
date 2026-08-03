@@ -72,7 +72,7 @@ const RETURN_REASONS = [
 ] as const;
 
 export function ProfilePage() {
-  const { user, token, isAuthenticated, logout, updateUser } = useAuth();
+  const { user, token, isAuthenticated, logout, updateUser, openLoginModal } = useAuth();
   const { wishlistItems, removeFromWishlist, addToCart, setIsCartOpen } = useCart();
   const { currencySymbol } = useCurrency();
 
@@ -220,7 +220,10 @@ export function ProfilePage() {
     setOrdersLoading(true);
     getUserOrders(token)
       .then((data) => setOrders(data || []))
-      .catch((err) => setOrdersError(err.message || 'Failed to load orders'))
+      .catch((err) => {
+        const msg = err.message || 'Failed to load orders';
+        setOrdersError(msg.toLowerCase().includes('not authorized') ? 'Login again, session expired' : msg);
+      })
       .finally(() => setOrdersLoading(false));
 
     fetchRequestMap();
@@ -407,9 +410,24 @@ export function ProfilePage() {
                     ))}
                   </div>
                 ) : ordersError ? (
-                  <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-red-600 flex items-center gap-3">
-                    <span className="material-symbols-outlined">error</span>
-                    {ordersError}
+                  <div className="bg-red-50 rounded-3xl p-6 border border-red-100 text-red-600 flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined">error</span>
+                      <span>{ordersError}</span>
+                    </div>
+                    {ordersError.toLowerCase().includes('session expired') && (
+                      <button 
+                        onClick={() => {
+                          logout(); // Clear the expired state
+                          openLoginModal(() => {
+                            window.location.reload(); // Reload after successful login
+                          });
+                        }}
+                        className="bg-red-600 text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20 whitespace-nowrap"
+                      >
+                        Login Now
+                      </button>
+                    )}
                   </div>
                 ) : orders.length === 0 ? (
                   <div className="bg-surface rounded-3xl border border-outline-variant/30 p-16 text-center shadow-[0_4px_20px_rgb(0,0,0,0.02)] flex flex-col items-center">
@@ -427,6 +445,9 @@ export function ProfilePage() {
                     {orders.map((order) => {
                       const existingRequest = requestMap[order.orderNumber];
                       const isCancellable = ['pending', 'confirmed', 'processing'].includes(order.orderStatus);
+                      const orderDate = new Date(order.createdAt);
+                      const daysSinceOrder = (new Date().getTime() - orderDate.getTime()) / (1000 * 3600 * 24);
+                      const isReturnWindowOpen = daysSinceOrder <= 7;
                       const isReturnable = order.orderStatus === 'delivered';
                       const isTerminal = ['cancelled', 'returned'].includes(order.orderStatus);
 
@@ -500,7 +521,13 @@ export function ProfilePage() {
                                 {isReturnable && (
                                   <button
                                     onClick={() => { setReturnModal({ open: true, order }); setReturnError(''); setReturnReason(''); setReturnNote(''); }}
-                                    className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-secondary/70 hover:text-primary transition-colors border border-outline-variant/50 hover:border-outline-variant rounded-full px-4 py-2"
+                                    disabled={!isReturnWindowOpen}
+                                    title={!isReturnWindowOpen ? "Return window has closed (7 days limit)" : ""}
+                                    className={`flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold border rounded-full px-4 py-2 transition-colors ${
+                                      isReturnWindowOpen 
+                                        ? 'text-secondary/70 hover:text-primary border-outline-variant/50 hover:border-outline-variant' 
+                                        : 'text-secondary/40 border-outline-variant/20 cursor-not-allowed opacity-60'
+                                    }`}
                                   >
                                     <span className="material-symbols-outlined text-[14px]">undo</span>
                                     Return / Refund
@@ -878,7 +905,7 @@ export function ProfilePage() {
           <div className="bg-surface rounded-3xl shadow-2xl p-8 max-w-md w-full" onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-red-500">cancel</span>
+                <span className="material-symbols-outlined text-red-500">remove_shopping_cart</span>
               </div>
               <div>
                 <h3 className="font-light tracking-[0.2em] uppercase text-lg text-primary">Cancel Order</h3>

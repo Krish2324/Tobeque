@@ -52,7 +52,7 @@ export function StyleJournalPage() {
         {/* Featured Hero Article */}
         {featuredArticle && (
           <section className="w-full max-w-[1600px] mx-auto px-6 md:px-12 mb-24 md:mb-32">
-            <Link to={`/style-journal/${featuredArticle.id}`} className="block group cursor-pointer">
+            <Link to={`/style-journal/${featuredArticle.slug || featuredArticle.id || featuredArticle._id}`} className="block group cursor-pointer">
               <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 relative">
                 <div className="w-full lg:w-[65%] overflow-hidden bg-surface-container rounded-sm shadow-2xl">
                   <img 
@@ -89,7 +89,7 @@ export function StyleJournalPage() {
         <section className="w-full max-w-[1600px] mx-auto px-6 md:px-12">
           <div className="columns-1 md:columns-2 lg:columns-3 gap-12 md:gap-16 space-y-16 md:space-y-24">
             {gridArticles.map((entry) => (
-              <Link to={`/style-journal/${entry.id}`} key={entry.id} className="break-inside-avoid flex flex-col group cursor-pointer animate-fade-in relative block">
+              <Link to={`/style-journal/${entry.slug || entry.id || entry._id}`} key={entry.id || entry._id} className="break-inside-avoid flex flex-col group cursor-pointer animate-fade-in relative block">
                 <article>
                   {entry.image && (
                     <div className="mb-8 overflow-hidden bg-surface-container rounded-sm shadow-md">

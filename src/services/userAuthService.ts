@@ -87,6 +87,10 @@ export const updateUserProfile = async (
     city?: string;
     state?: string;
     zipCode?: string;
+    shippingAddress?: string;
+    shippingCity?: string;
+    shippingState?: string;
+    shippingZipCode?: string;
     gender?: string;
   }
 ) => {

@@ -98,6 +98,7 @@ export function OtpLoginModal() {
     setIsLoading(true);
     try {
       const result = await verifyOtp(phone.replace(/\D/g, ''), otpString);
+      (document.activeElement as HTMLElement)?.blur();
       login(result.user, result.token);
       if (loginSuccessCallback) {
         loginSuccessCallback();
@@ -196,7 +197,7 @@ export function OtpLoginModal() {
                     value={phone}
                     onChange={(e) => { setPhone(e.target.value.replace(/\D/g, '')); setError(''); }}
                     placeholder="98765 43210"
-                    className="flex-1 text-[15px] text-gray-900 focus:outline-none bg-transparent placeholder-gray-300 font-light tracking-[0.06em]"
+                    className="flex-1 text-[16px] text-gray-900 focus:outline-none bg-transparent placeholder-gray-300 font-light tracking-[0.06em]"
                     inputMode="numeric"
                   />
                 </div>
@@ -270,7 +271,7 @@ export function OtpLoginModal() {
                       value={digit}
                       onChange={(e) => handleOtpChange(i, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      className="w-10 h-10 text-center text-[15px] font-medium text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors duration-150 bg-transparent"
+                      className="w-10 h-10 text-center text-[16px] font-medium text-gray-900 border-b-2 border-gray-200 focus:border-gray-900 focus:outline-none transition-colors duration-150 bg-transparent"
                     />
                   ))}
                 </div>

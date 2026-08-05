@@ -67,7 +67,7 @@ interface NavbarProps {
 
 export function Navbar({ onSearchProductSelect }: NavbarProps) {
   const navigate = useNavigate();
-  const { setIsCartOpen, cartCount, wishlistPulseTrigger, openWishlistDrawer } = useCart();
+  const { setIsCartOpen, cartCount, wishlistPulseTrigger } = useCart();
   const { isAuthenticated, openLoginModal, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);

@@ -349,46 +349,56 @@ export function ProductDetailPage() {
   const displayedImages = React.useMemo(() => {
     if (!product) return [];
     
-    // We want the primary thumbnail to always be the first image in the gallery.
     const primaryImg = product.imageSrc;
     const hoverImg = product.hoverImageSrc;
     
+    // If no galleryImageObjects exist, fallback to general gallery images
     if (!product.galleryImageObjects || product.galleryImageObjects.length === 0) {
       if (product.galleryImages && product.galleryImages.length > 0) {
-        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
-        return [primaryImg, ...uniqueGallery].filter(Boolean);
+        return product.galleryImages.filter(Boolean);
       }
       return hoverImg && hoverImg !== primaryImg 
         ? [primaryImg, hoverImg].filter(Boolean) 
         : [primaryImg].filter(Boolean);
     }
 
-    const currentSelectedColorName = selectedColor.name.toLowerCase();
-    
+    const currentSelectedColorName = selectedColor && selectedColor.name ? selectedColor.name.toLowerCase().trim() : '';
+
+    // Filter images tagged with the selected color
     const colorMatches: string[] = [];
-    const others: string[] = [];
     
     product.galleryImageObjects.forEach((imgObj) => {
-      if (imgObj.url === primaryImg) return; // Don't duplicate primary image
+      if (!imgObj.url) return;
+      const imgColor = (imgObj.color || '').toLowerCase().trim();
       
-      const imgColor = (imgObj.color || "").toLowerCase();
-      if (imgColor && (imgColor === currentSelectedColorName || currentSelectedColorName.includes(imgColor))) {
-        colorMatches.push(imgObj.url);
-      } else {
-        others.push(imgObj.url);
+      if (imgColor && currentSelectedColorName && currentSelectedColorName !== 'default') {
+        if (imgColor === currentSelectedColorName || currentSelectedColorName.includes(imgColor) || imgColor.includes(currentSelectedColorName)) {
+          if (!colorMatches.includes(imgObj.url)) {
+            colorMatches.push(imgObj.url);
+          }
+        }
       }
     });
 
+    // If color-specific images exist for the selected color, return ONLY those color images
     if (colorMatches.length > 0) {
-      return [primaryImg, ...colorMatches, ...others].filter(Boolean);
-    } else {
-      if (product.galleryImages && product.galleryImages.length > 0) {
-        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
-        return [primaryImg, ...uniqueGallery].filter(Boolean);
-      }
-      return [primaryImg].filter(Boolean);
+      return colorMatches;
     }
+
+    // Fallback: If no images are tagged with this color, show all gallery images
+    if (product.galleryImages && product.galleryImages.length > 0) {
+      return product.galleryImages.filter(Boolean);
+    }
+    return [primaryImg].filter(Boolean);
   }, [product, selectedColor]);
+
+  // Reset gallery scroll index when selected color changes
+  useEffect(() => {
+    setActiveImageIndex(0);
+    if (galleryScrollRef.current) {
+      galleryScrollRef.current.scrollLeft = 0;
+    }
+  }, [selectedColor]);
 
   // Add primary product to bag
   const handleAddToBag = () => {

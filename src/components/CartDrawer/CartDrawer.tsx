@@ -146,33 +146,52 @@ export function CartDrawer() {
                           COLOR <br /> {item.selectedColor || 'Default'}
                         </div>
                       </div>
-                      <div className="flex gap-2 mt-3 font-body-md text-sm pt-2">
+                      <div className="flex items-center justify-between gap-3 mt-3 pt-1">
                         {/* Interactive Size Selector */}
-                        <div className="flex-1 relative">
-                          <select
-                            value={item.selectedSize || 'S'}
-                            onChange={(e) => updateCartItemSize(item.cartId, e.target.value)}
-                            className="w-full bg-white border border-outline-variant text-[11px] font-label-caps tracking-wider py-1.5 pl-3 pr-8 rounded-none appearance-none focus:outline-none focus:border-primary cursor-pointer"
-                          >
-                            {['XS', 'S', 'M', 'L', 'XL'].map(size => (
-                              <option key={size} value={size}>{size}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[14px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+                        <div className="flex-1 flex items-center gap-1.5 min-w-0">
+                          <span className="text-[10px] font-label-caps text-secondary uppercase font-bold tracking-wider shrink-0">
+                            Size:
+                          </span>
+                          <div className="relative flex-1 min-w-0">
+                            <select
+                              value={item.selectedSize || 'S'}
+                              onChange={(e) => updateCartItemSize(item.cartId, e.target.value)}
+                              className="w-full bg-white border border-outline-variant text-[11px] font-label-caps font-bold tracking-wider py-1 pl-2.5 pr-6 rounded-none appearance-none focus:outline-none focus:border-primary cursor-pointer text-primary h-8"
+                            >
+                              {['XS', 'S', 'M', 'L', 'XL'].map(size => (
+                                <option key={size} value={size}>{size}</option>
+                              ))}
+                            </select>
+                            <span className="material-symbols-outlined text-[14px] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+                          </div>
                         </div>
 
-                        {/* Interactive Qty Selector */}
-                        <div className="flex-1 relative">
-                          <select
-                            value={item.quantity}
-                            onChange={(e) => updateCartItemQty(item.cartId, parseInt(e.target.value))}
-                            className="w-full bg-white border border-outline-variant text-[11px] font-label-caps tracking-wider py-1.5 pl-3 pr-8 rounded-none appearance-none focus:outline-none focus:border-primary cursor-pointer"
-                          >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(qty => (
-                              <option key={qty} value={qty}>Qty {qty}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[14px] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+                        {/* Interactive Professional Quantity Stepper */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[10px] font-label-caps text-secondary uppercase font-bold tracking-wider shrink-0">
+                            Qty:
+                          </span>
+                          <div className="flex items-center border border-outline-variant h-8 bg-white shrink-0">
+                            <button
+                              type="button"
+                              aria-label="Decrease quantity"
+                              onClick={() => updateCartItemQty(item.cartId, Math.max(1, item.quantity - 1))}
+                              className="w-7 h-full flex items-center justify-center text-secondary hover:text-primary hover:bg-neutral-100 transition-colors cursor-pointer select-none border-r border-outline-variant/40"
+                            >
+                              <span style={{ fontSize: '12px', lineHeight: 1 }}>&#8722;</span>
+                            </button>
+                            <span className="w-7 text-center text-primary text-[11px] font-bold select-none">
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Increase quantity"
+                              onClick={() => updateCartItemQty(item.cartId, item.quantity + 1)}
+                              className="w-7 h-full flex items-center justify-center text-secondary hover:text-primary hover:bg-neutral-100 transition-colors cursor-pointer select-none border-l border-outline-variant/40"
+                            >
+                              <span style={{ fontSize: '12px', lineHeight: 1 }}>&#43;</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -255,13 +255,6 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             >
               Collections
             </Link>
-
-            <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
-              to="/about"
-            >
-              About
-            </Link>
           </nav>
 
           {/* Logo - Centered */}
@@ -483,11 +476,6 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                     ))}
                   </div>
                 </div>
-
-                <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-black flex items-center justify-between hover:text-gray-700 transition-colors">
-                  ABOUT
-                  <span className="material-symbols-outlined text-[16px] text-gray-600">chevron_right</span>
-                </Link>
 
                 <Link to="/product-category/all" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-black flex items-center justify-between mt-1 hover:text-gray-700 transition-colors">
                   BEST SELLERS

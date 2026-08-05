@@ -53,7 +53,7 @@ export function StyleJournalDetailPage() {
       <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-semibold mb-4">Post not found</h2>
-          <Link to="/style-journal" className="text-primary hover:underline">Back to Journal</Link>
+          <Link to="/blogs" className="text-primary hover:underline">Back to Blogs</Link>
         </div>
       </div>
     );
@@ -111,7 +111,7 @@ export function StyleJournalDetailPage() {
                   <h3 className="font-display text-xl font-medium text-primary mb-6">Recent Posts</h3>
                   <div className="space-y-6">
                     {recentPosts.map((recentPost) => (
-                      <Link to={`/style-journal/${recentPost.slug}`} key={recentPost._id} className="flex items-start gap-4 group cursor-pointer">
+                      <Link to={`/blogs/${recentPost.slug}`} key={recentPost._id} className="flex items-start gap-4 group cursor-pointer">
                         {recentPost.image ? (
                           <img src={recentPost.image} alt={recentPost.title} className="w-16 h-16 object-cover rounded-sm bg-surface-container" />
                         ) : (
@@ -138,7 +138,7 @@ export function StyleJournalDetailPage() {
           <div className="mt-20 pt-10 border-t border-outline-variant/20 flex items-center justify-between">
             <div className="w-1/2 pr-4 border-r border-outline-variant/20">
               {prevPost && (
-                <Link to={`/style-journal/${prevPost.slug || prevPost.id || prevPost._id}`} className="group flex items-center gap-4">
+                <Link to={`/blogs/${prevPost.slug || prevPost.id || prevPost._id}`} className="group flex items-center gap-4">
                   <div className="w-8 h-8 rounded-full border border-outline-variant/50 flex items-center justify-center group-hover:border-primary transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M15 18l-6-6 6-6"/></svg>
                   </div>
@@ -151,7 +151,7 @@ export function StyleJournalDetailPage() {
             </div>
             <div className="w-1/2 pl-4 flex justify-end text-right">
               {nextPost && (
-                <Link to={`/style-journal/${nextPost.slug || nextPost.id || nextPost._id}`} className="group flex items-center justify-end gap-4">
+                <Link to={`/blogs/${nextPost.slug || nextPost.id || nextPost._id}`} className="group flex items-center justify-end gap-4">
                   <div className="flex-1 hidden md:block">
                     <span className="text-[10px] tracking-widest text-secondary uppercase block mb-1">Next</span>
                     <h4 className="font-display text-sm font-medium text-primary line-clamp-1 group-hover:underline underline-offset-2">{nextPost.title}</h4>

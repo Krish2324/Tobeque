@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import "../styles/index.css";
 
 import { HomePage } from "../pages/Home/HomePage";
@@ -49,10 +49,14 @@ export default function App() {
               <Route path="/collection" element={<CollectionPage />} />
               <Route path="/product-category/:categorySlug" element={<CollectionPage />} />
               <Route path="/product-category/:categorySlug/:productSlug" element={<ProductDetailPage />} />
-              <Route path="/about" element={<AboutPage />} />
+              <Route path="/about-tobeque" element={<AboutPage />} />
+              <Route path="/about" element={<Navigate to="/about-tobeque" replace />} />
+              <Route path="/about-us" element={<Navigate to="/about-tobeque" replace />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/style-journal" element={<StyleJournalPage />} />
-              <Route path="/style-journal/:id" element={<StyleJournalDetailPage />} />
+              <Route path="/blogs" element={<StyleJournalPage />} />
+              <Route path="/blogs/:id" element={<StyleJournalDetailPage />} />
+              <Route path="/style-journal" element={<Navigate to="/blogs" replace />} />
+              <Route path="/style-journal/:id" element={<Navigate to="/blogs" replace />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/cookie-policy" element={<CookiePolicyPage />} />

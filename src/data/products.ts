@@ -36,6 +36,8 @@ export type Product = {
   rawVariants?: any[]; // For frontend price/stock logic based on selections
   hotRightNowMedia?: string;
   styleItWith?: Product[];
+  relatedCategories?: string[];
+  category?: string;
   show7DayReturn?: boolean;
   showFreeShipping?: boolean;
   showCodAvailable?: boolean;

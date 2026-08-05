@@ -231,7 +231,7 @@ export function ProfilePage() {
 
   if (!isAuthenticated || !user) return null;
 
-  const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Guest User';
+  const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || (user.phone ? `+${user.phone}` : '');
 
   const handleLogout = () => {
     logout();
@@ -254,8 +254,8 @@ export function ProfilePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer',
-          email: user.email || `${user.phone}@guest.local`,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          email: user.email || '',
           phone: user.phone || '',
           orderId: cancelModal.order.orderNumber,
           requestType: 'cancel',
@@ -290,8 +290,8 @@ export function ProfilePage() {
     setReturnError('');
     try {
       const formData = new FormData();
-      formData.append('name', `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer');
-      formData.append('email', user.email || `${user.phone}@guest.local`);
+      formData.append('name', `${user.firstName || ''} ${user.lastName || ''}`.trim());
+      formData.append('email', user.email || '');
       formData.append('phone', user.phone || '');
       formData.append('orderId', returnModal.order.orderNumber);
       formData.append('requestType', 'return');

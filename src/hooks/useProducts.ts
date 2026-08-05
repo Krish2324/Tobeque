@@ -204,6 +204,8 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     taxRate: bp.taxRate,
     hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,
     styleItWith: bp.styleItWith ? bp.styleItWith.map(p => mapBackendProduct(p, currencySymbol)) : undefined,
+    relatedCategories: bp.relatedCategories ? bp.relatedCategories.map((c: any) => typeof c === 'object' ? String(c.id || c._id || c) : String(c)) : undefined,
+    category: bp.category ? (typeof bp.category === 'object' ? String(bp.category.id || bp.category._id || bp.category) : String(bp.category)) : undefined,
     show7DayReturn: bp.show7DayReturn,
     showFreeShipping: bp.showFreeShipping,
     showCodAvailable: bp.showCodAvailable,

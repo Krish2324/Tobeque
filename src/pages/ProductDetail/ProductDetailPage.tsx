@@ -136,21 +136,37 @@ export function ProductDetailPage() {
   // Fetch specific product from backend
   const { product, loading, error } = useProduct(productSlug);
 
-  // Fetch related products (e.g. latest 12 published products)
-  const { products: relatedProducts } = useProducts({ limit: 12, status: 'published' });
+  // Fetch related products catalog
+  const { products: relatedProducts } = useProducts({ limit: 20, status: 'published' });
   
-  // 1. Explicitly selected "Style It With" products
+  // 1. Explicitly selected "Related Products" from Admin
   const explicitStyleItWith = product?.styleItWith || [];
-  
-  // 2. Filter out explicit products and the current product from related products
   const explicitIds = new Set(explicitStyleItWith.map(p => p.id));
-  const otherProducts = relatedProducts.filter(p => p.slug !== productSlug && p.id !== productSlug && !explicitIds.has(p.id));
   
-  // 3. Merge them for "Style It With" (show up to 8)
-  const styleItWithProducts = [...explicitStyleItWith, ...otherProducts].slice(0, 8);
+  // 2. Related Category products: Check Admin configured relatedCategories (or fallback to product category)
+  const targetCategoryIds = new Set<string>();
+  if (product?.relatedCategories && product.relatedCategories.length > 0) {
+    product.relatedCategories.forEach(catId => targetCategoryIds.add(String(catId)));
+  } else if (product?.category) {
+    targetCategoryIds.add(String(product.category));
+  }
+
+  const categoryMatchedProducts = relatedProducts.filter(p => {
+    if (p.slug === productSlug || p.id === productSlug || explicitIds.has(p.id)) return false;
+    if (targetCategoryIds.size === 0) return true;
+    const pCat = p.category ? String(p.category) : '';
+    return targetCategoryIds.has(pCat);
+  });
+
+  const otherProducts = relatedProducts.filter(p => 
+    p.slug !== productSlug && p.id !== productSlug && !explicitIds.has(p.id) && !categoryMatchedProducts.some(c => c.id === p.id)
+  );
+
+  // 3. Merge: Explicit products first, then products from related category, then general catalog
+  const styleItWithProducts = [...explicitStyleItWith, ...categoryMatchedProducts, ...otherProducts].slice(0, 8);
   
-  // 4. Use remaining for "You Might Also Like"
-  const youMightAlsoLikeProducts = otherProducts.slice(Math.max(0, 8 - explicitStyleItWith.length), Math.max(0, 8 - explicitStyleItWith.length) + 8);
+  // 4. "You Might Also Like"
+  const youMightAlsoLikeProducts = [...categoryMatchedProducts, ...otherProducts].filter(p => !styleItWithProducts.some(s => s.id === p.id)).slice(0, 8);
 
   // Interactive States
   const [selectedColor, setSelectedColor] = useState<ProductColor>({ name: "DEFAULT", class: "bg-primary" });

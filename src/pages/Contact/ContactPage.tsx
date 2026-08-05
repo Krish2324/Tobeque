@@ -260,7 +260,7 @@ export function ContactPage() {
             {[
               {
                 icon: (<svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.01 2.014c-5.5 0-9.96 4.46-9.96 9.96 0 1.96.55 3.82 1.54 5.42L2 22l4.75-1.54c1.55.93 3.36 1.45 5.26 1.45 5.5 0 9.96-4.46 9.96-9.96s-4.46-9.96-9.96-9.96zm5.66 14.33c-.24.68-1.4 1.3-1.93 1.38-.5.07-1.16.14-3.32-.75-2.61-1.08-4.29-3.73-4.41-3.9-.13-.16-1.06-1.41-1.06-2.68 0-1.27.66-1.89.9-2.16.23-.26.5-.33.66-.33.17 0 .34 0 .49.02.16.01.37-.06.58.42.21.5.73 1.77.79 1.9.06.13.1.28.02.44-.08.16-.13.26-.26.42-.13.16-.28.35-.4.49-.13.14-.28.3-.13.56.16.26.7 1.14 1.5 1.85.99.91 1.85 1.19 2.11 1.32.26.13.41.11.56-.06.16-.17.68-.79.86-1.06.18-.28.36-.23.6-.14.24.08 1.5.7 1.76.84.26.13.44.2.5.31.06.11.06.66-.18 1.34z"/></svg>),
-                label: "WhatsApp", value: settings.phone, href: `https://wa.me/${settings.whatsapp}`, color: "#25D366",
+                label: "WhatsApp", value: "Click here to chat", href: `https://wa.me/${settings.whatsapp}`, color: "#25D366",
               },
               {
                 icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>),
@@ -268,7 +268,7 @@ export function ContactPage() {
               },
               {
                 icon: (<svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" /></svg>),
-                label: "Call Us", value: settings.phone, href: `tel:${settings.phone}`, color: "#c9b99a",
+                label: "Call Us", value: "Click here to call", href: `tel:${settings.phone}`, color: "#c9b99a",
               },
             ].map(({ icon, label, value, href, color }) => (
               <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"

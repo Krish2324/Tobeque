@@ -217,6 +217,7 @@ export function ProductDetailPage() {
   const [isSubmittingAsk, setIsSubmittingAsk] = useState(false);
   const [askError, setAskError] = useState('');
   const [deliveryEstimate, setDeliveryEstimate] = useState<string>('');
+  const [globalShippingReturns, setGlobalShippingReturns] = useState<string>('Orders are processed within 1-2 business days. Returns accepted within 14 days of delivery.');
   
   // Random Viewer Count
   const [viewers] = useState(() => Math.floor(Math.random() * 40) + 10);
@@ -242,6 +243,9 @@ export function ProductDetailPage() {
         const to = new Date(now); to.setDate(now.getDate() + max);
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
+        if (res.data.settings?.shippingReturnsText) {
+          setGlobalShippingReturns(res.data.settings.shippingReturnsText);
+        }
         setDeliveryEstimate(`${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`);
       })
       .catch(() => {
@@ -934,31 +938,38 @@ export function ProductDetailPage() {
 
             {/* Expandable Accordions — ultra-minimal */}
             <div className="flex flex-col border-t border-outline-variant/50">
-              <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer" open>
-                <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
-                  Description
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
-                </summary>
-                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
-                  {product.description || 'A striking fitted top crafted from luxury materials.'}
-                </div>
-              </details>
-              <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer">
-                <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
-                  Fabric &amp; Care
-                  <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
-                </summary>
-                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
-                  {product.fabricCare || '92% Polyamide, 8% Elastane. Hand wash cold.'}
-                </div>
-              </details>
+              {/* 1. Description Section (Top Accordion) */}
+              {product.description && (
+                <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer" open>
+                  <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
+                    Description
+                    <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
+                  </summary>
+                  <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: product.description }} />
+                </details>
+              )}
+              
+              {/* 2. Dynamic Product Custom Sections (Middle Accordions, above Shipping & Returns) */}
+              {product.customSections && Array.isArray(product.customSections) && product.customSections.map((sec, idx) => (
+                <details key={idx} className="group py-2.5 border-b border-outline-variant/40 cursor-pointer">
+                  <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
+                    {sec.title}
+                    <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
+                  </summary>
+                  <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap">
+                    {sec.content}
+                  </div>
+                </details>
+              ))}
+
+              {/* 3. Global Shipping & Returns Section (Bottom Accordion, maintained from Admin Settings -> General Branding) */}
               <details className="group py-2.5 border-b border-outline-variant/40 cursor-pointer">
                 <summary className="flex justify-between items-center text-[10px] tracking-[0.1em] uppercase text-primary/70 list-none font-medium">
                   Shipping &amp; Returns
                   <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                 </summary>
-                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2">
-                  {product.shippingReturns || 'Orders processed in 1-2 days. Returns accepted within 14 days.'}
+                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap">
+                  {globalShippingReturns}
                 </div>
               </details>
             </div>
@@ -1091,7 +1102,7 @@ export function ProductDetailPage() {
           {/* STYLE IT WITH Carousel */}
           <section className="mb-8 md:mb-10 relative">
             <div className="flex flex-col items-center mb-6">
-              <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">STYLE IT WITH</h2>
+              <h2 className="text-headline-md font-headline-md text-primary uppercase tracking-widest text-center">RELATED PRODUCTS</h2>
             </div>
 
             <div className="relative group/carousel">

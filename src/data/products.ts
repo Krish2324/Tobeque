@@ -22,6 +22,7 @@ export type Product = {
   description?: string;
   fabricCare?: string;
   shippingReturns?: string;
+  customSections?: Array<{ title: string; content: string }>;
   galleryImages?: string[];
   galleryImageObjects?: { url: string; color?: string }[];
   taxRate?: number;

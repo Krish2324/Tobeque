@@ -32,6 +32,7 @@ interface BackendProduct {
   showFreeShipping?: boolean;
   showCodAvailable?: boolean;
   sizeChart?: any;
+  customSections?: Array<{ title: string; content: string }> | null;
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string;
@@ -198,8 +199,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
     galleryImages,
     galleryImageObjects,
     rawVariants: (bp.variants && Array.isArray(bp.variants)) ? bp.variants : undefined,
-    fabricCare: '',
-    shippingReturns: 'Orders are processed within 1-2 business days.',
+    customSections: (bp.customSections && Array.isArray(bp.customSections)) ? bp.customSections : undefined,
     sku: bp.sku || undefined,
     taxRate: bp.taxRate,
     hotRightNowMedia: bp.hotRightNowMedia ? resolveImageUrl(bp.hotRightNowMedia) : undefined,

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { type Product } from "../data/products";
 import { ImageWithSkeleton } from "./ImageWithSkeleton";
+import { useCart } from "../context/CartContext";
 export type { Product };
 
 export interface ProductCardProps {
@@ -25,6 +26,26 @@ export function ProductCard({
   viewMode = 'grid',
   compact = false,
 }: ProductCardProps) {
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useCart();
+  const [isHeartPopping, setIsHeartPopping] = useState(false);
+
+  const isItemWishlisted = isWishlisted || wishlistItems?.some(w => (w.id && product.id && String(w.id) === String(product.id)) || w.name === product.name);
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsHeartPopping(true);
+    setTimeout(() => setIsHeartPopping(false), 500);
+
+    if (isItemWishlisted) {
+      removeFromWishlist(product.id || product.name);
+    } else {
+      addToWishlist(product);
+    }
+
+    onWishlistClick?.(e, product);
+  };
   if (viewMode === 'list') {
     return (
       <div className="group relative flex items-start sm:items-center gap-4 sm:gap-8 md:gap-12 border-b border-outline-variant/20 py-6 md:py-8 w-full text-left transition-colors">
@@ -74,17 +95,29 @@ export function ProductCard({
               Add to Bag
             </button>
             <button
-              onClick={(e) => onWishlistClick?.(e, product)}
-              className={`w-8 h-8 flex items-center justify-center transition-colors cursor-pointer rounded-full border ${
-                isWishlisted
-                  ? "bg-primary border-primary text-on-primary"
-                  : "border-outline-variant text-secondary hover:border-primary hover:text-primary"
+              onClick={handleWishlistClick}
+              className={`w-8 h-8 flex items-center justify-center transition-all duration-300 cursor-pointer rounded-full border relative overflow-visible ${
+                isItemWishlisted
+                  ? "bg-red-500 border-red-500 text-white shadow-md shadow-red-500/30"
+                  : "border-outline-variant text-secondary hover:border-red-500 hover:text-red-500"
               }`}
-              title="Wishlist"
+              title={isItemWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
             >
-              <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: isWishlisted ? "'FILL' 1" : "'FILL' 0" }}>
+              <span 
+                className={`material-symbols-outlined text-[15px] transition-transform duration-300 ${
+                  isHeartPopping ? 'animate-[heartPop_0.5s_ease-out]' : ''
+                }`} 
+                style={{ fontVariationSettings: isItemWishlisted ? "'FILL' 1" : "'FILL' 0" }}
+              >
                 favorite
               </span>
+              {isHeartPopping && (
+                <>
+                  <span className="absolute text-red-500 text-[10px] pointer-events-none select-none" style={{ '--tx': '-12px', animation: 'miniHeartFloat 0.6s ease-out forwards' } as any}>♥</span>
+                  <span className="absolute text-red-500 text-[12px] pointer-events-none select-none" style={{ '--tx': '0px', animation: 'miniHeartFloat 0.5s ease-out forwards' } as any}>♥</span>
+                  <span className="absolute text-red-500 text-[10px] pointer-events-none select-none" style={{ '--tx': '12px', animation: 'miniHeartFloat 0.6s ease-out forwards' } as any}>♥</span>
+                </>
+              )}
             </button>
             <button
               onClick={() => onQuickViewClick?.(product)}
@@ -247,26 +280,42 @@ export function ProductCard({
         <div className={`absolute flex flex-col z-10 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 ${
           compact ? 'top-1.5 right-1.5 gap-1' : 'top-4 right-4 gap-2'
         }`}>
-          {/* Wishlist */}
-          <button
-            onClick={(e) => onWishlistClick?.(e, product)}
-            aria-label="Add to Wishlist"
-            className={`rounded-full flex items-center justify-center transition-colors shadow-sm cursor-pointer ${
-              compact ? 'w-6 h-6' : 'w-8 h-8'
-            } ${
-              isWishlisted
-                ? "bg-primary text-on-primary"
-                : "bg-white/95 text-primary hover:bg-primary hover:text-white"
-            }`}
-          >
-            {compact ? (
-              <svg width="11" height="11" viewBox="0 0 24 24" fill={isWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            ) : (
-              <span className="material-symbols-outlined text-[18px]">favorite</span>
-            )}
-          </button>
+          {/* Wishlist Button with Heart Pop Animation */}
+          <div className="relative">
+            <button
+              onClick={handleWishlistClick}
+              aria-label={isItemWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              className={`rounded-full flex items-center justify-center transition-all duration-300 shadow-md cursor-pointer relative overflow-visible ${
+                compact ? 'w-6 h-6' : 'w-8 h-8'
+              } ${
+                isItemWishlisted
+                  ? "bg-red-500 text-white shadow-red-500/40"
+                  : "bg-white/95 text-primary hover:bg-red-500 hover:text-white"
+              }`}
+            >
+              {compact ? (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill={isItemWishlisted ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={isHeartPopping ? 'animate-[heartPop_0.5s_ease-out]' : ''}>
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              ) : (
+                <span 
+                  className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${
+                    isHeartPopping ? 'animate-[heartPop_0.5s_ease-out]' : ''
+                  }`}
+                  style={{ fontVariationSettings: isItemWishlisted ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  favorite
+                </span>
+              )}
+              {isHeartPopping && (
+                <>
+                  <span className="absolute text-red-500 text-[10px] pointer-events-none select-none" style={{ '--tx': '-12px', animation: 'miniHeartFloat 0.6s ease-out forwards' } as any}>♥</span>
+                  <span className="absolute text-red-500 text-[12px] pointer-events-none select-none" style={{ '--tx': '0px', animation: 'miniHeartFloat 0.5s ease-out forwards' } as any}>♥</span>
+                  <span className="absolute text-red-500 text-[10px] pointer-events-none select-none" style={{ '--tx': '12px', animation: 'miniHeartFloat 0.6s ease-out forwards' } as any}>♥</span>
+                </>
+              )}
+            </button>
+          </div>
           {/* Quick View */}
           <button
             onClick={() => onQuickViewClick?.(product)}
@@ -392,6 +441,21 @@ export function ProductCard({
           })()}
         </div>
       </div>
+
+      {/* Keyframe Styles for Wishlist Pop & Micro-Particles */}
+      <style>{`
+        @keyframes heartPop {
+          0% { transform: scale(1) rotate(0deg); }
+          30% { transform: scale(1.45) rotate(-12deg); }
+          60% { transform: scale(0.9) rotate(6deg); }
+          100% { transform: scale(1) rotate(0deg); }
+        }
+        @keyframes miniHeartFloat {
+          0% { opacity: 1; transform: translate(0, 0) scale(0.6); }
+          50% { opacity: 1; transform: translate(var(--tx, 0px), -20px) scale(1.2); }
+          100% { opacity: 0; transform: translate(var(--tx, 0px), -36px) scale(0.6); }
+        }
+      `}</style>
     </div>
   );
 }

@@ -13,6 +13,8 @@ export function CartDrawer() {
   const { 
     isCartOpen, 
     setIsCartOpen, 
+    activeCartTab,
+    setActiveCartTab,
     cart, 
     removeFromCart,
     wishlistItems,
@@ -27,7 +29,6 @@ export function CartDrawer() {
   const { isAuthenticated, openLoginModal } = useAuth();
   const navigate = useNavigate();
   
-  const [activeCartTab, setActiveCartTab] = useState<'cart' | 'wishlist'>('cart');
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);

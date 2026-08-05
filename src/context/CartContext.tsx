@@ -17,6 +17,11 @@ export interface AppliedCoupon {
 interface CartContextType {
   isCartOpen: boolean;
   setIsCartOpen: (isOpen: boolean) => void;
+  activeCartTab: 'cart' | 'wishlist';
+  setActiveCartTab: (tab: 'cart' | 'wishlist') => void;
+  openWishlistDrawer: () => void;
+  wishlistPulseTrigger: number;
+  triggerWishlistPulse: () => void;
   cart: CartItem[];
   addToCart: (item: Omit<CartItem, 'cartId'>) => void;
   removeFromCart: (cartId: string) => void;
@@ -43,6 +48,17 @@ const WISHLIST_STORAGE_KEY = 'tobeque_wishlist_data_v1';
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [activeCartTab, setActiveCartTab] = useState<'cart' | 'wishlist'>('cart');
+  const [wishlistPulseTrigger, setWishlistPulseTrigger] = useState(0);
+
+  const openWishlistDrawer = () => {
+    setActiveCartTab('wishlist');
+    setIsCartOpen(true);
+  };
+
+  const triggerWishlistPulse = () => {
+    setWishlistPulseTrigger(prev => prev + 1);
+  };
   
   // Initialize cart from localStorage if available
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -105,6 +121,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (exists) return prev;
       return [...prev, product];
     });
+    setWishlistPulseTrigger(prev => prev + 1);
   };
 
   const removeFromWishlist = (productIdentifier: string) => {
@@ -143,6 +160,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       value={{
         isCartOpen,
         setIsCartOpen,
+        activeCartTab,
+        setActiveCartTab,
+        openWishlistDrawer,
+        wishlistPulseTrigger,
+        triggerWishlistPulse,
         cart,
         addToCart,
         removeFromCart,

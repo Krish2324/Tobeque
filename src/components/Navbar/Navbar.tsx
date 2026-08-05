@@ -67,13 +67,29 @@ interface NavbarProps {
 
 export function Navbar({ onSearchProductSelect }: NavbarProps) {
   const navigate = useNavigate();
-  const { setIsCartOpen, cartCount } = useCart();
+  const { setIsCartOpen, cartCount, wishlistPulseTrigger, openWishlistDrawer } = useCart();
   const { isAuthenticated, openLoginModal, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mainCategories, setMainCategories] = useState<MainCategoryItem[]>([]);
+  
+  const [isCartBouncing, setIsCartBouncing] = useState(false);
+  const [showWishlistBadge, setShowWishlistBadge] = useState(false);
+
+  useEffect(() => {
+    if (wishlistPulseTrigger > 0) {
+      setIsCartBouncing(true);
+      setShowWishlistBadge(true);
+      const bounceTimer = setTimeout(() => setIsCartBouncing(false), 600);
+      const badgeTimer = setTimeout(() => setShowWishlistBadge(false), 3000);
+      return () => {
+        clearTimeout(bounceTimer);
+        clearTimeout(badgeTimer);
+      };
+    }
+  }, [wishlistPulseTrigger]);
 
   useEffect(() => {
     api.get('/api/categories/public')
@@ -309,20 +325,32 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                 </span>
               </button>
             )}
+            {/* Desktop Shopping Bag / Cart & Wishlist Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              aria-label="Shopping Bag"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 relative cursor-pointer flex items-center"
+              aria-label="Shopping Bag and Wishlist"
+              className={`hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 relative cursor-pointer flex items-center ${
+                isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+              }`}
             >
               <span
-                className="material-symbols-outlined !text-[18px]"
+                className={`material-symbols-outlined !text-[18px] transition-colors duration-300 ${
+                  showWishlistBadge ? 'text-red-500' : ''
+                }`}
                 data-icon="shopping_bag"
               >
                 shopping_bag
               </span>
+
+              {/* Quantity Badge */}
               <span className="absolute -top-1.5 -right-1.5 bg-primary text-on-primary text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
                 {cartCount}
               </span>
+
+              {/* Sleek Glowing Red Pulse Dot Indicator */}
+              {showWishlistBadge && (
+                <span className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-red-500 animate-ping pointer-events-none" />
+              )}
             </button>
           </div>
 
@@ -337,19 +365,38 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
               <span className="material-symbols-outlined font-light !text-[20px]">search</span>
             </button>
 
-            {/* Shopping Bag Button */}
+            {/* Shopping Bag & Wishlist Button */}
             <button
               onClick={() => setIsCartOpen(true)}
-              aria-label="Shopping Bag"
-              className="text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+              aria-label="Shopping Bag and Wishlist"
+              className={`text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center ${
+                isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+              }`}
             >
-              <span className="material-symbols-outlined font-light !text-[20px]">shopping_bag</span>
+              <span className={`material-symbols-outlined font-light !text-[20px] ${
+                showWishlistBadge ? 'text-red-500' : ''
+              }`}>shopping_bag</span>
+              
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold shadow-md">
                 {cartCount}
               </span>
+
+              {showWishlistBadge && (
+                <span className="absolute -top-1 -left-1 w-2 h-2 rounded-full bg-red-500 animate-ping pointer-events-none" />
+              )}
             </button>
           </div>
         </div>
+
+        {/* Keyframe Styles for Header Cart Bounce */}
+        <style>{`
+          @keyframes headerCartBounce {
+            0% { transform: scale(1) rotate(0deg); }
+            35% { transform: scale(1.35) rotate(-10deg); }
+            65% { transform: scale(0.92) rotate(4deg); }
+            100% { transform: scale(1) rotate(0deg); }
+          }
+        `}</style>
       </header>
 
       {/* Mobile Drawer Overlay */}

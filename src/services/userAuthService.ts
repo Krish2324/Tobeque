@@ -180,6 +180,7 @@ export const createRazorpayOrder = async (
   orderData: {
     items: Array<{ productId: string | number; price: number | string; quantity: number; variantDetails?: any }>;
     couponCode?: string;
+    shippingCost?: number;
   }
 ) => {
   const res = await fetch(`${API_BASE}/razorpay/create-order`, {

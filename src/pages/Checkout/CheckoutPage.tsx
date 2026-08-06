@@ -648,7 +648,34 @@ export function CheckoutPage() {
         const rpOrder = await createRazorpayOrder(token, {
           items,
           couponCode: appliedCoupon?.code,
+          shippingCost,
         });
+
+        // Handle zero-amount orders (100% discount with free shipping)
+        if (rpOrder.isZeroAmount) {
+          await verifyRazorpayPayment(token, {
+            razorpay_payment_id: 'pay_zero_discount',
+            razorpay_order_id: 'order_zero_discount',
+            razorpay_signature: 'zero_discount',
+            customerName: billingName,
+            customerPhone: billingPhone,
+            shippingAddress: shippingAddressObj,
+            billingAddress: billingAddressObj,
+            items,
+            couponCode: appliedCoupon?.code,
+            notes: orderNotes,
+            shippingCost,
+          });
+
+          setIsSubmittingOrder(false);
+          setCheckoutSuccess(true);
+          setTimeout(() => {
+            clearCart();
+            setCheckoutSuccess(false);
+            navigate('/');
+          }, 10000);
+          return;
+        }
 
         const options = {
           key: keyId,

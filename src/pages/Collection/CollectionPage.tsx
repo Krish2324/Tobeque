@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 
 import { ProductCard, type Product } from '../../components/ProductCard';
@@ -46,6 +46,8 @@ export function CollectionPage() {
   // Filter & Layout states
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid-3' | 'grid-4'>('grid-4');
+  // Mobile-only grid column toggle: 2 (default) or 3
+  const [mobileGridCols, setMobileGridCols] = useState<2 | 3>(2);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>('');
@@ -96,40 +98,72 @@ export function CollectionPage() {
       .finally(() => setCategoriesLoading(false));
   }, []);
 
+  // Infinite scroll sentinel ref
+  const infiniteScrollRef = useRef<HTMLDivElement>(null);
+
   // Compute what tabs to show based on the tree and current categoryParam
   const { currentContext, siblings } = useMemo<{ currentContext: Category | null, siblings: Category[] }>(() => {
-    if (!categoryParam) return { currentContext: null, siblings: categoriesTree };
+    const searchId = searchParams.get('category');
+    const searchName = searchParams.get('name');
 
-    const dfs = (nodes: Category[], parent: Category | null): { node: Category, parent: Category | null } | null => {
-      for (const n of nodes) {
-        if (String(n.id || n._id) === categoryParam || String(n.name).toLowerCase() === String(categoryParam).toLowerCase()) {
-          return { node: n, parent };
-        }
-        if (n.subcategories && n.subcategories.length > 0) {
-          const res = dfs(n.subcategories, n);
-          if (res) return res;
-        }
-      }
-      return null;
-    };
-    const result = dfs(categoriesTree, null);
+    const normalizeCategoryString = (str: string) => 
+      str.toLowerCase().trim()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]/g, '');
 
-    if (result) {
-      const { node: foundNode, parent: foundParent } = result;
-      if (foundNode.subcategories && foundNode.subcategories.length > 0) {
-        // Node has children -> It's a parent category, show its children as tabs
-        return { currentContext: foundNode, siblings: foundNode.subcategories };
-      } else if (foundParent) {
-        // Node is a leaf -> User requested to ONLY show this specific subcategory, not all siblings
-        return { currentContext: foundParent, siblings: [foundNode] };
-      } else {
-        // Node is a root with no children
-        return { currentContext: null, siblings: [foundNode] };
+    let foundCategory: Category | null = null;
+    let parentCategory: Category | null = null;
+
+    if (categoryParam || searchId || searchName) {
+      const targetParam = decodeURIComponent(categoryParam || searchName || '').trim();
+      const targetNormalized = normalizeCategoryString(targetParam);
+
+      const dfs = (nodes: Category[], parent: Category | null): { node: Category; parent: Category | null } | null => {
+        for (const n of nodes) {
+          const nodeId = String(n.id || n._id || '');
+          const nodeName = String(n.name || '');
+          const nodeSlug = (n as any).slug ? String((n as any).slug) : '';
+
+          if (
+            (searchId && nodeId === searchId) ||
+            (targetParam && nodeId === targetParam) ||
+            (targetNormalized && (
+              normalizeCategoryString(nodeName) === targetNormalized ||
+              normalizeCategoryString(nodeSlug) === targetNormalized ||
+              normalizeCategoryString(nodeName.replace(/and/g, '')) === targetNormalized.replace(/and/g, '') ||
+              normalizeCategoryString(nodeSlug.replace(/and/g, '')) === targetNormalized.replace(/and/g, '')
+            ))
+          ) {
+            return { node: n, parent };
+          }
+          if (n.subcategories && n.subcategories.length > 0) {
+            const res = dfs(n.subcategories, n);
+            if (res) return res;
+          }
+        }
+        return null;
+      };
+      const res = dfs(categoriesTree, null);
+      if (res) {
+        foundCategory = res.node;
+        parentCategory = res.parent;
       }
     }
 
-    return { currentContext: null, siblings: categoriesTree };
-  }, [categoriesTree, categoryParam]);
+    if (foundCategory) {
+      // 1. If foundCategory has subcategories, show its subcategories as tabs
+      if (foundCategory.subcategories && foundCategory.subcategories.length > 0) {
+        return { currentContext: foundCategory, siblings: foundCategory.subcategories };
+      }
+      // 2. If foundCategory is a subcategory, show all sibling subcategories under the same parent
+      if (parentCategory && parentCategory.subcategories && parentCategory.subcategories.length > 0) {
+        return { currentContext: parentCategory, siblings: parentCategory.subcategories };
+      }
+    }
+
+    // Default: show all main categories
+    return { currentContext: foundCategory, siblings: categoriesTree };
+  }, [categoriesTree, categoryParam, searchParams]);
 
   // ── Products ──────────────────────────────────────────────────────────────
   let sortByParam = 'createdAt';
@@ -145,7 +179,8 @@ export function CollectionPage() {
     sortDirParam = 'DESC';
   }
 
-  const effectiveCategory = (categoryParam && categoryParam.toLowerCase() !== 'all') ? categoryParam : undefined;
+  const searchCategoryId = searchParams.get('category');
+  const effectiveCategory = searchCategoryId || (currentContext ? (currentContext.id || currentContext._id) : (categoryParam && categoryParam.toLowerCase() !== 'all' ? categoryParam : undefined));
 
   const { products: liveProducts, loading, loadingMore, error, total, hasMore, loadMore } = useProducts({
     status: 'published',
@@ -154,6 +189,26 @@ export function CollectionPage() {
     sortBy: sortByParam,
     sortDir: sortDirParam,
   });
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    if (!hasMore || loadingMore || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: '350px' }
+    );
+
+    if (infiniteScrollRef.current) {
+      observer.observe(infiniteScrollRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, loadMore]);
 
   // Extract all unique sizes from loaded products dynamically
   const { allSizes } = useMemo(() => {
@@ -245,7 +300,11 @@ export function CollectionPage() {
   // Displayed heading
   const displayTitle = categoryNameParam
     ? decodeURIComponent(categoryNameParam).toUpperCase()
-    : 'ALL PRODUCTS';
+    : currentContext
+      ? currentContext.name.toUpperCase()
+      : (categorySlug && categorySlug.toLowerCase() !== 'all'
+          ? decodeURIComponent(categorySlug).replace(/-/g, ' ').toUpperCase()
+          : 'ALL PRODUCTS');
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
@@ -321,10 +380,10 @@ export function CollectionPage() {
               </div>
               {/* Loading State */}
               {loading && !loadingMore && (
-                <div className={`grid gap-1 md:gap-1.5 transition-all w-full ${
+                <div className={`grid gap-0.5 md:gap-1.5 transition-all w-full ${
                   viewMode === 'list' ? 'grid-cols-1' : 
-                  viewMode === 'grid-3' ? 'grid-cols-3' : 
-                  'grid-cols-2 md:grid-cols-4'
+                  viewMode === 'grid-3' ? 'grid-cols-2 sm:grid-cols-3' : 
+                  'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
                 }`}>
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={`init-skel-${i}`} className="flex flex-col gap-2 animate-pulse bg-surface-container aspect-[3/4]">
@@ -348,34 +407,36 @@ export function CollectionPage() {
                 {/* Parent / All tab */}
                 <button
                   onClick={() => {
-                    if (currentContext) {
-                      const id = currentContext.id || currentContext._id;
-                      navigate(`/product-category/${encodeURIComponent(String(currentContext.name).toLowerCase())}?category=${id}&name=${encodeURIComponent(currentContext.name)}`);
-                    } else {
-                      navigate('/product-category/all');
-                    }
+                    navigate('/product-category/all');
                   }}
-                  className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(!categoryParam || categoryParam === 'all' || (currentContext && (categoryParam === String(currentContext.id || currentContext._id) || String(currentContext.name).toLowerCase() === String(categoryParam).toLowerCase())))
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-secondary hover:text-primary'
-                    }`}
+                  className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${
+                    (!categoryParam || categoryParam.toLowerCase() === 'all') && !searchCategoryId
+                      ? 'border-black text-black font-bold border-b-2'
+                      : 'border-transparent text-secondary hover:text-primary font-medium'
+                  }`}
                 >
-                  {currentContext ? `All ${currentContext.name}` : 'All Products'}
+                  ALL PRODUCTS
                 </button>
 
                 {/* Subcategories / Siblings tabs */}
                 {siblings.map((cat: Category) => {
                   const catId = String(cat.id || cat._id);
+                  const isCatActive = currentContext
+                    ? String(currentContext.id || currentContext._id) === catId || currentContext.name.toLowerCase() === cat.name.toLowerCase()
+                    : (searchCategoryId ? searchCategoryId === catId : false);
+
+                  const rawSlug = (cat as any).slug ? String((cat as any).slug).replace(/-\d+$/, '') : cat.name;
+                  const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+
                   return (
                     <button
                       key={catId}
-                      onClick={() =>
-                        navigate(`/product-category/${encodeURIComponent(String(cat.name).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`)
-                      }
-                      className={`px-5 py-2.5 text-[10px] font-medium tracking-[0.15em] uppercase border-b-2 transition-colors whitespace-nowrap ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase())
-                          ? 'border-primary text-primary'
-                          : 'border-transparent text-secondary hover:text-primary'
-                        }`}
+                      onClick={() => navigate(`/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`)}
+                      className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${
+                        isCatActive
+                          ? 'border-black text-black font-bold border-b-2'
+                          : 'border-transparent text-secondary hover:text-primary font-medium'
+                      }`}
                     >
                       {cat.name}
                     </button>
@@ -387,15 +448,15 @@ export function CollectionPage() {
         </div>
 
         {/* ── Filter / Sort bar ────────────────────────────────────────────── */}
-        <div className="sticky top-[72px] z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 py-2.5 px-outer-margin md:px-8 flex justify-between items-center gap-4">
-          <div className="text-[9px] tracking-[0.18em] font-medium text-secondary uppercase whitespace-nowrap">
+        <div className="sticky top-[72px] z-40 bg-surface/90 backdrop-blur-md border-b border-outline-variant/30 py-2 sm:py-2.5 px-3 sm:px-outer-margin md:px-8 flex justify-between items-center gap-2 sm:gap-4">
+          <div className="text-[7.5px] min-[380px]:text-[8.5px] sm:text-[9px] tracking-normal sm:tracking-[0.18em] font-medium text-secondary uppercase whitespace-nowrap shrink-0">
             {loading ? 'Loading…' : `Showing ${filteredAndSortedProducts.length} of ${total} products`}
           </div>
-          <div className="flex items-center gap-4 font-label-caps text-label-caps text-primary relative">
+          <div className="flex items-center gap-2 sm:gap-4 font-label-caps text-label-caps text-primary relative shrink-0">
             {/* Filter Toggle */}
             <button
               onClick={() => setIsFilterOpen(true)}
-              className="flex items-center gap-1 hover:text-secondary transition-colors cursor-pointer text-[9px] tracking-[0.2em] font-bold text-primary uppercase"
+              className="flex items-center gap-1 hover:text-secondary transition-colors cursor-pointer text-[8px] sm:text-[9px] tracking-[0.1em] sm:tracking-[0.2em] font-bold text-primary uppercase"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -413,18 +474,51 @@ export function CollectionPage() {
 
             <span className="text-outline-variant/60 text-xs">•</span>
 
-            {/* Grid / List Layout Switcher */}
-            <div className="flex items-center gap-1.5">
+            {/* Mobile-only: 2 / 3 column toggle */}
+            <div className="flex items-center gap-0.5 sm:hidden">
+              <button
+                onClick={() => setMobileGridCols(2)}
+                title="2 Columns"
+                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+                  mobileGridCols === 2
+                    ? 'bg-outline-variant/30 text-primary'
+                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                }`}
+              >
+                <svg className="w-3 h-3" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2" y="2" width="4" height="10" rx="0.5" />
+                  <rect x="8" y="2" width="4" height="10" rx="0.5" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setMobileGridCols(3)}
+                title="3 Columns"
+                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
+                  mobileGridCols === 3
+                    ? 'bg-outline-variant/30 text-primary'
+                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                }`}
+              >
+                <svg className="w-3 h-3" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="1.5" y="2" width="3" height="10" rx="0.5" />
+                  <rect x="5.5" y="2" width="3" height="10" rx="0.5" />
+                  <rect x="9.5" y="2" width="3" height="10" rx="0.5" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Desktop: Grid / List Layout Switcher */}
+            <div className="hidden sm:flex items-center gap-1 sm:gap-1.5">
               {/* List View */}
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'list'
+                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'list'
                     ? 'bg-outline-variant/30 text-primary'
                     : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="List View"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                   <rect x="1" y="1.75" width="12" height="1.5" rx="0.5" />
                   <rect x="1" y="4.75" width="12" height="1.5" rx="0.5" />
                   <rect x="1" y="7.75" width="12" height="1.5" rx="0.5" />
@@ -434,13 +528,13 @@ export function CollectionPage() {
               {/* 3 Column Grid */}
               <button
                 onClick={() => setViewMode('grid-3')}
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'grid-3'
+                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'grid-3'
                     ? 'bg-outline-variant/30 text-primary'
                     : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="3 Columns Grid"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                   <rect x="2.75" y="2" width="1.5" height="10" rx="0.5" />
                   <rect x="6.25" y="2" width="1.5" height="10" rx="0.5" />
                   <rect x="9.75" y="2" width="1.5" height="10" rx="0.5" />
@@ -449,13 +543,13 @@ export function CollectionPage() {
               {/* 4 Column Grid */}
               <button
                 onClick={() => setViewMode('grid-4')}
-                className={`flex items-center justify-center w-8 h-8 rounded-md transition-colors ${viewMode === 'grid-4'
+                className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'grid-4'
                     ? 'bg-outline-variant/30 text-primary'
                     : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="4 Columns Grid"
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                   <rect x="1.75" y="2" width="1.5" height="10" rx="0.5" />
                   <rect x="4.75" y="2" width="1.5" height="10" rx="0.5" />
                   <rect x="7.75" y="2" width="1.5" height="10" rx="0.5" />
@@ -517,7 +611,9 @@ export function CollectionPage() {
                 ))}
               </div>
             ) : viewMode === 'grid-3' ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-1 md:gap-1.5 animate-fade-in">
+              <div className={`grid gap-1 md:gap-1.5 animate-fade-in ${
+                mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
+              } sm:grid-cols-3`}>
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -539,7 +635,9 @@ export function CollectionPage() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-1.5 animate-fade-in">
+              <div className={`grid gap-0.5 md:gap-1.5 animate-fade-in ${
+                mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
+              } sm:grid-cols-3 md:grid-cols-4`}>
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -564,20 +662,19 @@ export function CollectionPage() {
           )}
 
           {!loading && !error && filteredAndSortedProducts.length > 0 && (
-            <div className="w-full flex flex-col mt-6 mb-2">
-              {/* Load More Button */}
-              {hasMore && (
-                <div className="flex justify-center mt-4">
-                  <button 
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); loadMore(); }}
-                    disabled={loadingMore}
-                    className="px-10 py-3 bg-surface border-2 border-primary text-primary font-label-caps tracking-widest text-[11px] font-bold hover:bg-primary hover:text-on-primary transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
-                  >
-                    {loadingMore ? 'LOADING...' : 'LOAD MORE PRODUCTS'}
-                  </button>
-                </div>
-              )}
+            <div className="w-full flex flex-col items-center justify-center my-6">
+              {/* Invisible sentinel element for infinite scroll */}
+              <div ref={infiniteScrollRef} className="h-10 w-full flex items-center justify-center">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-secondary uppercase animate-pulse">
+                    <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    LOADING MORE PRODUCTS...
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </section>
@@ -785,9 +882,10 @@ export function CollectionPage() {
                     About {activeCat.name}
                   </h2>
 
-                  <p className="text-sm md:text-base leading-[1.85] font-normal whitespace-pre-line text-slate-600">
-                    {activeCat.description}
-                  </p>
+                  <div
+                    className="text-sm md:text-base leading-[1.85] font-normal text-slate-600 space-y-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline"
+                    dangerouslySetInnerHTML={{ __html: activeCat.description || '' }}
+                  />
                 </div>
               )}
 
@@ -806,9 +904,10 @@ export function CollectionPage() {
                       )}
 
                       {sec.content?.trim() && (
-                        <p className="text-sm text-slate-600 leading-[1.85] font-normal whitespace-pre-line pl-3.5">
-                          {sec.content}
-                        </p>
+                        <div
+                          className="text-sm text-slate-600 leading-[1.85] font-normal pl-3.5 space-y-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_a]:text-primary [&_a]:underline"
+                          dangerouslySetInnerHTML={{ __html: sec.content || '' }}
+                        />
                       )}
                     </div>
                   ))}

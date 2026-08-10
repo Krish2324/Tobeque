@@ -191,27 +191,31 @@ export function HomePage() {
     if (collectionScrollRef.current) collectionScrollRef.current.style.cursor = 'grab';
   };
 
-  // Season Collection continuous infinite auto-scroll
+  // Season Collection continuous infinite auto-scroll (Safari & cross-browser compatible)
   const animationRef = useRef<number>(0);
 
   useEffect(() => {
     if (!collectionScrollRef.current || collectionItems.length <= 1) return;
     const container = collectionScrollRef.current;
-    let scrollSpeed = 0.5; // pixels per frame
+    let scrollPos = container.scrollLeft;
+    const scrollSpeed = 0.6; // pixels per frame
 
     const animate = () => {
-      if (!collectionDragging.current) {
-        container.scrollLeft += scrollSpeed;
+      if (!collectionDragging.current && container) {
+        scrollPos += scrollSpeed;
 
-        // Since we render the items 3 times, one set's width is scrollWidth / 3
+        // Since items are rendered 3 times, one set width is scrollWidth / 3
         const oneSetWidth = container.scrollWidth / 3;
 
-        // If we have scrolled past the first set, reset seamlessly
-        if (container.scrollLeft >= oneSetWidth) {
-          container.scrollLeft -= oneSetWidth;
-        } else if (container.scrollLeft <= 0 && scrollSpeed < 0) {
-          // In case of backwards scroll/drag, though drag handles its own bounds
+        if (oneSetWidth > 0) {
+          if (scrollPos >= oneSetWidth) {
+            scrollPos -= oneSetWidth;
+          }
+          container.scrollLeft = Math.floor(scrollPos);
         }
+      } else if (container) {
+        // Sync accumulator with manual drag/touch scroll
+        scrollPos = container.scrollLeft;
       }
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -359,7 +363,7 @@ export function HomePage() {
                 return (
                   <div
                     key={`${item.id}-${idx}`}
-                    className="shrink-0 aspect-[3/4] w-[calc((100%-3px)/2)] md:w-[calc((100%-15px)/6)]"
+                    className="shrink-0 aspect-[3/4] w-[calc((100%-6px)/2.5)] sm:w-[calc((100%-9px)/3.5)] md:w-[calc((100%-15px)/6)]"
                   >
                     <button
                       className="group relative w-full h-full overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block rounded"
@@ -369,7 +373,14 @@ export function HomePage() {
                           e.stopPropagation();
                           return;
                         }
-                        navigate(`/product-category/${item.category?.slug || 'all'}`);
+                        const catId = (item.category as any)?.id || (item.category as any)?._id || (item as any).categoryId;
+                        const catName = item.category?.name || item.displayLabel || 'Category';
+                        const rawSlug = item.category?.slug ? String(item.category.slug).replace(/-\d+$/, '') : catName;
+                        const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+                        const targetUrl = catId 
+                          ? `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(catName)}`
+                          : `/product-category/${catSlug}`;
+                        navigate(targetUrl);
                       }}
                     >
                       {/* Background image */}
@@ -572,7 +583,7 @@ export function HomePage() {
             {onSaleLoading ? (
               <div className="flex gap-[3px] overflow-hidden">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="shrink-0 aspect-[2/3] bg-surface-container animate-pulse w-[calc((100%-9px)/4)] md:w-[calc((100%-21px)/8)]" />
+                  <div key={i} className="shrink-0 aspect-[2/3] bg-surface-container animate-pulse w-[calc((100%-6px)/3)] md:w-[calc((100%-21px)/8)]" />
                 ))}
               </div>
             ) : onSaleProducts.length > 0 ? (
@@ -588,7 +599,7 @@ export function HomePage() {
                 {onSaleProducts.map((p, idx) => (
                   <div
                     key={idx}
-                    className="shrink-0 w-[calc((100%-9px)/4)] md:w-[calc((100%-21px)/8)]"
+                    className="shrink-0 w-[calc((100%-6px)/3)] md:w-[calc((100%-21px)/8)]"
                     style={{ scrollSnapAlign: 'start' }}
                   >
                     <ProductCard

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { type Product } from "../data/products";
 import { ImageWithSkeleton } from "./ImageWithSkeleton";
@@ -29,6 +29,76 @@ export function ProductCard({
   const { wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const [isHeartPopping, setIsHeartPopping] = useState(false);
 
+  // ── Color-image swap state ───────────────────────────────────────────────
+  const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
+
+  // Find color of the primary thumbnail image (or first color-tagged image)
+  const primaryImgColor = React.useMemo(() => {
+    if (!product.galleryImageObjects || product.galleryImageObjects.length === 0) return undefined;
+    const matchPrimary = product.galleryImageObjects.find(g => g.url === product.imageSrc && g.color);
+    if (matchPrimary) return matchPrimary.color;
+    const matchAny = product.galleryImageObjects.find(g => g.color);
+    return matchAny?.color;
+  }, [product]);
+
+  // Effective color: user-tapped color or default primary image color
+  const activeColorName = selectedColorName || primaryImgColor;
+
+  // Display image for desktop product card — switches to selected color image when color dot is clicked
+  const displayImage = React.useMemo(() => {
+    if (selectedColorName) {
+      const match = product.galleryImageObjects?.find(
+        (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
+      );
+      if (match && match.url) return match.url;
+    }
+    return product.imageSrc;
+  }, [product, selectedColorName]);
+
+  // Mobile swipable gallery: filter images for the active color, always keep primary thumbnail first
+  const images = React.useMemo(() => {
+    if (activeColorName) {
+      const matches = product.galleryImageObjects
+        ?.filter((g) => g.color && g.color.trim().toLowerCase() === activeColorName.toLowerCase())
+        .map(g => g.url)
+        .filter(Boolean) as string[];
+      if (matches && matches.length > 0) {
+        const primary = product.imageSrc;
+        // Only prepend primary thumbnail if it has no color tag OR its color matches the selected color
+        const primaryColorTag = (product.galleryImageObjects?.[0]?.color || '').toLowerCase().trim();
+        const shouldPrepend = primary && 
+          !matches.includes(primary) &&
+          (!primaryColorTag ||
+            primaryColorTag === activeColorName.toLowerCase() ||
+            activeColorName.toLowerCase().includes(primaryColorTag) ||
+            primaryColorTag.includes(activeColorName.toLowerCase()));
+        return shouldPrepend ? [primary, ...matches] : matches;
+      }
+    }
+    
+    if (product.galleryImages && product.galleryImages.length > 0) {
+       return product.galleryImages;
+    }
+    
+    if (product.hoverImageSrc) {
+       return [product.imageSrc, product.hoverImageSrc];
+    }
+    return [product.imageSrc];
+  }, [product, activeColorName]);
+
+  const productUrl = `/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}${activeColorName ? `?color=${encodeURIComponent(activeColorName)}` : ''}`;
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  // Reset mobile slider to start (first image) when a new color dot is selected
+  useEffect(() => {
+    setActiveImageIndex(0);
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+    }
+  }, [selectedColorName]);
+
   const isItemWishlisted = isWishlisted || wishlistItems?.some(w => (w.id && product.id && String(w.id) === String(product.id)) || w.name === product.name);
 
   const handleWishlistClick = (e: React.MouseEvent) => {
@@ -46,13 +116,23 @@ export function ProductCard({
 
     onWishlistClick?.(e, product);
   };
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const scrollPosition = scrollRef.current.scrollLeft;
+      const width = scrollRef.current.clientWidth;
+      const currentIndex = Math.round(scrollPosition / width);
+      setActiveImageIndex(currentIndex);
+    }
+  };
+
   if (viewMode === 'list') {
     return (
       <div className="group relative flex items-start sm:items-center gap-4 sm:gap-8 md:gap-12 border-b border-outline-variant/20 py-6 md:py-8 w-full text-left transition-colors">
         {/* Left Side: Responsive Image Container */}
         <div className="relative w-28 sm:w-56 md:w-72 lg:w-[280px] shrink-0 aspect-[4/5] bg-surface-container overflow-hidden rounded-md">
           <Link 
-            to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
+            to={productUrl}
             className="absolute inset-0 z-0 block cursor-pointer"
           >
             <ImageWithSkeleton
@@ -77,7 +157,7 @@ export function ProductCard({
         {/* Right Side: Info & Actions */}
         <div className="flex-1 flex flex-col justify-center gap-3 sm:gap-4 md:gap-5 min-w-0 py-1">
           <div className="flex flex-col gap-1 sm:gap-2">
-            <Link to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`} className="hover:text-primary cursor-pointer transition-colors inline-block">
+            <Link to={productUrl} className="hover:text-primary cursor-pointer transition-colors inline-block">
               <h2 className="font-body-md text-xs sm:text-sm text-secondary uppercase tracking-[0.1em] font-medium truncate sm:whitespace-normal">
                 {product.name}
               </h2>
@@ -121,7 +201,7 @@ export function ProductCard({
             </button>
             <button
               onClick={() => onQuickViewClick?.(product)}
-              className="w-8 h-8 flex items-center justify-center transition-colors cursor-pointer rounded-full border border-outline-variant text-secondary hover:border-primary hover:text-primary"
+              className="hidden sm:flex w-8 h-8 items-center justify-center transition-colors cursor-pointer rounded-full border border-outline-variant text-secondary hover:border-primary hover:text-primary"
               title="Quick View"
             >
               <span className="material-symbols-outlined text-[15px] font-light">visibility</span>
@@ -131,50 +211,6 @@ export function ProductCard({
       </div>
     );
   }
-
-  // ── Color-image swap state ───────────────────────────────────────────────
-  const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
-
-  // Display image for desktop webpage (respects selected color or default imageSrc)
-  const displayImage = React.useMemo(() => {
-    if (selectedColorName) {
-      const match = product.galleryImageObjects?.find(
-        (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
-      );
-      if (match) return match.url;
-    }
-    return product.imageSrc;
-  }, [product, selectedColorName]);
-
-  const images = React.useMemo(() => {
-    if (selectedColorName) {
-      const match = product.galleryImageObjects?.find(
-        (g) => g.color && g.color.trim().toLowerCase() === selectedColorName.toLowerCase()
-      );
-      if (match) return [match.url];
-    }
-    
-    if (product.galleryImages && product.galleryImages.length > 0) {
-       return product.galleryImages;
-    }
-    
-    if (product.hoverImageSrc) {
-       return [product.imageSrc, product.hoverImageSrc];
-    }
-    return [product.imageSrc];
-  }, [product, selectedColorName]);
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const scrollRef = React.useRef<HTMLDivElement>(null);
-
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollPosition = scrollRef.current.scrollLeft;
-      const width = scrollRef.current.clientWidth;
-      const currentIndex = Math.round(scrollPosition / width);
-      setActiveImageIndex(currentIndex);
-    }
-  };
 
   return (
     <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02] hover:z-10">
@@ -189,7 +225,7 @@ export function ProductCard({
           {images.map((img, idx) => (
             <Link
               key={`${img}-${idx}`}
-              to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
+              to={productUrl}
               className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
             >
               {isVideo(img) ? (
@@ -213,7 +249,7 @@ export function ProductCard({
         {/* Desktop View: Old Webpage Flow (Primary Image + Hover Image Transition) */}
         <div className="hidden sm:block absolute inset-0 z-0">
           <Link
-            to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`}
+            to={productUrl}
             className="absolute inset-0 block cursor-pointer"
           >
             {isVideo(displayImage) ? (
@@ -320,7 +356,7 @@ export function ProductCard({
           <button
             onClick={() => onQuickViewClick?.(product)}
             aria-label="Quick View"
-            className={`bg-white/95 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm cursor-pointer ${
+            className={`hidden sm:flex bg-white/95 rounded-full items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm cursor-pointer ${
               compact ? 'w-6 h-6' : 'w-8 h-8'
             }`}
           >
@@ -368,7 +404,7 @@ export function ProductCard({
       <div className="flex flex-col gap-0 px-0.5 mt-1.5 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
         {/* Clickable Title */}
         <Link 
-          to={`/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}`} 
+          to={productUrl} 
           className="hover:underline cursor-pointer block text-left"
         >
           <h3 className="font-body-md text-[10px] text-secondary truncate tracking-wide leading-tight">

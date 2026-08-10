@@ -25,6 +25,62 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const dismissMobileKeyboard = () => {
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+    if (document.activeElement && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    try {
+      const dummy = document.createElement('input');
+      dummy.setAttribute('type', 'text');
+      dummy.style.position = 'fixed';
+      dummy.style.opacity = '0';
+      dummy.style.top = '-9999px';
+      document.body.appendChild(dummy);
+      dummy.focus();
+      dummy.blur();
+      document.body.removeChild(dummy);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleClose = () => {
+    dismissMobileKeyboard();
+    onClose();
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    dismissMobileKeyboard();
+    if (query.trim()) {
+      setLoading(true);
+      api.get('/api/products', { params: { search: query.trim(), status: 'published', limit: 20 } })
+        .then((res) => {
+          const data = res.data;
+          if (data.success && data.data && Array.isArray(data.data.products)) {
+            setResults(data.data.products);
+          } else {
+            setResults([]);
+          }
+        })
+        .catch((err) => {
+          console.error("Search error:", err);
+          setResults([]);
+        })
+        .finally(() => setLoading(false));
+    }
+  };
+
+  const handleProductClick = (product: any) => {
+    dismissMobileKeyboard();
+    onClose();
+    const productId = product.id || product._id;
+    navigate(`/product-category/${product.categorySlug || 'all'}/${product.slug || productId}`);
+  };
+
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -65,16 +121,27 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   return (
     <div className="fixed top-0 left-0 w-full z-[120] bg-white border-b border-outline-variant shadow-md animate-in slide-in-from-top-full duration-300">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-4 flex flex-col relative">
-        <div className="flex justify-between items-center gap-4">
-          <span className="material-symbols-outlined text-secondary text-2xl">search</span>
+        <form action="." onSubmit={handleSearchSubmit} className="flex justify-between items-center gap-4">
+          <button type="submit" className="text-secondary hover:text-primary transition-colors cursor-pointer border-none bg-transparent p-0 flex items-center">
+            <span className="material-symbols-outlined text-2xl">search</span>
+          </button>
           <div className="flex-1 relative">
             <input
               ref={inputRef}
-              type="text"
+              type="search"
+              enterKeyHint="search"
+              inputMode="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.keyCode === 13 || e.which === 13) {
+                  e.preventDefault();
+                  dismissMobileKeyboard();
+                  handleSearchSubmit(e);
+                }
+              }}
               placeholder="Search products, SKU, barcode..."
-              className="w-full bg-transparent text-headline-sm font-headline-sm text-primary placeholder:text-outline-variant border-none focus:ring-0 py-2 focus:outline-none"
+              className="w-full bg-transparent text-headline-sm font-headline-sm text-primary placeholder:text-outline-variant border-none focus:ring-0 py-2 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none"
             />
             {loading && (
               <div className="absolute right-0 top-1/2 -translate-y-1/2">
@@ -86,16 +153,17 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             )}
           </div>
           <button
-            onClick={onClose}
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-primary cursor-pointer"
+            type="button"
+            onClick={handleClose}
+            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-100 transition-colors text-primary cursor-pointer border-none bg-transparent"
           >
             <span className="material-symbols-outlined text-2xl">close</span>
           </button>
-        </div>
+        </form>
 
         {/* Results Dropdown Container */}
         {(query.trim() !== "" || results.length > 0) && (
-          <div className="absolute top-[100%] left-0 w-full bg-white shadow-2xl border-t border-outline-variant max-h-[70vh] overflow-y-auto no-scrollbar">
+          <div className="absolute top-[100%] left-0 w-full bg-white shadow-2xl border-t border-outline-variant max-h-[70vh] overflow-y-auto no-scrollbar z-50">
             
             {query.trim() && !loading && results.length === 0 && (
               <div className="text-center py-8 text-secondary font-body-md">
@@ -108,15 +176,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 {results.map((product) => {
                   const thumbUrl = resolveImageUrl(product.thumbnail);
                   const displayPrice = typeof product.price === 'number' ? product.price.toFixed(2) : product.price;
-                  const productId = product.id || product._id;
 
                   return (
                     <button
-                      key={productId}
-                      onClick={() => {
-                        onClose();
-                        navigate(`/product-category/${product.categorySlug || 'all'}/${product.slug || productId}`);
-                      }}
+                      key={product.id || product._id}
+                      onClick={() => handleProductClick(product)}
                       className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                     >
                       <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative rounded-md">

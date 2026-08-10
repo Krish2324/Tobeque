@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
 import { useProduct, useProducts } from "../../hooks/useProducts";
 import api from "../../services/api";
@@ -133,6 +133,9 @@ export function ProductDetailPage() {
   const { productSlug } = useParams<{ categorySlug?: string; productSlug: string }>();
   const { currencySymbol } = useCurrency();
 
+  const [searchParams] = useSearchParams();
+  const colorParam = searchParams.get('color');
+
   // Fetch specific product from backend
   const { product, loading, error } = useProduct(productSlug);
 
@@ -215,6 +218,16 @@ export function ProductDetailPage() {
   const displayPrice = currentVariant && currentVariant.price !== undefined && currentVariant.price !== null && currentVariant.price !== ''
     ? `${currencySymbol}${Number(currentVariant.price).toFixed(2)}` 
     : product?.price;
+
+  const displaySku = React.useMemo(() => {
+    if (currentVariant && currentVariant.sku && String(currentVariant.sku).trim() !== '') {
+      return String(currentVariant.sku).trim();
+    }
+    if (product?.sku && String(product.sku).trim() !== '') {
+      return String(product.sku).trim();
+    }
+    return '';
+  }, [currentVariant, product]);
 
   const isOutOfStock = currentVariant && currentVariant.stock !== undefined && currentVariant.stock !== null && currentVariant.stock !== '' && Number(currentVariant.stock) <= 0;
 
@@ -349,9 +362,27 @@ export function ProductDetailPage() {
   useEffect(() => {
     if (product) {
       if (product.detailedColors && product.detailedColors.length > 0) {
-        setSelectedColor(product.detailedColors[0]);
+        if (colorParam) {
+          const matched = product.detailedColors.find(
+            c => c.name.toLowerCase().trim() === colorParam.toLowerCase().trim()
+          );
+          setSelectedColor(matched || product.detailedColors[0]);
+        } else {
+          // Find color of the primary main image
+          const primaryImgColor = product.galleryImageObjects?.find(img => img.color)?.color;
+          let defaultColorObj = product.detailedColors[0];
+          if (primaryImgColor) {
+            const matchedPrimaryColor = product.detailedColors.find(
+              c => c.name.toLowerCase().trim() === primaryImgColor.toLowerCase().trim()
+            );
+            if (matchedPrimaryColor) {
+              defaultColorObj = matchedPrimaryColor;
+            }
+          }
+          setSelectedColor(defaultColorObj);
+        }
       } else {
-        setSelectedColor({ name: "DEFAULT", class: product.colors?.[0] || "bg-primary" });
+        setSelectedColor({ name: colorParam || "DEFAULT", class: product.colors?.[0] || "bg-primary" });
       }
       if (product.sizes && product.sizes.length > 0) {
         setSelectedSize(product.sizes[0]);
@@ -359,7 +390,7 @@ export function ProductDetailPage() {
         setSelectedSize("S");
       }
     }
-  }, [product, user]);
+  }, [product, user, colorParam]);
 
   // Derived state for gallery images based on selected color
   const displayedImages = React.useMemo(() => {
@@ -396,9 +427,20 @@ export function ProductDetailPage() {
       }
     });
 
-    // If color-specific images exist for the selected color, return ONLY those color images
+    // If color-specific images exist for the selected color,
+    // only prepend the admin primary thumbnail if:
+    //  1. It has no color tag (belongs to all colors — always show it), OR
+    //  2. Its color tag matches the currently selected color
+    // This prevents e.g. the "Green" primary thumbnail from showing when "Yellow" is selected.
     if (colorMatches.length > 0) {
-      return colorMatches;
+      const primaryColorTag = (product.galleryImageObjects[0]?.color || '').toLowerCase().trim();
+      const shouldPrepend = primaryImg &&
+        !colorMatches.includes(primaryImg) &&
+        (!primaryColorTag || 
+          primaryColorTag === currentSelectedColorName || 
+          currentSelectedColorName.includes(primaryColorTag) || 
+          primaryColorTag.includes(currentSelectedColorName));
+      return shouldPrepend ? [primaryImg, ...colorMatches] : colorMatches;
     }
 
     // Fallback: If no images are tagged with this color, show all gallery images
@@ -884,10 +926,10 @@ export function ProductDetailPage() {
                 <span>Delivery:</span>
                 <span className="text-primary/80">{deliveryEstimate}</span>
               </div>
-              {product.sku && (
+              {displaySku && (
                 <div className="flex items-center gap-2 text-[10px] text-secondary/70">
                   <span className="w-14 shrink-0">Sku:</span>
-                  <span className="text-primary/70 tracking-wider font-light">{product.sku}</span>
+                  <span className="text-primary/70 tracking-wider font-light">{displaySku}</span>
                 </div>
               )}
             </div>
@@ -1245,32 +1287,36 @@ export function ProductDetailPage() {
                 {hasPrev && !innerZoom && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex - 1]); setInnerZoom(false); }}
-                    className="hidden sm:flex absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
+                    className="flex absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/60 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
                     aria-label="Previous image"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
                 )}
                 {hasNext && !innerZoom && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex + 1]); setInnerZoom(false); }}
-                    className="hidden sm:flex absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
+                    className="flex absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/60 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
                     aria-label="Next image"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   </button>
                 )}
               </>
             );
           })()}
           <div 
-            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20"
+            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20 select-none"
             onClick={(e) => {
                if (isVideo(zoomedImage)) {
                  e.stopPropagation();
                  return;
                }
                e.stopPropagation(); 
+               const rect = e.currentTarget.getBoundingClientRect();
+               const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+               const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+               setMousePos({ x, y });
                setInnerZoom(!innerZoom); 
             }}
             onTouchStart={(e) => {
@@ -1282,7 +1328,7 @@ export function ProductDetailPage() {
               if (!innerZoom && swipeStartX.current !== null && zoomedImage) {
                 const swipeEndX = e.changedTouches[0].clientX;
                 const diffX = swipeStartX.current - swipeEndX;
-                if (Math.abs(diffX) > 50) {
+                if (Math.abs(diffX) > 40) {
                   const currentIndex = displayedImages.indexOf(zoomedImage);
                   if (diffX > 0 && currentIndex !== -1 && currentIndex < displayedImages.length - 1) {
                     setZoomedImage(displayedImages[currentIndex + 1]);
@@ -1298,23 +1344,18 @@ export function ProductDetailPage() {
               const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
               const x = ((e.clientX - left) / width) * 100;
               const y = ((e.clientY - top) / height) * 100;
-              setMousePos({ x, y });
+              setMousePos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
             }}
             onTouchMove={(e) => {
               if (!innerZoom) return;
-              // Prevent default to stop page scrolling while panning zoomed image
               if (e.cancelable) e.preventDefault();
               const touch = e.touches[0];
               const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-              // Calculate standard percentages
-              const rawX = ((touch.clientX - left) / width) * 100;
-              const rawY = ((touch.clientY - top) / height) * 100;
-              
-              // For touch dragging, we invert the movement so dragging left moves the image left (which means origin moves right)
-              // Let's use a standard mapping first:
+              const x = ((touch.clientX - left) / width) * 100;
+              const y = ((touch.clientY - top) / height) * 100;
               setMousePos({ 
-                x: Math.max(0, Math.min(100, rawX)), 
-                y: Math.max(0, Math.min(100, rawY))
+                x: Math.max(0, Math.min(100, x)), 
+                y: Math.max(0, Math.min(100, y))
               });
             }}
             onMouseLeave={() => setInnerZoom(false)}
@@ -1322,19 +1363,18 @@ export function ProductDetailPage() {
           >
             {isVideo(zoomedImage) ? (
               <video
-                className="w-full h-full object-cover sm:object-contain"
+                className="w-full h-full object-contain"
                 src={zoomedImage}
                 autoPlay loop controls playsInline
               />
             ) : (
               <img
                 alt="Zoomed view"
-                className="w-full h-full object-cover sm:object-contain"
+                className="w-full h-full object-contain transition-transform duration-300 ease-out select-none"
                 src={zoomedImage}
                 style={{
-                  transform: innerZoom ? 'scale(2.2)' : 'scale(1)',
+                  transform: innerZoom ? 'scale(2.5)' : 'scale(1)',
                   transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-                  transition: 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)'
                 }}
                 draggable={false}
               />

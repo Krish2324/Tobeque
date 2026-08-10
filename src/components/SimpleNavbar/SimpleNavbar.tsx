@@ -4,16 +4,8 @@ import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
 import { SearchModal } from "../SearchModal/SearchModal";
 import type { Product } from "../ProductCard";
+import api from "../../services/api";
 import logoImage from "../../assets/Tobeque-Logo-290x57.webp";
-
-const CATEGORIES = [
-  { name: 'Tops', path: '/product-category/tops' },
-  { name: 'Dresses', path: '/product-category/dresses' },
-  { name: 'Shirts and Blouses', path: '/product-category/shirts-and-blouses' },
-  { name: 'T-Shirts and Vests', path: '/product-category/t-shirts-and-vests' },
-  { name: 'Jeans and Pants', path: '/product-category/jeans-and-pants' },
-  { name: 'Skirts and Shorts', path: '/product-category/skirts-and-shorts' },
-];
 
 interface SimpleNavbarProps {
   onSearchProductSelect?: (product: Product) => void;
@@ -28,6 +20,26 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [categories, setCategories] = useState<{ name: string; path: string }[]>([]);
+
+  useEffect(() => {
+    api.get('/api/categories/public')
+      .then(res => {
+        if (res.data.success && Array.isArray(res.data.categories)) {
+          const items = res.data.categories.map((cat: any) => {
+            const catId = cat.id || cat._id;
+            const rawSlug = cat.slug ? String(cat.slug).replace(/-\d+$/, '') : cat.name;
+            const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+            return {
+              name: cat.name,
+              path: `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`
+            };
+          });
+          setCategories(items);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,10 +76,11 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
         {/* Desktop Navigation Links */}
         <div className="hidden md:flex flex-1 justify-center space-x-8">
           <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/all">NEW ARRIVAL</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/tops">TOPS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/dresses">DRESSES</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/jeans-and-pants">JEANS AND PANTS</Link>
-          <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/skirts-and-shorts">SKIRTS AND SHORTS</Link>
+          {categories.slice(0, 5).map(cat => (
+            <Link key={cat.name} className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to={cat.path}>
+              {cat.name.toUpperCase()}
+            </Link>
+          ))}
           <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/all">BEST SELLERS</Link>
         </div>
 
@@ -174,7 +187,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
                     <span className="w-8 h-[1px] bg-gray-400"></span> Shop By Category
                   </h4>
                   <div className="grid grid-cols-1 gap-3 pl-4 border-l-2 border-outline-variant/30">
-                    {CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <Link 
                         key={cat.name} 
                         to={cat.path} 

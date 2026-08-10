@@ -66,7 +66,15 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   useEffect(() => {
     if (product) {
-      setSelectedColor(product.detailedColors && product.detailedColors.length > 0 ? product.detailedColors[0].name : undefined);
+      const primaryImgColor = product.galleryImageObjects?.find(img => img.color)?.color;
+      let initialColor = product.detailedColors && product.detailedColors.length > 0 ? product.detailedColors[0].name : undefined;
+      
+      if (primaryImgColor && product.detailedColors) {
+        const matched = product.detailedColors.find(c => c.name.toLowerCase().trim() === primaryImgColor.toLowerCase().trim());
+        if (matched) initialColor = matched.name;
+      }
+
+      setSelectedColor(initialColor);
       setSelectedSize(product.sizes && product.sizes.length > 0 ? product.sizes[0] : undefined);
       setQuantity(1);
     }
@@ -98,44 +106,56 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
   const displayedImages = useMemo(() => {
     if (!product) return [];
+    
     const primaryImg = product.imageSrc;
     const hoverImg = product.hoverImageSrc;
-    let list: string[] = [];
+    
+    const targetColor = (selectedColor || product.detailedColors?.[0]?.name || product.colors?.[0] || '').toLowerCase().trim();
 
-    if (selectedColor && product.galleryImageObjects && product.galleryImageObjects.length > 0) {
-      const colorMatches: string[] = [];
-      const others: string[] = [];
-      product.galleryImageObjects.forEach(imgObj => {
-        if (!imgObj.url || imgObj.url === primaryImg) return;
-        if (imgObj.color && imgObj.color.toLowerCase() === selectedColor.toLowerCase()) {
-          colorMatches.push(imgObj.url);
-        } else {
-          others.push(imgObj.url);
-        }
-      });
+    const isColorMatch = (c1: string, c2: string) => {
+      if (!c1 || !c2) return false;
+      const clean1 = c1.toLowerCase().trim();
+      const clean2 = c2.toLowerCase().trim();
+      if (clean1 === clean2) return true;
+      const words1 = clean1.split(/[\s\-_]+/);
+      const words2 = clean2.split(/[\s\-_]+/);
+      return words1.some(w => w.length > 2 && words2.includes(w)) || words2.some(w => w.length > 2 && words1.includes(w));
+    };
+
+    if (product.galleryImageObjects && product.galleryImageObjects.length > 0) {
+      // 1. Strict/fuzzy color matches
+      const colorMatches = product.galleryImageObjects
+        .filter(imgObj => imgObj.url && imgObj.color && isColorMatch(imgObj.color, targetColor))
+        .map(imgObj => imgObj.url);
+
       if (colorMatches.length > 0) {
-        list = [primaryImg, ...colorMatches, ...others];
+        return Array.from(new Set(colorMatches));
+      }
+
+      // 2. Filter out images tagged for OTHER colors of this product
+      const otherColors = (product.detailedColors || []).map(c => c.name.toLowerCase().trim()).filter(c => c !== targetColor && c !== 'default');
+
+      const filteredUntagged = product.galleryImageObjects
+        .filter(imgObj => {
+          if (!imgObj.url) return false;
+          if (!imgObj.color) return true; // untagged allowed
+          const imgColor = imgObj.color.toLowerCase().trim();
+          return !otherColors.some(otherC => isColorMatch(imgColor, otherC));
+        })
+        .map(imgObj => imgObj.url);
+
+      if (filteredUntagged.length > 0) {
+        return Array.from(new Set(filteredUntagged));
       }
     }
 
-    if (list.length === 0) {
-      if (product.galleryImages && product.galleryImages.length > 0) {
-        const uniqueGallery = product.galleryImages.filter(img => img !== primaryImg);
-        list = [primaryImg, ...uniqueGallery];
-      } else if (hoverImg && hoverImg !== primaryImg) {
-        list = [primaryImg, hoverImg];
-      } else {
-        list = [primaryImg];
-      }
+    if (product.galleryImages && product.galleryImages.length > 0) {
+      return product.galleryImages.filter(Boolean);
     }
 
-    const uniqueList: string[] = [];
-    list.forEach(img => {
-      if (img && !uniqueList.includes(img)) {
-        uniqueList.push(img);
-      }
-    });
-    return uniqueList;
+    return hoverImg && hoverImg !== primaryImg 
+      ? [primaryImg, hoverImg].filter(Boolean) 
+      : [primaryImg].filter(Boolean);
   }, [product, selectedColor]);
 
   useEffect(() => {

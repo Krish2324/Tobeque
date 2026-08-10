@@ -162,21 +162,31 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
   }
 
   // Extract gallery images, always ensuring the primary thumbnail is first
-  const thumbnailUrl = resolveImageUrl(bp.thumbnail);
+  // Treat empty string same as null/undefined (backend defaults thumbnail to '')
+  let rawThumbnail: string | null | undefined = bp.thumbnail && bp.thumbnail.trim() !== '' ? bp.thumbnail : null;
+  if (!rawThumbnail && bp.images && bp.images.length > 0) {
+    rawThumbnail = (bp.images[0] as any).imageUrl || (bp.images[0] as any).url || null;
+  }
+  const thumbnailUrl = resolveImageUrl(rawThumbnail);
+  let thumbnailColor: string | undefined = (bp as any).thumbnailColor;
   const galleryImages: string[] = [];
   const galleryImageObjects: { url: string; color?: string }[] = [];
   if (bp.images && bp.images.length > 0) {
-    bp.images.forEach((img) => {
-      const url = resolveImageUrl(img.imageUrl);
-      // Skip if this gallery image is the same as the thumbnail (avoid duplicates)
-      if (url === thumbnailUrl) return;
+    bp.images.forEach((img: any) => {
+      const url = resolveImageUrl(img.imageUrl || img.url || img);
+      const imgColor = img.color || undefined;
+      // If this image's URL matches the thumbnail, capture its color
+      if (url === thumbnailUrl) {
+        if (imgColor) thumbnailColor = imgColor;
+        return; // Don't add thumbnail again — it will be unshifted below
+      }
       galleryImages.push(url);
-      galleryImageObjects.push({ url, color: (img as any).color });
+      galleryImageObjects.push({ url, color: imgColor });
     });
   }
-  // Always put the thumbnail first so videos uploaded as thumbnail always show in gallery
+  // Always put the thumbnail first so primary thumbnail is always first in gallery
   galleryImages.unshift(thumbnailUrl);
-  galleryImageObjects.unshift({ url: thumbnailUrl });
+  galleryImageObjects.unshift({ url: thumbnailUrl, color: thumbnailColor });
 
   // Badge logic
   let badge: string | undefined;

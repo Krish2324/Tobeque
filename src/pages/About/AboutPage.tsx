@@ -3,6 +3,8 @@ import { Footer } from "../../components/Footer/Footer";
 import { Navbar } from "../../components/Navbar/Navbar";
 import api from "../../services/api";
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
 export function AboutPage() {
   const [pageData, setPageData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export function AboutPage() {
               {pageData.missionImage ? (
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-surface-container">
                   <img 
-                    src={pageData.missionImage.startsWith('http') ? pageData.missionImage : `http://localhost:5000${pageData.missionImage}`} 
+                    src={pageData.missionImage.startsWith('http') ? pageData.missionImage : `${API_URL}${pageData.missionImage}`} 
                     alt="Our Mission" 
                     className="w-full h-full object-cover"
                   />

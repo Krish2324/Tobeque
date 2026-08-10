@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+
 export function StealTheStylePage() {
   const [styleImages, setStyleImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,7 @@ export function StealTheStylePage() {
           {styleImages.map((img) => (
             <div key={img._id} className="relative group overflow-hidden break-inside-avoid">
               <img
-                src={img.image.startsWith('http') ? img.image : `http://localhost:5000${img.image}`}
+                src={img.image.startsWith('http') ? img.image : `${API_URL}${img.image}`}
                 alt={img.altText}
                 className="w-full object-cover block transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"

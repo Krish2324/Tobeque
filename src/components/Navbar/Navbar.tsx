@@ -22,33 +22,26 @@ interface MainCategoryItem {
   subcategories?: SubCategoryItem[];
 }
 
-const FALLBACK_CATEGORIES: MainCategoryItem[] = [
-  { id: 'tops', name: 'TOPS', slug: 'tops', path: '/product-category/tops' },
-  { id: 'dresses', name: 'DRESSES', slug: 'dresses', path: '/product-category/dresses' },
-  { id: 'shirt-and-blouses', name: 'SHIRT AND BLOUSES', slug: 'shirt-and-blouses', path: '/product-category/shirt-and-blouses' },
-  { id: 't-shirt-and-vests', name: 'T-SHIRT AND VESTS', slug: 't-shirt-and-vests', path: '/product-category/t-shirt-and-vests' },
-  { id: 'jeans-and-pants', name: 'JEANS AND PANTS', slug: 'jeans-and-pants', path: '/product-category/jeans-and-pants' },
-  { id: 'skirt-and-shorts', name: 'SKIRT AND SHORTS', slug: 'skirt-and-shorts', path: '/product-category/skirt-and-shorts' },
-];
+const FALLBACK_CATEGORIES: MainCategoryItem[] = [];
 
 const NEW_COLLECTION = [
   { name: 'NEW IN', path: '/product-category/new-in' },
-  { name: 'SUMMER-26', path: '/product-category/summer-26' },
+  { name: 'SUMMER CLOTHES', path: '/product-category/summer-clothes' },
   { name: 'CUSTOMISABLE', path: '/product-category/customisable' },
   { name: 'COLLABORATION', path: '/product-category/collaboration' },
 ];
 
 const RECOMMENDED = [
-  { name: 'STYLE JOURNAL', path: '/product-category/style-journal' },
+  { name: 'BLOGS', path: '/journal' },
   { name: 'STEAL THE STYLE', path: '/product-category/steal-the-style' },
 ];
 
 const EXCLUDED_CATEGORIES = new Set([
   'NEW IN',
-  'SUMMER-26',
+  'SUMMER CLOTHES',
   'CUSTOMISABLE',
   'COLLABORATION',
-  'STYLE JOURNAL',
+  'BLOGS',
   'STEAL THE STYLE',
   'FASHION',
 ]);
@@ -74,7 +67,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mainCategories, setMainCategories] = useState<MainCategoryItem[]>([]);
-  
+
   const [isCartBouncing, setIsCartBouncing] = useState(false);
   const [showWishlistBadge, setShowWishlistBadge] = useState(false);
 
@@ -96,29 +89,26 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
       .then(res => {
         if (res.data.success && Array.isArray(res.data.categories)) {
           const items: MainCategoryItem[] = [];
-          
+
           const processCategory = (cat: any) => {
             const catId = cat.id || cat._id;
-            const catSlug = cat.slug || cat.name;
-            const path = `/product-category/${encodeURIComponent(String(catSlug).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`;
-            
+            const rawSlug = cat.slug ? String(cat.slug).replace(/-\d+$/, '') : cat.name;
+            const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+            const path = `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`;
+
             items.push({
               id: catId,
               name: cat.name,
               slug: catSlug,
               path
             });
-
-            if (cat.subcategories && Array.isArray(cat.subcategories)) {
-              cat.subcategories.forEach(processCategory);
-            }
           };
 
           res.data.categories.forEach(processCategory);
           setMainCategories(items);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const combinedList = [...mainCategories, ...FALLBACK_CATEGORIES];
@@ -157,8 +147,8 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
           {/* Mobile Menu Toggle - Left (Visible only on mobile) */}
           <div className="flex md:hidden flex-1 items-center justify-start">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)} 
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
               className="text-secondary p-1 -ml-1 transition-transform active:scale-95 cursor-pointer"
             >
               <span className="material-symbols-outlined font-light !text-[22px]">menu</span>
@@ -170,8 +160,8 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
             {/* Shop — Mega Menu trigger */}
             <div className="relative group py-4">
-              <button 
-                onClick={() => navigate('/product-category/all')}
+              <button
+                type="button"
                 className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-pointer"
               >
                 Shop
@@ -248,7 +238,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                         to="/product-category/all"
                         className="text-[9px] font-label-caps tracking-[0.25em] uppercase text-gray-400 hover:text-white transition-colors flex items-center gap-1.5"
                       >
-                        VIEW ALL
+                        ALL PRODUCTS
                         <span className="material-symbols-outlined text-[13px]">arrow_right_alt</span>
                       </Link>
                     </div>
@@ -329,14 +319,12 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag and Wishlist"
-              className={`hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 relative cursor-pointer flex items-center ${
-                isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
-              }`}
+              className={`hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 relative cursor-pointer flex items-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+                }`}
             >
               <span
-                className={`material-symbols-outlined !text-[18px] transition-colors duration-300 ${
-                  showWishlistBadge ? 'text-red-500' : ''
-                }`}
+                className={`material-symbols-outlined !text-[18px] transition-colors duration-300 ${showWishlistBadge ? 'text-red-500' : ''
+                  }`}
                 data-icon="shopping_bag"
               >
                 shopping_bag
@@ -369,14 +357,12 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag and Wishlist"
-              className={`text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center ${
-                isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
-              }`}
+              className={`text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+                }`}
             >
-              <span className={`material-symbols-outlined font-light !text-[20px] ${
-                showWishlistBadge ? 'text-red-500' : ''
-              }`}>shopping_bag</span>
-              
+              <span className={`material-symbols-outlined font-light !text-[20px] ${showWishlistBadge ? 'text-red-500' : ''
+                }`}>shopping_bag</span>
+
               <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold shadow-md">
                 {cartCount}
               </span>
@@ -403,7 +389,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[9999] md:hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
@@ -416,10 +402,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                 <span className="material-symbols-outlined text-[24px]">close</span>
               </button>
             </div>
-            
+
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto py-5 px-6 flex flex-col gap-6">
-              
+
               {/* Professional Account / Profile Card */}
               {isAuthenticated ? (
                 <button
@@ -461,7 +447,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   COLLECTIONS
                   <span className="material-symbols-outlined text-[16px] text-gray-600">chevron_right</span>
                 </Link>
-                
+
                 {/* Shop By Category */}
                 <div className="flex flex-col gap-3 mt-1">
                   <h4 className="text-[10px] uppercase tracking-[0.25em] text-gray-700 font-bold flex items-center gap-2">
@@ -469,10 +455,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   </h4>
                   <div className="grid grid-cols-1 gap-2.5 pl-4 border-l-2 border-gray-400/40">
                     {displayMainCategories.map((cat) => (
-                      <Link 
-                        key={cat.id || cat.name} 
-                        to={cat.path} 
-                        onClick={() => setIsMobileMenuOpen(false)} 
+                      <Link
+                        key={cat.id || cat.name}
+                        to={cat.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-black transition-colors block py-0.5"
                       >
                         {cat.name}
@@ -488,10 +474,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   </h4>
                   <div className="grid grid-cols-1 gap-2.5 pl-4 border-l-2 border-gray-400/40">
                     {NEW_COLLECTION.map((item, i) => (
-                      <Link 
-                        key={item.name} 
-                        to={item.path} 
-                        onClick={() => setIsMobileMenuOpen(false)} 
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-black transition-colors flex items-center gap-2 py-0.5"
                       >
                         {item.name}
@@ -512,10 +498,10 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                   </h4>
                   <div className="grid grid-cols-1 gap-2.5 pl-4 border-l-2 border-gray-400/40">
                     {RECOMMENDED.map((item) => (
-                      <Link 
-                        key={item.name} 
-                        to={item.path} 
-                        onClick={() => setIsMobileMenuOpen(false)} 
+                      <Link
+                        key={item.name}
+                        to={item.path}
+                        onClick={() => setIsMobileMenuOpen(false)}
                         className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-black transition-colors block py-0.5"
                       >
                         {item.name}
@@ -532,7 +518,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
               {/* Logout Button (if logged in) */}
               {isAuthenticated && (
-                <button 
+                <button
                   onClick={() => { logout?.(); setIsMobileMenuOpen(false); }}
                   className="mt-auto flex items-center justify-center gap-2 text-red-600 border border-red-300 bg-red-50 py-3 rounded-xl uppercase tracking-widest text-[10px] font-bold cursor-pointer active:scale-95 transition-transform"
                 >

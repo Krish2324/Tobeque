@@ -57,7 +57,7 @@ export function StyleJournalPage() {
                 <div className="w-full lg:w-[65%] overflow-hidden bg-surface-container rounded-sm shadow-2xl">
                   <img 
                     src={featuredArticle.image!} 
-                    alt={featuredArticle.title} 
+                    alt={featuredArticle.imageAltTag || featuredArticle.title} 
                     className="w-full aspect-[4/3] lg:aspect-auto lg:h-[650px] object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.03]" 
                   />
                 </div>
@@ -93,7 +93,7 @@ export function StyleJournalPage() {
                 <article>
                   {entry.image && (
                     <div className="mb-8 overflow-hidden bg-surface-container rounded-sm shadow-md">
-                      <img src={entry.image} alt={entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
+                      <img src={entry.image} alt={entry.imageAltTag || entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
                     </div>
                   )}
                   

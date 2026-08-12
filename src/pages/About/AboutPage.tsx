@@ -117,11 +117,18 @@ export function AboutPage() {
         )}
 
         {/* Our Story Section */}
-        <section className="py-24 px-6 max-w-3xl mx-auto text-center">
+        <section className="py-24 px-6 max-w-3xl mx-auto text-center space-y-6">
           <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary mb-8">Our Story</h2>
-          <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
-            {pageData.ourStoryText}
-          </p>
+          {pageData.ourStoryText && (
+            <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
+              {pageData.ourStoryText}
+            </p>
+          )}
+          {pageData.ourStoryText2 && (
+            <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
+              {pageData.ourStoryText2}
+            </p>
+          )}
         </section>
 
       </main>

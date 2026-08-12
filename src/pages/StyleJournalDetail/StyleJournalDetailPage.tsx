@@ -28,6 +28,70 @@ export function StyleJournalDetailPage() {
     }
   }, [id]);
 
+  // Dynamic Head SEO Metadata Management
+  useEffect(() => {
+    if (!post) return;
+
+    const originalTitle = document.title;
+    document.title = post.seoTitle || `${post.title} | Tobeque Journal`;
+
+    // Meta Description Tag
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    const oldDesc = metaDesc.getAttribute('content') || '';
+    metaDesc.setAttribute('content', post.seoDescription || post.excerpt || post.title);
+
+    // Meta Keywords Tag
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    const oldKeywords = metaKeywords.getAttribute('content') || '';
+    if (post.seoKeywords) {
+      metaKeywords.setAttribute('content', post.seoKeywords);
+    }
+
+    // JSON-LD Structured Data Schema Injection
+    let scriptTag = document.getElementById('blog-schema-jsonld') as HTMLScriptElement | null;
+    if (!scriptTag) {
+      scriptTag = document.createElement('script');
+      scriptTag.id = 'blog-schema-jsonld';
+      scriptTag.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(scriptTag);
+    }
+
+    if (post.seoSchema) {
+      scriptTag.textContent = post.seoSchema;
+    } else {
+      const defaultSchema = {
+        "@context": "https://schema.org/",
+        "@type": "BlogPosting",
+        "headline": post.title,
+        "image": post.image ? [post.image] : [],
+        "description": post.excerpt || post.title,
+        "author": {
+          "@type": "Person",
+          "name": post.author || "Tobeque Admin"
+        },
+        "datePublished": post.createdAt
+      };
+      scriptTag.textContent = JSON.stringify(defaultSchema);
+    }
+
+    return () => {
+      document.title = originalTitle;
+      if (metaDesc) metaDesc.setAttribute('content', oldDesc);
+      if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
+      if (scriptTag) scriptTag.remove();
+    };
+  }, [post]);
+
   // Fetch recent posts
   useEffect(() => {
     api.get('/api/blogs?status=published')
@@ -91,7 +155,7 @@ export function StyleJournalDetailPage() {
                 <div className="mb-10 overflow-hidden bg-surface-container rounded-sm">
                   <img 
                     src={post.image} 
-                    alt={post.title} 
+                    alt={post.imageAltTag || post.title} 
                     className="w-full h-auto max-h-[800px] object-cover"
                   />
                 </div>

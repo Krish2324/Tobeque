@@ -116,18 +116,43 @@ export function AboutPage() {
           </section>
         )}
 
-        {/* Our Story Section */}
-        <section className="py-24 px-6 max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary mb-8">Our Story</h2>
-          {pageData.ourStoryText && (
-            <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
-              {pageData.ourStoryText}
-            </p>
-          )}
-          {pageData.ourStoryText2 && (
-            <p className="text-secondary leading-loose text-lg whitespace-pre-wrap">
-              {pageData.ourStoryText2}
-            </p>
+        {/* Our Story & Sequential Sub-Sections */}
+        <section className="py-24 px-6 max-w-4xl mx-auto text-center space-y-16">
+          {/* Main Our Story Section */}
+          <div className="space-y-6">
+            <h2 className="font-display text-3xl md:text-4xl font-semibold text-primary mb-6">
+              {pageData.ourStoryTitle || "Our Story"}
+            </h2>
+            {pageData.ourStoryText && (
+              <p className="text-secondary leading-relaxed text-lg md:text-xl whitespace-pre-wrap max-w-3xl mx-auto">
+                {pageData.ourStoryText}
+              </p>
+            )}
+            {(!pageData.extraSections || pageData.extraSections.length === 0) && pageData.ourStoryText2 && (
+              <p className="text-secondary leading-relaxed text-lg md:text-xl whitespace-pre-wrap max-w-3xl mx-auto mt-6">
+                {pageData.ourStoryText2}
+              </p>
+            )}
+          </div>
+
+          {/* Subsequent Story Sections (rendered sequentially one below another) */}
+          {pageData.extraSections && pageData.extraSections.length > 0 && (
+            pageData.extraSections.map((section: any, idx: number) => (
+              (section.title || section.description) && (
+                <div key={idx} className="space-y-6 pt-10 border-t border-outline-variant/20">
+                  {section.title && (
+                    <h3 className="font-display text-2xl md:text-3xl font-semibold text-primary mb-6">
+                      {section.title}
+                    </h3>
+                  )}
+                  {section.description && (
+                    <p className="text-secondary leading-relaxed text-lg md:text-xl whitespace-pre-wrap max-w-3xl mx-auto">
+                      {section.description}
+                    </p>
+                  )}
+                </div>
+              )
+            ))
           )}
         </section>
 

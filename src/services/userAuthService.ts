@@ -139,6 +139,8 @@ export const createOrder = async (
     paymentMethod?: string;
     billingAddress?: any;
     notes?: string;
+    companyName?: string;
+    companyGst?: string;
     shippingCost?: number;
   }
 ) => {

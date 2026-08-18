@@ -239,7 +239,27 @@ export function ProductDetailPage() {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [innerZoom, setInnerZoom] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [touchScale, setTouchScale] = useState(1);
+  const [touchPan, setTouchPan] = useState({ x: 0, y: 0 });
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartScaleRef = useRef<number>(1);
+  const panStartRef = useRef<{ x: number; y: number; touchX: number; touchY: number } | null>(null);
+  const lastTapTimeRef = useRef<number>(0);
   const swipeStartX = useRef<number | null>(null);
+  const wasPinchingRef = useRef<boolean>(false);
+
+  const resetZoomState = () => {
+    setInnerZoom(false);
+    setTouchScale(1);
+    setTouchPan({ x: 0, y: 0 });
+    pinchStartDistRef.current = null;
+    panStartRef.current = null;
+  };
+
+  const closeZoomModal = () => {
+    setZoomedImage(null);
+    resetZoomState();
+  };
   const [askName, setAskName] = useState('');
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
@@ -1262,11 +1282,11 @@ export function ProductDetailPage() {
         onClose={() => setQuickViewProduct(null)}
       />
 
-      {/* Premium Zoom Modal */}
+      {/* Premium Zoom Modal with Multi-Touch Pinch & Pan */}
       {zoomedImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in group/zoommodal"
-          onClick={() => { setZoomedImage(null); setInnerZoom(false); }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-0 sm:p-12 cursor-zoom-out backdrop-blur-md animate-fade-in group/zoommodal select-none touch-none"
+          onClick={closeZoomModal}
         >
           {(() => {
             const currentIndex = displayedImages.indexOf(zoomedImage);
@@ -1275,18 +1295,18 @@ export function ProductDetailPage() {
             
             return (
               <>
-                {hasPrev && !innerZoom && (
+                {hasPrev && !innerZoom && touchScale === 1 && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex - 1]); setInnerZoom(false); }}
+                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex - 1]); resetZoomState(); }}
                     className="flex absolute left-2 sm:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/60 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
                     aria-label="Previous image"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
                   </button>
                 )}
-                {hasNext && !innerZoom && (
+                {hasNext && !innerZoom && touchScale === 1 && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex + 1]); setInnerZoom(false); }}
+                    onClick={(e) => { e.stopPropagation(); setZoomedImage(displayedImages[currentIndex + 1]); resetZoomState(); }}
                     className="flex absolute right-2 sm:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/60 hover:bg-white hover:text-black text-white rounded-full items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-[110]"
                     aria-label="Next image"
                   >
@@ -1297,34 +1317,101 @@ export function ProductDetailPage() {
             );
           })()}
           <div 
-            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20 select-none"
+            className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20 select-none touch-none"
             onClick={(e) => {
                if (isVideo(zoomedImage)) {
                  e.stopPropagation();
                  return;
                }
                e.stopPropagation(); 
+               // Click zoom for desktop
                const rect = e.currentTarget.getBoundingClientRect();
                const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
                const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
                setMousePos({ x, y });
-               setInnerZoom(!innerZoom); 
+               if (touchScale > 1) {
+                 resetZoomState();
+               } else {
+                 setInnerZoom(!innerZoom);
+               }
             }}
             onTouchStart={(e) => {
-              if (!innerZoom) {
+              if (e.touches.length === 2) {
+                wasPinchingRef.current = true;
+                // Clear swipeStartX so finger lift after pinch never triggers image navigation
+                swipeStartX.current = null;
+                panStartRef.current = null;
+                const dist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                pinchStartDistRef.current = dist;
+                pinchStartScaleRef.current = touchScale;
+              } else if (e.touches.length === 1) {
+                const now = Date.now();
+                if (now - lastTapTimeRef.current < 300) {
+                  // Double-tap toggle zoom
+                  if (touchScale > 1 || innerZoom) {
+                    resetZoomState();
+                  } else {
+                    setTouchScale(2.5);
+                  }
+                  lastTapTimeRef.current = 0;
+                  return;
+                }
+                lastTapTimeRef.current = now;
+
                 swipeStartX.current = e.touches[0].clientX;
+                panStartRef.current = {
+                  x: touchPan.x,
+                  y: touchPan.y,
+                  touchX: e.touches[0].clientX,
+                  touchY: e.touches[0].clientY
+                };
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length === 2 && pinchStartDistRef.current !== null) {
+                if (e.cancelable) e.preventDefault();
+                const currentDist = Math.hypot(
+                  e.touches[0].clientX - e.touches[1].clientX,
+                  e.touches[0].clientY - e.touches[1].clientY
+                );
+                const ratio = currentDist / pinchStartDistRef.current;
+                const newScale = Math.max(1, Math.min(4, pinchStartScaleRef.current * ratio));
+                setTouchScale(newScale);
+                if (newScale === 1) setTouchPan({ x: 0, y: 0 });
+              } else if (e.touches.length === 1 && (touchScale > 1 || innerZoom) && panStartRef.current) {
+                if (e.cancelable) e.preventDefault();
+                const deltaX = e.touches[0].clientX - panStartRef.current.touchX;
+                const deltaY = e.touches[0].clientY - panStartRef.current.touchY;
+                setTouchPan({
+                  x: panStartRef.current.x + deltaX,
+                  y: panStartRef.current.y + deltaY
+                });
               }
             }}
             onTouchEnd={(e) => {
-              if (!innerZoom && swipeStartX.current !== null && zoomedImage) {
-                const swipeEndX = e.changedTouches[0].clientX;
-                const diffX = swipeStartX.current - swipeEndX;
-                if (Math.abs(diffX) > 40) {
-                  const currentIndex = displayedImages.indexOf(zoomedImage);
-                  if (diffX > 0 && currentIndex !== -1 && currentIndex < displayedImages.length - 1) {
-                    setZoomedImage(displayedImages[currentIndex + 1]);
-                  } else if (diffX < 0 && currentIndex > 0) {
-                    setZoomedImage(displayedImages[currentIndex - 1]);
+              if (e.touches.length < 2) {
+                pinchStartDistRef.current = null;
+              }
+              if (e.touches.length === 0) {
+                panStartRef.current = null;
+                const didPinch = wasPinchingRef.current;
+                wasPinchingRef.current = false;
+
+                if (!didPinch && touchScale === 1 && !innerZoom && swipeStartX.current !== null && zoomedImage) {
+                  const swipeEndX = e.changedTouches[0]?.clientX || swipeStartX.current;
+                  const diffX = swipeStartX.current - swipeEndX;
+                  if (Math.abs(diffX) > 40) {
+                    const currentIndex = displayedImages.indexOf(zoomedImage);
+                    if (diffX > 0 && currentIndex !== -1 && currentIndex < displayedImages.length - 1) {
+                      setZoomedImage(displayedImages[currentIndex + 1]);
+                      resetZoomState();
+                    } else if (diffX < 0 && currentIndex > 0) {
+                      setZoomedImage(displayedImages[currentIndex - 1]);
+                      resetZoomState();
+                    }
                   }
                 }
                 swipeStartX.current = null;
@@ -1337,20 +1424,8 @@ export function ProductDetailPage() {
               const y = ((e.clientY - top) / height) * 100;
               setMousePos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
             }}
-            onTouchMove={(e) => {
-              if (!innerZoom) return;
-              if (e.cancelable) e.preventDefault();
-              const touch = e.touches[0];
-              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-              const x = ((touch.clientX - left) / width) * 100;
-              const y = ((touch.clientY - top) / height) * 100;
-              setMousePos({ 
-                x: Math.max(0, Math.min(100, x)), 
-                y: Math.max(0, Math.min(100, y))
-              });
-            }}
-            onMouseLeave={() => setInnerZoom(false)}
-            style={{ cursor: isVideo(zoomedImage) ? 'auto' : (innerZoom ? 'zoom-out' : 'zoom-in') }}
+            onMouseLeave={() => resetZoomState()}
+            style={{ cursor: isVideo(zoomedImage) ? 'auto' : (innerZoom || touchScale > 1 ? 'zoom-out' : 'zoom-in') }}
           >
             {isVideo(zoomedImage) ? (
               <video
@@ -1361,11 +1436,14 @@ export function ProductDetailPage() {
             ) : (
               <img
                 alt="Zoomed view"
-                className="w-full h-full object-contain transition-transform duration-300 ease-out select-none"
+                className="w-full h-full object-contain transition-transform duration-100 ease-out select-none"
                 src={zoomedImage}
                 style={{
-                  transform: innerZoom ? 'scale(2.5)' : 'scale(1)',
-                  transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+                  transform: touchScale > 1
+                    ? `scale(${touchScale}) translate(${touchPan.x / touchScale}px, ${touchPan.y / touchScale}px)`
+                    : (innerZoom ? 'scale(2.5)' : 'scale(1)'),
+                  transformOrigin: innerZoom ? `${mousePos.x}% ${mousePos.y}%` : 'center center',
+                  touchAction: 'none'
                 }}
                 draggable={false}
               />
@@ -1374,16 +1452,16 @@ export function ProductDetailPage() {
             {/* Close Button */}
             <button
               className="absolute top-4 right-4 sm:top-6 sm:right-6 w-12 h-12 bg-black/50 hover:bg-white hover:text-black text-white rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-md border border-white/20 cursor-pointer hover:scale-110 z-10"
-              onClick={(e) => { e.stopPropagation(); setZoomedImage(null); setInnerZoom(false); }}
+              onClick={(e) => { e.stopPropagation(); closeZoomModal(); }}
               aria-label="Close zoom"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             
             {/* Hint text */}
-            {!innerZoom && !isVideo(zoomedImage) && (
+            {touchScale === 1 && !innerZoom && !isVideo(zoomedImage) && (
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 text-white/90 px-6 py-2.5 rounded-full text-[10px] font-medium tracking-[0.2em] uppercase backdrop-blur-md border border-white/10 pointer-events-none transition-opacity duration-500 opacity-70">
-                Tap to pan & zoom
+                Pinch to Zoom & Pan
               </div>
             )}
           </div>

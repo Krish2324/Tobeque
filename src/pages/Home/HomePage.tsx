@@ -10,15 +10,6 @@ import api from "../../services/api";
 
 import heroBanner from '../../assets/images/hero-spring-edit.jpg';
 
-const PLACEHOLDER_IMAGES = [
-  'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&q=80',
-  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&q=80',
-  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80',
-  'https://images.unsplash.com/photo-1509631179647-0c37cb5f0fc9?w=600&q=80',
-  'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80',
-  'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80'
-];
-
 const isVideo = (url: string | undefined) => url && typeof url === 'string' && !!url.match(/\.(mp4|webm|ogg|mov|m4v)$/i);
 
 const openInNewTab = (url: string | undefined) => {
@@ -339,80 +330,95 @@ export function HomePage() {
                 <div key={i} className="aspect-[3/4] bg-surface-container rounded" />
               ))}
             </div>
-          ) : collectionItems.length > 0 ? (
-            <div
-              ref={collectionScrollRef}
-              className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab"
-              style={{ WebkitOverflowScrolling: 'touch' }}
-              onMouseDown={collectionMouseDown}
-              onMouseMove={collectionMouseMove}
-              onMouseUp={collectionMouseUp}
-              onMouseLeave={collectionMouseUp}
-              onTouchStart={() => { collectionDragging.current = true; }}
-              onTouchEnd={() => { collectionDragging.current = false; }}
-              onTouchCancel={() => { collectionDragging.current = false; }}
-            >
-              {[...collectionItems, ...collectionItems, ...collectionItems].map((item, idx) => {
-                const displayName = item.displayLabel || item.category?.name || 'Category';
-                const imageUrl = item.imageOverride || item.category?.image || item.category?.banner;
-                const fallbackUrl = PLACEHOLDER_IMAGES[idx % PLACEHOLDER_IMAGES.length];
+          ) : (() => {
+            const validItems = collectionItems.filter((item) => {
+              const rawImg = item.imageOverride || item.category?.image || item.category?.banner;
+              return !!(rawImg && String(rawImg).trim());
+            });
 
-                return (
-                  <div
-                    key={`${item.id}-${idx}`}
-                    className="shrink-0 aspect-[3/4] w-[calc((100%-6px)/2.5)] sm:w-[calc((100%-9px)/3.5)] md:w-[calc((100%-15px)/6)]"
-                  >
-                    <button
-                      className="group relative w-full h-full overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block rounded"
-                      onClick={(e) => {
-                        if (collectionIsDragging.current) {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          return;
-                        }
-                        const catId = (item.category as any)?.id || (item.category as any)?._id || (item as any).categoryId;
-                        const catName = item.category?.name || item.displayLabel || 'Category';
-                        const rawSlug = item.category?.slug ? String(item.category.slug).replace(/-\d+$/, '') : catName;
-                        const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
-                        navigate(`/product-category/${catSlug}`, { state: { category: catId, name: catName } });
-                      }}
+            if (validItems.length === 0) {
+              return (
+                <div className="text-center py-10">
+                  <p className="text-secondary text-sm">Season Collection is empty. Configure it from the Admin Panel.</p>
+                </div>
+              );
+            }
+
+            const itemsToLoop = validItems.length >= 3 ? [...validItems, ...validItems, ...validItems] : validItems;
+
+            return (
+              <div
+                ref={collectionScrollRef}
+                className="flex gap-[3px] overflow-x-auto no-scrollbar select-none cursor-grab"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                onMouseDown={collectionMouseDown}
+                onMouseMove={collectionMouseMove}
+                onMouseUp={collectionMouseUp}
+                onMouseLeave={collectionMouseUp}
+                onTouchStart={() => { collectionDragging.current = true; }}
+                onTouchEnd={() => { collectionDragging.current = false; }}
+                onTouchCancel={() => { collectionDragging.current = false; }}
+              >
+                {itemsToLoop.map((item, idx) => {
+                  const displayName = item.displayLabel || item.category?.name || 'Category';
+                  const rawImageUrl = item.imageOverride || item.category?.image || item.category?.banner;
+                  const resolvedImg = resolveImageUrl(rawImageUrl);
+
+                  return (
+                    <div
+                      key={`${item.id}-${idx}`}
+                      className="shrink-0 aspect-[3/4] w-[calc((100%-6px)/2.5)] sm:w-[calc((100%-9px)/3.5)] md:w-[calc((100%-15px)/6)]"
                     >
-                      {/* Background image */}
-                      <img
-                        draggable={false}
-                        src={resolveImageUrl(imageUrl) || fallbackUrl}
-                        alt={displayName}
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = fallbackUrl;
+                      <button
+                        className="group relative w-full h-full overflow-hidden bg-surface-container cursor-pointer border-none p-0 text-left block rounded"
+                        onClick={(e) => {
+                          if (collectionIsDragging.current) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                          }
+                          const catId = (item.category as any)?.id || (item.category as any)?._id || (item as any).categoryId;
+                          const catName = item.category?.name || item.displayLabel || 'Category';
+                          const rawSlug = item.category?.slug ? String(item.category.slug).replace(/-\d+$/, '') : catName;
+                          const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+                          navigate(`/product-category/${catSlug}`, { state: { category: catId, name: catName } });
                         }}
-                      />
+                      >
+                        {/* Background image */}
+                        {resolvedImg && (
+                          <img
+                            draggable={false}
+                            src={resolvedImg}
+                            alt={displayName}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        )}
 
-                      {/* Dark gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                        {/* Dark gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
-                      {/* Category name at bottom */}
-                      <div className="absolute bottom-0 inset-x-0 p-3 pointer-events-none">
-                        <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate drop-shadow-md">
-                          {displayName}
-                        </p>
-                        <p className="text-[9px] tracking-widest text-white/80 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md">
-                          Shop Now
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>) : (
-            <div className="text-center py-10">
-              <p className="text-secondary text-sm">Season Collection is empty. Configure it from the Admin Panel.</p>
-            </div>
-          )}
+                        {/* Category name at bottom */}
+                        <div className="absolute bottom-0 inset-x-0 p-3 pointer-events-none">
+                          <p className="text-[11px] font-medium tracking-[0.15em] uppercase text-white truncate drop-shadow-md">
+                            {displayName}
+                          </p>
+                          <p className="text-[9px] tracking-widest text-white/80 mt-0.5 uppercase flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-md">
+                            Shop Now
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                              <path d="M2 5h6M6 3l2 2-2 2" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </section>
 
         {/* ── Featured Products ─────────────────────────────────────────────── */}

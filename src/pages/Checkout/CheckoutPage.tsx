@@ -233,7 +233,6 @@ export function CheckoutPage() {
   /* ─── UI state ─── */
   const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
-  const [successProgress, setSuccessProgress] = useState(0);
   const [iconVisible, setIconVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
@@ -261,26 +260,12 @@ export function CheckoutPage() {
       .catch(() => { });
   }, []);
 
-  /* ─── Success screen progress timer ─── */
+  /* ─── Success screen icon animation ─── */
   useEffect(() => {
     if (!checkoutSuccess) return;
-    setSuccessProgress(0);
     setIconVisible(false);
-    // Slight delay so DOM is ready, then show icon
     const iconTimer = setTimeout(() => setIconVisible(true), 50);
-    const TOTAL_MS = 10000;
-    const TICK_MS = 50;
-    let elapsed = 0;
-    const interval = setInterval(() => {
-      elapsed += TICK_MS;
-      const pct = Math.min((elapsed / TOTAL_MS) * 100, 100);
-      setSuccessProgress(pct);
-      if (elapsed >= TOTAL_MS) clearInterval(interval);
-    }, TICK_MS);
-    return () => {
-      clearInterval(interval);
-      clearTimeout(iconTimer);
-    };
+    return () => clearTimeout(iconTimer);
   }, [checkoutSuccess]);
 
   /* ─── Coupon state ─── */
@@ -633,16 +618,14 @@ export function CheckoutPage() {
           couponCode: appliedCoupon?.code,
           paymentMethod: 'cod',
           notes: orderNotes,
+          companyName,
+          companyGst,
           shippingCost,
         });
 
+        clearCart();
         setIsSubmittingOrder(false);
         setCheckoutSuccess(true);
-        setTimeout(() => {
-          clearCart();
-          setCheckoutSuccess(false);
-          navigate('/');
-        }, 10000);
       } else {
         const keyId = await getRazorpayConfig();
         const rpOrder = await createRazorpayOrder(token, {
@@ -664,16 +647,14 @@ export function CheckoutPage() {
             items,
             couponCode: appliedCoupon?.code,
             notes: orderNotes,
+            companyName,
+            companyGst,
             shippingCost,
           });
 
+          clearCart();
           setIsSubmittingOrder(false);
           setCheckoutSuccess(true);
-          setTimeout(() => {
-            clearCart();
-            setCheckoutSuccess(false);
-            navigate('/');
-          }, 10000);
           return;
         }
 
@@ -698,16 +679,14 @@ export function CheckoutPage() {
                 items,
                 couponCode: appliedCoupon?.code,
                 notes: orderNotes,
+                companyName,
+                companyGst,
                 shippingCost,
               });
 
+              clearCart();
               setIsSubmittingOrder(false);
               setCheckoutSuccess(true);
-              setTimeout(() => {
-                clearCart();
-                setCheckoutSuccess(false);
-                navigate('/');
-              }, 10000);
             } catch (err: any) {
               setIsSubmittingOrder(false);
               setErrorMessage(err.message || 'Payment verification failed.');
@@ -818,31 +797,16 @@ export function CheckoutPage() {
               <h3 className="font-headline-md text-3xl text-primary mb-3 font-bold tracking-tight">
                 Order Placed Successfully!
               </h3>
-              <p className="text-base text-secondary/80 max-w-sm leading-relaxed mb-10">
+              <p className="text-base text-secondary/80 max-w-sm leading-relaxed mb-8">
                 Thank you, <strong>{billingName.split(' ')[0]}</strong>! Your order has been confirmed and will be processed shortly.
               </p>
 
-              {/* JS-driven progress bar */}
-              <div className="w-full max-w-[280px] flex flex-col gap-2 mb-8">
-                <div className="flex justify-between text-[10px] font-bold tracking-widest uppercase text-secondary/50">
-                  <span>Redirecting to home</span>
-                  <span>{Math.round(10 - (successProgress / 100) * 10)}s</span>
-                </div>
-                <div className="w-full h-1.5 bg-neutral-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full"
-                    style={{ width: `${successProgress}%`, transition: 'width 0.05s linear' }}
-                  />
-                </div>
-              </div>
-
               <button
                 onClick={() => {
-                  clearCart();
                   setCheckoutSuccess(false);
                   navigate('/');
                 }}
-                className="px-8 py-3 rounded-full border border-outline-variant text-[11px] font-bold tracking-widest uppercase text-secondary hover:text-primary hover:border-primary/30 transition-colors flex items-center gap-2"
+                className="px-8 py-3.5 bg-primary text-on-primary text-xs font-bold tracking-widest uppercase rounded-full hover:bg-neutral-800 transition-all shadow-md cursor-pointer flex items-center gap-2"
               >
                 Return to Home Now
                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>

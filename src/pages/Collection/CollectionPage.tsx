@@ -113,7 +113,7 @@ export function CollectionPage() {
     const searchId = searchParams.get('category') || stateCategory;
     const searchName = searchParams.get('name') || stateName;
 
-    const normalizeCategoryString = (str: string) => 
+    const normalizeCategoryString = (str: string) =>
       str.toLowerCase().trim()
         .replace(/&/g, 'and')
         .replace(/[^a-z0-9]/g, '');
@@ -326,8 +326,8 @@ export function CollectionPage() {
     : currentContext
       ? currentContext.name.toUpperCase()
       : (categorySlug && categorySlug.toLowerCase() !== 'all'
-          ? decodeURIComponent(categorySlug).replace(/-/g, ' ').toUpperCase()
-          : 'ALL PRODUCTS');
+        ? decodeURIComponent(categorySlug).replace(/-/g, ' ').toUpperCase()
+        : 'ALL PRODUCTS');
 
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
@@ -348,7 +348,7 @@ export function CollectionPage() {
                   {(() => {
                     const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
                     let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
-                    
+
                     if (isMobile && heroBannerData.mobileImageUrl) {
                       const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
                       mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
@@ -437,11 +437,10 @@ export function CollectionPage() {
                   onClick={() => {
                     navigate('/product-category/all');
                   }}
-                  className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${
-                    (!categoryParam || categoryParam.toLowerCase() === 'all') && !searchCategoryId
+                  className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${(!categoryParam || categoryParam.toLowerCase() === 'all') && !searchCategoryId
                       ? 'border-black text-black font-bold border-b-2'
                       : 'border-transparent text-secondary hover:text-primary font-medium'
-                  }`}
+                    }`}
                 >
                   ALL PRODUCTS
                 </button>
@@ -460,11 +459,10 @@ export function CollectionPage() {
                     <button
                       key={catId}
                       onClick={() => navigate(`/product-category/${catSlug}`, { state: { category: catId, name: cat.name } })}
-                      className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${
-                        isCatActive
+                      className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${isCatActive
                           ? 'border-black text-black font-bold border-b-2'
                           : 'border-transparent text-secondary hover:text-primary font-medium'
-                      }`}
+                        }`}
                     >
                       {cat.name}
                     </button>
@@ -507,11 +505,10 @@ export function CollectionPage() {
               <button
                 onClick={() => setMobileGridCols(2)}
                 title="2 Columns"
-                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
-                  mobileGridCols === 2
+                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${mobileGridCols === 2
                     ? 'bg-outline-variant/30 text-primary'
                     : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
-                }`}
+                  }`}
               >
                 <svg className="w-3 h-3" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                   <rect x="2" y="2" width="4" height="10" rx="0.5" />
@@ -521,11 +518,10 @@ export function CollectionPage() {
               <button
                 onClick={() => setMobileGridCols(3)}
                 title="3 Columns"
-                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
-                  mobileGridCols === 3
+                className={`flex items-center justify-center w-7 h-7 rounded-md transition-colors ${mobileGridCols === 3
                     ? 'bg-outline-variant/30 text-primary'
                     : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
-                }`}
+                  }`}
               >
                 <svg className="w-3 h-3" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                   <rect x="1.5" y="2" width="3" height="10" rx="0.5" />
@@ -541,8 +537,8 @@ export function CollectionPage() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'list'
-                    ? 'bg-outline-variant/30 text-primary'
-                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  ? 'bg-outline-variant/30 text-primary'
+                  : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="List View"
               >
@@ -557,8 +553,8 @@ export function CollectionPage() {
               <button
                 onClick={() => setViewMode('grid-3')}
                 className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'grid-3'
-                    ? 'bg-outline-variant/30 text-primary'
-                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  ? 'bg-outline-variant/30 text-primary'
+                  : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="3 Columns Grid"
               >
@@ -572,8 +568,8 @@ export function CollectionPage() {
               <button
                 onClick={() => setViewMode('grid-4')}
                 className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-md transition-colors ${viewMode === 'grid-4'
-                    ? 'bg-outline-variant/30 text-primary'
-                    : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
+                  ? 'bg-outline-variant/30 text-primary'
+                  : 'bg-outline-variant/10 text-secondary hover:bg-outline-variant/20 hover:text-primary'
                   }`}
                 title="4 Columns Grid"
               >
@@ -639,9 +635,8 @@ export function CollectionPage() {
                 ))}
               </div>
             ) : viewMode === 'grid-3' ? (
-              <div className={`grid gap-1 md:gap-1.5 animate-fade-in ${
-                mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
-              } sm:grid-cols-3`}>
+              <div className={`grid gap-1 md:gap-1.5 animate-fade-in ${mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:grid-cols-3`}>
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -663,9 +658,8 @@ export function CollectionPage() {
                 ))}
               </div>
             ) : (
-              <div className={`grid gap-0.5 md:gap-1.5 animate-fade-in ${
-                mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
-              } sm:grid-cols-3 md:grid-cols-4`}>
+              <div className={`grid gap-0.5 md:gap-1.5 animate-fade-in ${mobileGridCols === 3 ? 'grid-cols-3' : 'grid-cols-2'
+                } sm:grid-cols-3 md:grid-cols-4`}>
                 {filteredAndSortedProducts.map((p) => (
                   <ProductCard
                     key={p.id}
@@ -742,8 +736,8 @@ export function CollectionPage() {
                     key={opt}
                     onClick={() => setCurrentSort(opt)}
                     className={`text-left text-xs uppercase tracking-wider py-1.5 px-3 border transition-colors flex items-center justify-between cursor-pointer ${isSelected
-                        ? 'border-primary bg-primary text-on-primary font-bold'
-                        : 'border-outline-variant text-secondary hover:border-primary hover:text-primary'
+                      ? 'border-primary bg-primary text-on-primary font-bold'
+                      : 'border-outline-variant text-secondary hover:border-primary hover:text-primary'
                       }`}
                   >
                     {opt}
@@ -797,8 +791,8 @@ export function CollectionPage() {
                       }
                     }}
                     className={`min-w-[40px] h-10 px-3 border text-[10px] font-label-caps font-bold transition-all flex items-center justify-center cursor-pointer ${isSelected
-                        ? 'border-primary bg-primary text-on-primary'
-                        : 'border-outline-variant bg-surface text-secondary hover:border-primary hover:text-primary'
+                      ? 'border-primary bg-primary text-on-primary'
+                      : 'border-outline-variant bg-surface text-secondary hover:border-primary hover:text-primary'
                       }`}
                   >
                     {size}
@@ -824,9 +818,8 @@ export function CollectionPage() {
                         setSelectedColors([...selectedColors, color.name]);
                       }
                     }}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all ${
-                      isSelected ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'
-                    } ${color.border ? 'border border-outline-variant/60' : 'border border-transparent'}`}
+                    className={`w-7 h-7 rounded-full flex items-center justify-center cursor-pointer transition-all ${isSelected ? 'ring-2 ring-offset-2 ring-primary scale-110' : 'hover:scale-110'
+                      } ${color.border ? 'border border-outline-variant/60' : 'border border-transparent'}`}
                     style={{ backgroundColor: color.hex }}
                   />
                 );
@@ -889,17 +882,17 @@ export function CollectionPage() {
       {/* ── Category SEO & Description Guide (Above Footer) ───────────────── */}
       {(() => {
         const activeCat = currentContext || categoriesTree.find(c => String(c.id || c._id) === categoryParam || String(c.name).toLowerCase() === String(categoryParam).toLowerCase());
-        
+
         const hasDesc = !!activeCat?.description;
         const validSections = activeCat?.descriptionSections?.filter(s => s.title?.trim() || s.content?.trim()) || [];
         const hasSections = validSections.length > 0;
-        
+
         if (!activeCat || (!hasDesc && !hasSections)) return null;
 
         return (
           <section className="w-full bg-[#FDFDFD] border-t border-slate-200/60 py-12 md:py-16 px-6 md:px-12 mt-12">
             <div className="max-w-5xl mx-auto space-y-8">
-              
+
               {/* Main Category Article Header */}
               {hasDesc && (
                 <div className="space-y-3 max-w-3xl pb-2">
@@ -950,10 +943,10 @@ export function CollectionPage() {
                   <button
                     type="button"
                     onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer uppercase tracking-wider group"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors cursor-pointer group"
                   >
                     <span className="underline underline-offset-4 decoration-slate-300 group-hover:decoration-slate-900">
-                      {isDescriptionExpanded ? 'Read Less' : 'Read More'}
+                      {isDescriptionExpanded ? `Read less about ${activeCat.name}` : `Read more about ${activeCat.name}`}
                     </span>
                     <span className="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:translate-y-0.5">
                       {isDescriptionExpanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}

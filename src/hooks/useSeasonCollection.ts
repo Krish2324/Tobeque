@@ -30,9 +30,18 @@ interface UseSeasonCollectionResult {
 // ─── Image URL helper (same as useProducts) ───────────────────────────────────
 
 export function resolveImageUrl(path: string | null | undefined): string {
-  if (!path) return 'https://via.placeholder.com/400x500?text=No+Image';
-  if (path.startsWith('http')) return path;
-  return path; // Vite proxy forwards /uploads/* → backend
+  if (!path || typeof path !== 'string' || !path.trim()) return 'https://via.placeholder.com/400x500?text=No+Image';
+  const trimmed = path.trim();
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) return trimmed;
+  const normalizedPath = trimmed.replace(/\\/g, '/');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  return apiBase ? `${apiBase}${cleanPath}` : cleanPath;
 }
 
 export function getSeasonItemImage(item: SeasonCollectionItem): string {

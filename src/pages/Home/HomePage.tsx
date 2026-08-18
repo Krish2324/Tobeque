@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
-import { useProducts } from "../../hooks/useProducts";
+import { useProducts, resolveImageUrl } from "../../hooks/useProducts";
 import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
@@ -254,14 +254,11 @@ export function HomePage() {
             {bannersLoading ? (
               <div className="w-full h-full bg-black animate-pulse absolute inset-0" />
             ) : (() => {
-              const rawUrl = heroBannerData?.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
-              let mediaUrl = rawUrl
-                ? (rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`)
-                : heroBanner;
+              const rawUrl = heroBannerData?.imageUrl || '';
+              let mediaUrl = rawUrl ? resolveImageUrl(rawUrl) : heroBanner;
               
               if (isMobile && heroBannerData?.mobileImageUrl) {
-                 const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
-                 mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+                 mediaUrl = resolveImageUrl(heroBannerData.mobileImageUrl);
               }
 
               const isVideoContent = isVideo(mediaUrl);
@@ -386,7 +383,7 @@ export function HomePage() {
                       {/* Background image */}
                       <img
                         draggable={false}
-                        src={imageUrl || fallbackUrl}
+                        src={resolveImageUrl(imageUrl) || fallbackUrl}
                         alt={displayName}
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
                       />
@@ -493,12 +490,11 @@ export function HomePage() {
           >
             <div className="w-full h-full relative overflow-hidden bg-surface-container">
               {(() => {
-                const rawUrl = bottomBannerData?.imageUrl ? bottomBannerData.imageUrl.replace(/\\/g, '/') : '';
-                let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                const rawUrl = bottomBannerData?.imageUrl || '';
+                let mediaUrl = rawUrl ? resolveImageUrl(rawUrl) : '';
                 
                 if (isMobile && bottomBannerData?.mobileImageUrl) {
-                   const mobileRawUrl = bottomBannerData.mobileImageUrl.replace(/\\/g, '/');
-                   mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+                   mediaUrl = resolveImageUrl(bottomBannerData.mobileImageUrl);
                 }
 
                 const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');

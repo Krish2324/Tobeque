@@ -72,15 +72,23 @@ interface UseProductsResult {
  * - full http URLs → used as-is
  * - null/empty → fallback placeholder
  */
-function resolveImageUrl(path: string | null | undefined): string {
-  if (!path) {
+export function resolveImageUrl(path: string | null | undefined): string {
+  if (!path || typeof path !== 'string' || !path.trim()) {
     return 'https://via.placeholder.com/400x500?text=No+Image';
   }
-  if (path.startsWith('http')) {
-    return path;
+  const trimmed = path.trim();
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
   }
-  // Vite proxy will forward /uploads/* → http://localhost:5000/uploads/*
-  return path;
+  const normalizedPath = trimmed.replace(/\\/g, '/');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  return apiBase ? `${apiBase}${cleanPath}` : cleanPath;
 }
 
 // ─── Data Mapper ─────────────────────────────────────────────────────────────

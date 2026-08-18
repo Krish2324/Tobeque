@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
 import { useProduct, useProducts } from "../../hooks/useProducts";
 import api from "../../services/api";
@@ -11,6 +11,7 @@ import { QuickViewModal } from "../../components/QuickViewModal/QuickViewModal";
 import { ShareModal } from '../../components/ShareModal/ShareModal';
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
+import { NotFoundPage } from "../NotFound/NotFoundPage";
 import { useCurrency } from "../../context/CurrencyContext";
 import { ImageWithSkeleton } from "../../components/ImageWithSkeleton";
 
@@ -594,17 +595,7 @@ export function ProductDetailPage() {
   }
 
   if (error || !product) {
-    return (
-      <div className="bg-surface-container-lowest min-h-screen flex flex-col">
-        <Navbar />
-        <div className="flex-grow flex flex-col items-center justify-center gap-4">
-          <h1 className="text-headline-md font-headline-md text-primary">Product Not Found</h1>
-          <Link to="/collection" className="border border-primary text-primary px-6 py-2 text-label-caps font-label-caps hover:bg-neutral-50 transition-colors">
-            RETURN TO COLLECTION
-          </Link>
-        </div>
-      </div>
-    );
+    return <NotFoundPage />;
   }
 
   return (

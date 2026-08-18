@@ -3,15 +3,13 @@ import { useSearchParams, useNavigate, useParams, useLocation } from 'react-rout
 
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
-import { useProducts } from '../../hooks/useProducts';
+import { useProducts, resolveImageUrl } from '../../hooks/useProducts';
 import { QuickViewModal } from '../../components/QuickViewModal/QuickViewModal';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
+import { NotFoundPage } from '../NotFound/NotFoundPage';
 import api from '../../services/api';
 import { useCurrency } from '../../context/CurrencyContext';
-
-import collectionHeroLeft from '../../assets/images/collection-hero-left.jpg';
-import collectionHeroRight from '../../assets/images/collection-hero-right.jpg';
 
 const BASE_COLORS = [
   { name: 'Black', hex: '#000000' },
@@ -52,6 +50,7 @@ export function CollectionPage() {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const [searchParams] = useSearchParams();
@@ -61,6 +60,10 @@ export function CollectionPage() {
 
   const categoryParam = categorySlug || searchParams.get('category') || stateCategory;
   const categoryNameParam = searchParams.get('name') || stateName;
+
+  useEffect(() => {
+    setIsDescriptionExpanded(false);
+  }, [categorySlug]);
 
   // ── Live categories tree ──────────────────────────────────────────────────
   const [categoriesTree, setCategoriesTree] = useState<Category[]>([]);
@@ -168,6 +171,22 @@ export function CollectionPage() {
     // Default: show all main categories
     return { currentContext: foundCategory, siblings: categoriesTree };
   }, [categoriesTree, categoryParam, searchParams]);
+
+  // Valid category check: redirect/render 404 if slug is unknown
+  const SPECIAL_SLUGS = useMemo(() => new Set(['all', 'new-in', 'summer-clothes', 'customisable', 'collaboration', 'steal-the-style']), []);
+
+  const isValidCategory = useMemo(() => {
+    if (categoriesLoading) return true;
+    if (!categorySlug) return true;
+    const lowerSlug = categorySlug.toLowerCase().trim();
+    if (SPECIAL_SLUGS.has(lowerSlug)) return true;
+    if (currentContext) return true;
+    return false;
+  }, [categoriesLoading, categorySlug, SPECIAL_SLUGS, currentContext]);
+
+  if (!categoriesLoading && !isValidCategory) {
+    return <NotFoundPage />;
+  }
 
   // ── Products ──────────────────────────────────────────────────────────────
   let sortByParam = 'createdAt';
@@ -316,88 +335,93 @@ export function CollectionPage() {
 
       <main>
         {/* ── Hero banner ─────────────────────────────────────────────────── */}
-        <section className={`w-full ${heroBannerData ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[298px] md:min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
-          {bannersLoading ? (
-            <div className="absolute inset-0 w-full h-full animate-pulse bg-surface-container" />
-          ) : heroBannerData ? (
-            <div className="absolute inset-0 w-full h-full bg-black">
-              {(() => {
-                const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
-                let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
-                
-                if (isMobile && heroBannerData.mobileImageUrl) {
-                  const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
-                  mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
-                }
+        {(() => {
+          const categoryBannerRaw = (currentContext as any)?.banner || (currentContext as any)?.image || '';
+          const categoryBannerUrl = categoryBannerRaw ? resolveImageUrl(categoryBannerRaw) : '';
 
-                const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
+          return (
+            <section className={`w-full ${heroBannerData || categoryBannerUrl ? '' : 'bg-[#F5F5F0]'} py-8 md:py-14 min-h-[298px] md:min-h-[350px] px-outer-margin relative overflow-hidden flex items-center justify-center`}>
+              {bannersLoading ? (
+                <div className="absolute inset-0 w-full h-full animate-pulse bg-surface-container" />
+              ) : heroBannerData ? (
+                <div className="absolute inset-0 w-full h-full bg-black">
+                  {(() => {
+                    const rawUrl = heroBannerData.imageUrl ? heroBannerData.imageUrl.replace(/\\/g, '/') : '';
+                    let mediaUrl = rawUrl.startsWith('http') ? rawUrl : `/${rawUrl.replace(/^\/+/, '')}`;
+                    
+                    if (isMobile && heroBannerData.mobileImageUrl) {
+                      const mobileRawUrl = heroBannerData.mobileImageUrl.replace(/\\/g, '/');
+                      mediaUrl = mobileRawUrl.startsWith('http') ? mobileRawUrl : `/${mobileRawUrl.replace(/^\/+/, '')}`;
+                    }
 
-                return isVideo ? (
-                  <video
-                    key={mediaUrl}
-                    autoPlay loop muted playsInline
-                    className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
-                  >
-                    <source src={mediaUrl} type="video/mp4" />
-                  </video>
-                ) : (
-                  <img
-                    alt={heroBannerData.title || displayTitle}
-                    className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
-                    src={mediaUrl}
-                  />
-                );
-              })()}
-              <div className="absolute inset-0 bg-black/40 pointer-events-none" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
-                <p className="text-[9px] md:text-xs tracking-[0.35em] text-white/80 uppercase font-medium mb-1 md:mb-2 transition-all">
-                  Season Collection
-                </p>
-                <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
-                  {heroBannerData.title || displayTitle}
-                </h1>
-                {heroBannerData.subtitle && (
-                  <p className="font-body-md text-body-md text-white/90 max-w-xl drop-shadow">
-                    {heroBannerData.subtitle}
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10">
-                <p className="text-[9px] md:text-xs tracking-[0.35em] text-secondary uppercase font-medium mb-1 md:mb-2 transition-all">
-                  Season Collection
-                </p>
-                <h1 className="font-display-lg text-primary mb-2 uppercase text-2xl md:text-3xl">
-                  {displayTitle}
-                </h1>
-                <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
-                  Effortless silhouettes for the modern woman.
-                </p>
-              </div>
-              <div className="absolute left-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
-                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroLeft})` }} />
-              </div>
-              <div className="absolute right-0 top-0 bottom-0 w-1/4 hidden lg:block opacity-80 pointer-events-none">
-                <div className="w-full h-full bg-cover bg-center" style={{ backgroundImage: `url(${collectionHeroRight})` }} />
-              </div>
-              {/* Loading State */}
-              {loading && !loadingMore && (
-                <div className={`grid gap-0.5 md:gap-1.5 transition-all w-full ${
-                  viewMode === 'list' ? 'grid-cols-1' : 
-                  viewMode === 'grid-3' ? 'grid-cols-2 sm:grid-cols-3' : 
-                  'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
-                }`}>
-                  {Array.from({ length: 8 }).map((_, i) => (
-                    <div key={`init-skel-${i}`} className="flex flex-col gap-2 animate-pulse bg-surface-container aspect-[3/4]">
-                    </div>
-                  ))}
+                    const isVideo = mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)(?:[?#].*)?$/i) || mediaUrl.includes('/video/upload/');
+
+                    return isVideo ? (
+                      <video
+                        key={mediaUrl}
+                        autoPlay loop muted playsInline
+                        className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
+                      >
+                        <source src={mediaUrl} type="video/mp4" />
+                      </video>
+                    ) : (
+                      <img
+                        alt={heroBannerData.title || displayTitle}
+                        className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
+                        src={mediaUrl}
+                      />
+                    );
+                  })()}
+                  <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
+                    <p className="text-[9px] md:text-xs tracking-[0.35em] text-white/80 uppercase font-medium mb-1 md:mb-2 transition-all">
+                      Season Collection
+                    </p>
+                    <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
+                      {heroBannerData.title || displayTitle}
+                    </h1>
+                    {heroBannerData.subtitle && (
+                      <p className="font-body-md text-body-md text-white/90 max-w-xl drop-shadow">
+                        {heroBannerData.subtitle}
+                      </p>
+                    )}
+                  </div>
                 </div>
+              ) : categoryBannerUrl ? (
+                <div className="absolute inset-0 w-full h-full bg-black">
+                  <img
+                    alt={displayTitle}
+                    className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
+                    src={categoryBannerUrl}
+                  />
+                  <div className="absolute inset-0 bg-black/45 pointer-events-none" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
+                    <p className="text-[9px] md:text-xs tracking-[0.35em] text-white/80 uppercase font-medium mb-1 md:mb-2 transition-all">
+                      Category Collection
+                    </p>
+                    <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
+                      {displayTitle}
+                    </h1>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="max-w-[1600px] mx-auto flex flex-col items-center justify-center text-center relative z-10 py-6">
+                    <p className="text-[9px] md:text-xs tracking-[0.35em] text-secondary uppercase font-medium mb-1 md:mb-2 transition-all">
+                      Category Collection
+                    </p>
+                    <h1 className="font-display-lg text-primary mb-2 uppercase text-2xl md:text-3xl">
+                      {displayTitle}
+                    </h1>
+                    <p className="font-body-md text-body-md text-on-surface-variant max-w-xl">
+                      Effortless silhouettes for the modern woman.
+                    </p>
+                  </div>
+                </>
               )}
-            </>
-          )}
-        </section>
+            </section>
+          );
+        })()}
 
         {/* ── Category tab bar ────────────────────────────────────────────── */}
         <div className="w-full border-b border-outline-variant overflow-x-auto flex justify-center">
@@ -873,8 +897,8 @@ export function CollectionPage() {
         if (!activeCat || (!hasDesc && !hasSections)) return null;
 
         return (
-          <section className="w-full bg-[#FDFDFD] border-t border-slate-200/60 py-16 md:py-20 px-6 md:px-12 mt-12">
-            <div className="max-w-5xl mx-auto space-y-10">
+          <section className="w-full bg-[#FDFDFD] border-t border-slate-200/60 py-12 md:py-16 px-6 md:px-12 mt-12">
+            <div className="max-w-5xl mx-auto space-y-8">
               
               {/* Main Category Article Header */}
               {hasDesc && (
@@ -895,17 +919,17 @@ export function CollectionPage() {
                 </div>
               )}
 
-              {/* Dynamic Description Sections: 2-Column Alternating Left / Right Layout */}
-              {hasSections && (
-                <div className={`grid grid-cols-1 ${validSections.length > 1 ? 'md:grid-cols-2' : ''} gap-8 md:gap-12 ${hasDesc ? 'border-t border-slate-200/60 pt-8' : ''}`}>
+              {/* Dynamic Description Sections: Fully hidden until Read More is clicked */}
+              {hasSections && isDescriptionExpanded && (
+                <div className={`grid grid-cols-1 ${validSections.length > 1 ? 'md:grid-cols-2' : ''} gap-8 md:gap-12 ${hasDesc ? 'border-t border-slate-200/60 pt-8' : ''} animate-fade-in`}>
                   {validSections.map((sec, idx) => (
                     <div key={idx} className="space-y-3">
                       {sec.title?.trim() && (
                         <div className="flex items-center gap-2.5">
                           <div className="w-1 h-4 bg-slate-900 rounded-full shrink-0" />
-                          <h3 className="text-base font-semibold text-slate-900 tracking-tight">
+                          <h2 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight">
                             {sec.title}
-                          </h3>
+                          </h2>
                         </div>
                       )}
 
@@ -917,6 +941,24 @@ export function CollectionPage() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Read More / Read Less Text Link (Left Aligned) */}
+              {hasSections && (
+                <div className="flex justify-start pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-bold text-slate-900 hover:text-primary transition-colors cursor-pointer uppercase tracking-wider group"
+                  >
+                    <span className="underline underline-offset-4 decoration-slate-300 group-hover:decoration-slate-900">
+                      {isDescriptionExpanded ? 'Read Less' : 'Read More'}
+                    </span>
+                    <span className="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:translate-y-0.5">
+                      {isDescriptionExpanded ? 'keyboard_arrow_up' : 'keyboard_arrow_down'}
+                    </span>
+                  </button>
                 </div>
               )}
 

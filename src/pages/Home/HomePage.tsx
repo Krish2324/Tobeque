@@ -383,6 +383,10 @@ export function HomePage() {
                         src={resolveImageUrl(imageUrl) || fallbackUrl}
                         alt={displayName}
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = fallbackUrl;
+                        }}
                       />
 
                       {/* Dark gradient overlay */}

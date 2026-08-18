@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
+import { NotFoundPage } from "../NotFound/NotFoundPage";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
 
@@ -113,14 +114,7 @@ export function StyleJournalDetailPage() {
   }
 
   if (!post) {
-    return (
-      <div className="bg-surface-container-lowest min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Post not found</h2>
-          <Link to="/blogs" className="text-primary hover:underline">Back to Blogs</Link>
-        </div>
-      </div>
-    );
+    return <NotFoundPage />;
   }
 
   // Not implemented next/prev for dynamic yet, can be added later

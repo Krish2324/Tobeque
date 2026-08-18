@@ -20,7 +20,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [categories, setCategories] = useState<{ name: string; path: string }[]>([]);
+  const [categories, setCategories] = useState<{ name: string; path: string; state?: any }[]>([]);
 
   useEffect(() => {
     api.get('/api/categories/public')
@@ -32,7 +32,8 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
             const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
             return {
               name: cat.name,
-              path: `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`
+              path: `/product-category/${catSlug}`,
+              state: { category: catId, name: cat.name }
             };
           });
           setCategories(items);
@@ -77,7 +78,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
         <div className="hidden md:flex flex-1 justify-center space-x-8">
           <Link className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to="/product-category/all">NEW ARRIVAL</Link>
           {categories.slice(0, 5).map(cat => (
-            <Link key={cat.name} className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to={cat.path}>
+            <Link key={cat.name} className="text-secondary hover:text-primary transition-colors duration-300 text-label-caps font-label-caps" to={cat.path} state={cat.state}>
               {cat.name.toUpperCase()}
             </Link>
           ))}
@@ -191,6 +192,7 @@ export function SimpleNavbar({ onSearchProductSelect }: SimpleNavbarProps) {
                       <Link 
                         key={cat.name} 
                         to={cat.path} 
+                        state={cat.state}
                         onClick={() => setIsMobileMenuOpen(false)} 
                         className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-primary transition-colors"
                       >

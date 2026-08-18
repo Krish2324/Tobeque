@@ -87,7 +87,15 @@ export function resolveImageUrl(path: string | null | undefined): string {
   }
   const normalizedPath = trimmed.replace(/\\/g, '/');
   const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-  const apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  let apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  
+  if (!apiBase && typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      apiBase = 'https://backend.tobeque.com';
+    }
+  }
+
   return apiBase ? `${apiBase}${cleanPath}` : cleanPath;
 }
 

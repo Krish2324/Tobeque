@@ -374,10 +374,7 @@ export function HomePage() {
                         const catName = item.category?.name || item.displayLabel || 'Category';
                         const rawSlug = item.category?.slug ? String(item.category.slug).replace(/-\d+$/, '') : catName;
                         const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
-                        const targetUrl = catId 
-                          ? `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(catName)}`
-                          : `/product-category/${catSlug}`;
-                        navigate(targetUrl);
+                        navigate(`/product-category/${catSlug}`, { state: { category: catId, name: catName } });
                       }}
                     >
                       {/* Background image */}

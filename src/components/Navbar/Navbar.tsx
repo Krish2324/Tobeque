@@ -19,6 +19,7 @@ interface MainCategoryItem {
   name: string;
   slug: string;
   path: string;
+  state?: any;
   subcategories?: SubCategoryItem[];
 }
 
@@ -94,13 +95,14 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             const catId = cat.id || cat._id;
             const rawSlug = cat.slug ? String(cat.slug).replace(/-\d+$/, '') : cat.name;
             const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
-            const path = `/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`;
+            const path = `/product-category/${catSlug}`;
 
             items.push({
               id: catId,
               name: cat.name,
               slug: catSlug,
-              path
+              path,
+              state: { category: catId, name: cat.name }
             });
           };
 
@@ -182,6 +184,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                         <Link
                           key={item.id || item.name}
                           to={item.path}
+                          state={item.state}
                           className="text-[10px] tracking-[0.18em] font-label-caps text-gray-300 hover:text-white transition-colors uppercase font-medium"
                         >
                           {item.name}
@@ -458,6 +461,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                       <Link
                         key={cat.id || cat.name}
                         to={cat.path}
+                        state={cat.state}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="text-[11px] font-bold tracking-widest uppercase text-gray-800 hover:text-black transition-colors block py-0.5"
                       >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams, useLocation } from 'react-router-dom';
 
 import { ProductCard, type Product } from '../../components/ProductCard';
 import { useCart } from '../../context/CartContext';
@@ -55,8 +55,12 @@ export function CollectionPage() {
 
   const { categorySlug } = useParams<{ categorySlug?: string }>();
   const [searchParams] = useSearchParams();
-  const categoryParam = categorySlug || searchParams.get('category');
-  const categoryNameParam = searchParams.get('name');
+  const location = useLocation();
+  const stateCategory = (location.state as any)?.category;
+  const stateName = (location.state as any)?.name;
+
+  const categoryParam = categorySlug || searchParams.get('category') || stateCategory;
+  const categoryNameParam = searchParams.get('name') || stateName;
 
   // ── Live categories tree ──────────────────────────────────────────────────
   const [categoriesTree, setCategoriesTree] = useState<Category[]>([]);
@@ -103,8 +107,8 @@ export function CollectionPage() {
 
   // Compute what tabs to show based on the tree and current categoryParam
   const { currentContext, siblings } = useMemo<{ currentContext: Category | null, siblings: Category[] }>(() => {
-    const searchId = searchParams.get('category');
-    const searchName = searchParams.get('name');
+    const searchId = searchParams.get('category') || stateCategory;
+    const searchName = searchParams.get('name') || stateName;
 
     const normalizeCategoryString = (str: string) => 
       str.toLowerCase().trim()
@@ -179,7 +183,7 @@ export function CollectionPage() {
     sortDirParam = 'DESC';
   }
 
-  const searchCategoryId = searchParams.get('category');
+  const searchCategoryId = searchParams.get('category') || stateCategory;
   const effectiveCategory = searchCategoryId || (currentContext ? (currentContext.id || currentContext._id) : (categoryParam && categoryParam.toLowerCase() !== 'all' ? categoryParam : undefined));
 
   const { products: liveProducts, loading, loadingMore, error, total, hasMore, loadMore } = useProducts({
@@ -431,7 +435,7 @@ export function CollectionPage() {
                   return (
                     <button
                       key={catId}
-                      onClick={() => navigate(`/product-category/${catSlug}?category=${catId}&name=${encodeURIComponent(cat.name)}`)}
+                      onClick={() => navigate(`/product-category/${catSlug}`, { state: { category: catId, name: cat.name } })}
                       className={`px-5 py-2.5 text-[10px] tracking-[0.15em] uppercase border-b-2 transition-all whitespace-nowrap ${
                         isCatActive
                           ? 'border-black text-black font-bold border-b-2'
@@ -738,7 +742,9 @@ export function CollectionPage() {
                     <button
                       key={catId}
                       onClick={() => {
-                        navigate(`/product-category/${encodeURIComponent(String(cat.name).toLowerCase())}?category=${catId}&name=${encodeURIComponent(cat.name)}`);
+                        const rawSlug = (cat as any).slug ? String((cat as any).slug).replace(/-\d+$/, '') : cat.name;
+                        const catSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+                        navigate(`/product-category/${catSlug}`, { state: { category: catId, name: cat.name } });
                         setIsFilterOpen(false);
                       }}
                       className={`text-left text-xs uppercase tracking-wider py-1 hover:text-primary transition-colors cursor-pointer ${(categoryParam === catId || String(cat.name).toLowerCase() === String(categoryParam).toLowerCase()) ? 'text-primary font-bold border-l-2 border-primary pl-2' : 'text-secondary pl-2'}`}

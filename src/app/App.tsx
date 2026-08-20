@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import "../styles/index.css";
+import { CanonicalUrl } from "../components/CanonicalUrl/CanonicalUrl";
 
 import { HomePage } from "../pages/Home/HomePage";
 import { CollectionPage } from "../pages/Collection/CollectionPage";
@@ -44,6 +45,7 @@ export default function App() {
         <CartProvider>
           <CurrencyProvider>
             <ScrollToTop />
+            <CanonicalUrl />
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/collection" element={<CollectionPage />} />

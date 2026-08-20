@@ -431,14 +431,17 @@ export function ProductCard({
                           // Toggle off if already selected, otherwise select
                           setSelectedColorName(isSelected ? null : color.name);
                         }}
-                        className={`w-3.5 h-3.5 rounded-full border shadow-sm cursor-pointer hover:scale-110 transition-all duration-200 relative ${
+                        className={`w-3.5 h-3.5 rounded-full border shadow-sm cursor-pointer hover:scale-110 transition-all duration-200 relative overflow-hidden flex items-center justify-center ${
                           isSelected
                             ? 'ring-2 ring-offset-1 ring-primary scale-110'
                             : color.name.toLowerCase() === 'white' ? 'border-outline-variant/60' : 'border-black/10'
                         }`}
-                        style={color.bgStyle}
+                        style={color.image ? undefined : color.bgStyle}
                         title={color.name}
                       >
+                        {color.image && (
+                          <img src={color.image} alt={color.name} className="w-full h-full object-cover rounded-full" />
+                        )}
                         {!color.inStock && (
                           <div className="absolute inset-0 w-full h-full border border-red-500/50 rounded-full" />
                         )}

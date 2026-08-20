@@ -32,6 +32,8 @@ interface Category {
   description?: string;
   descriptionSections?: Array<{ title?: string; content?: string }>;
   subcategories?: Category[];
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export function CollectionPage() {
@@ -329,6 +331,42 @@ export function CollectionPage() {
         ? decodeURIComponent(categorySlug).replace(/-/g, ' ').toUpperCase()
         : 'ALL PRODUCTS');
 
+  // Dynamic Head SEO Metadata Management (Meta Title & Meta Description)
+  useEffect(() => {
+    const originalTitle = document.title;
+
+    // Determine Meta Title
+    const titleText = currentContext?.seoTitle && currentContext.seoTitle.trim()
+      ? currentContext.seoTitle.trim()
+      : `${displayTitle} | Tobeque`;
+
+    document.title = titleText;
+
+    // Determine Meta Description
+    let descText = '';
+    if (currentContext?.seoDescription && currentContext.seoDescription.trim()) {
+      descText = currentContext.seoDescription.trim();
+    } else if (currentContext?.description && currentContext.description.trim()) {
+      descText = currentContext.description.replace(/<[^>]*>/g, '').trim();
+    } else {
+      descText = `Explore ${displayTitle} collection at Tobeque. Discover effortless silhouettes and timeless fashion.`;
+    }
+
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    const oldDesc = metaDesc.getAttribute('content') || '';
+    metaDesc.setAttribute('content', descText);
+
+    return () => {
+      document.title = originalTitle;
+      if (metaDesc) metaDesc.setAttribute('content', oldDesc);
+    };
+  }, [currentContext, displayTitle]);
+
   return (
     <div className="bg-surface-container-lowest text-on-surface antialiased selection:bg-primary selection:text-on-primary font-body-md text-body-md overflow-x-hidden min-h-screen">
       <Navbar onSearchProductSelect={(product) => setQuickViewProduct(product)} />
@@ -375,7 +413,7 @@ export function CollectionPage() {
                   <div className="absolute inset-0 bg-black/40 pointer-events-none" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">
                     <p className="text-[9px] md:text-xs tracking-[0.35em] text-white/80 uppercase font-medium mb-1 md:mb-2 transition-all">
-                      Season Collection
+                      Category
                     </p>
                     <h1 className="font-display-lg text-white mb-2 uppercase text-3xl md:text-5xl drop-shadow-lg">
                       {heroBannerData.title || displayTitle}

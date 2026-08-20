@@ -3,6 +3,7 @@ export type ProductColor = {
   class: string;
   bgStyle?: React.CSSProperties;
   inStock?: boolean;
+  image?: string;
 };
 
 export type Product = {

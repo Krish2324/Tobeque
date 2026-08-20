@@ -57,6 +57,8 @@ export default function App() {
               <Route path="/blogs/:id" element={<StyleJournalDetailPage />} />
               <Route path="/style-journal" element={<Navigate to="/blogs" replace />} />
               <Route path="/style-journal/:id" element={<Navigate to="/blogs" replace />} />
+              <Route path="/journal" element={<Navigate to="/blogs" replace />} />
+              <Route path="/journal/:id" element={<Navigate to="/blogs" replace />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/cookie-policy" element={<CookiePolicyPage />} />

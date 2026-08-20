@@ -842,18 +842,21 @@ export function ProductDetailPage() {
                         disabled={isOutOfStock}
                         onClick={() => setSelectedColor(color)}
                         aria-label={`Select Color ${color.name}`}
-                        className={`relative w-5 h-5 rounded-full border transition-all duration-200 ${
+                        className={`relative w-5 h-5 rounded-full border transition-all duration-200 overflow-hidden flex items-center justify-center ${
                           isOutOfStock ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:scale-105'
                         } ${
                           selectedColor.name === color.name && !isOutOfStock
                             ? 'ring-1 ring-offset-1 ring-primary scale-110'
                             : 'border-outline-variant'
                         }`}
-                        style={color.bgStyle}
+                        style={color.image ? undefined : color.bgStyle}
                         title={isOutOfStock ? 'Out of Stock' : color.name}
                       >
+                        {color.image && (
+                          <img src={color.image} alt={color.name} className="w-full h-full object-cover rounded-full" />
+                        )}
                         {isOutOfStock && (
-                          <div className="absolute inset-0 m-auto w-full h-[1px] bg-red-500 rotate-45 transform origin-center" />
+                          <div className="absolute inset-0 m-auto w-full h-[1px] bg-red-500 rotate-45 transform origin-center z-10" />
                         )}
                       </button>
                     );

@@ -20,6 +20,7 @@ interface BackendProduct {
   thumbnail: string | null;
   taxRate?: number;
   colors?: string[];
+  colorSwatches?: Array<{ color: string; image: string }>;
   variants: Array<{ size?: string; color?: string; stock?: number; price?: number; sku?: string }> | null;
   images?: Array<{ id: number; imageUrl: string }>;
   category?: any;
@@ -117,7 +118,7 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
 
   // Extract sizes and colors from variants JSON
   const sizes: string[] = [];
-  const detailedColors: { name: string; class: string; bgStyle: any; inStock?: boolean }[] = [];
+  const detailedColors: { name: string; class: string; bgStyle: any; inStock?: boolean; image?: string }[] = [];
   const colorNames = new Set<string>();
   
   // Aggregate stock per color from variants
@@ -146,12 +147,23 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
         // If they use variants, enforce stock check. If a color has 0 variants with stock > 0, disable it.
         hasStock = colorStockMap.has(cleanColor.toLowerCase()) ? colorStockMap.get(cleanColor.toLowerCase())! > 0 : false;
       }
+
+      let swatchImage: string | undefined = undefined;
+      if (bp.colorSwatches && Array.isArray(bp.colorSwatches)) {
+        const match = bp.colorSwatches.find(
+          (s: any) => s.color && String(s.color).toLowerCase().trim() === cleanColor.toLowerCase()
+        );
+        if (match && match.image && String(match.image).trim()) {
+          swatchImage = resolveImageUrl(match.image);
+        }
+      }
       
       detailedColors.push({
         name: cleanColor.toUpperCase(),
         class: '',
         bgStyle: { backgroundColor: cleanColor.toLowerCase() },
-        inStock: hasStock
+        inStock: hasStock,
+        image: swatchImage
       });
     }
   };

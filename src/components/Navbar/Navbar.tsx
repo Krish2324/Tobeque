@@ -33,7 +33,7 @@ const NEW_COLLECTION = [
 ];
 
 const RECOMMENDED = [
-  { name: 'BLOGS', path: '/journal' },
+  { name: 'BLOGS', path: '/blogs' },
   { name: 'STEAL THE STYLE', path: '/product-category/steal-the-style' },
 ];
 

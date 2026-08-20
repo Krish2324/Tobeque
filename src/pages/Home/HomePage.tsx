@@ -316,9 +316,9 @@ export function HomePage() {
               <p className="text-[9px] tracking-[0.35em] text-secondary uppercase font-medium mb-0.5">
                 Shop By
               </p>
-              <h2 className="text-[13px] tracking-[0.3em] font-light text-primary uppercase">
-                Season Collection
-              </h2>
+              <h1 className="text-[13px] tracking-[0.3em] font-light text-primary uppercase">
+                Category
+              </h1>
             </div>
             <span className="flex-1 h-px bg-gradient-to-l from-transparent to-outline-variant max-w-[120px]" />
           </div>

@@ -331,15 +331,19 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                       disabled={isOutOfStock}
                       title={isOutOfStock ? 'Out of Stock' : color.name}
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedColor(color.name); }}
-                      className={`relative w-8 h-8 rounded-full border p-0.5 flex items-center justify-center transition-all ${
+                      className={`relative w-8 h-8 rounded-full border p-0.5 flex items-center justify-center transition-all overflow-hidden ${
                         isOutOfStock ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-secondary'
                       } ${
                         selectedColor === color.name && !isOutOfStock ? 'border-primary border-2' : 'border-outline-variant'
                       }`}
                     >
-                      <span className={`block w-full h-full rounded-full ${color.class}`} style={color.bgStyle}></span>
+                      {color.image ? (
+                        <img src={color.image} alt={color.name} className="w-full h-full object-cover rounded-full" />
+                      ) : (
+                        <span className={`block w-full h-full rounded-full ${color.class}`} style={color.bgStyle}></span>
+                      )}
                       {isOutOfStock && (
-                        <div className="absolute inset-0 m-auto w-[120%] h-[1.5px] bg-red-500 -rotate-45 transform origin-center" />
+                        <div className="absolute inset-0 m-auto w-[120%] h-[1.5px] bg-red-500 -rotate-45 transform origin-center z-10" />
                       )}
                     </button>
                   );

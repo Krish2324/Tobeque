@@ -653,6 +653,9 @@ export function ProductDetailPage() {
                       alt={`${product.imageAltTag || product.imageAlt || product.name} detail view ${index + 1}`}
                       wrapperClassName="absolute inset-0"
                       src={img}
+                      // First image is always visible — load it with highest priority.
+                      // Subsequent images load lazily as user swipes/scrolls.
+                      priority={index === 0}
                     />
                   )}
                 </div>

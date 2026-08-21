@@ -271,6 +271,9 @@ export function HomePage() {
                   alt={titleText}
                   className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                   src={mediaUrl}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="sync"
                 />
               );
             })()}
@@ -391,6 +394,8 @@ export function HomePage() {
                             src={resolvedImg}
                             alt={displayName}
                             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 select-none"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                             }}
@@ -522,6 +527,8 @@ export function HomePage() {
                     alt={titleText}
                     className="w-full h-full object-cover absolute inset-0"
                     src={mediaUrl}
+                    loading="lazy"
+                    decoding="async"
                   />
                 );
               })()}
@@ -682,13 +689,15 @@ export function HomePage() {
                       src={mediaUrl}
                       alt={p.name}
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      loading="lazy"
+                      decoding="async"
                     />
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent pointer-events-none" />
 
                   <div className="absolute bottom-0 inset-x-0 p-2.5 sm:p-4 pointer-events-none flex flex-col justify-end h-full">
                     <div className="flex gap-2 sm:gap-3 mt-auto pointer-events-auto items-end">
-                      <img src={p.imageSrc} className="w-12 h-16 sm:w-14 sm:h-18 object-cover border border-white/30 rounded-md shadow-md shrink-0 bg-white" alt={p.name} />
+                      <img src={p.imageSrc} className="w-12 h-16 sm:w-14 sm:h-18 object-cover border border-white/30 rounded-md shadow-md shrink-0 bg-white" alt={p.name} loading="lazy" decoding="async" />
                       <div className="flex flex-col text-left mb-0.5 sm:mb-1 min-w-0">
                         <h3 className="text-white text-xs font-semibold leading-tight line-clamp-2 mb-0.5">{p.name}</h3>
                         <div className="flex items-center gap-1.5 flex-wrap mt-0.5">

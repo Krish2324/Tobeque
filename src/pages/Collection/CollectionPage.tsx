@@ -407,6 +407,9 @@ export function CollectionPage() {
                         alt={heroBannerData.title || displayTitle}
                         className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                         src={mediaUrl}
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="sync"
                       />
                     );
                   })()}
@@ -431,6 +434,9 @@ export function CollectionPage() {
                     alt={displayTitle}
                     className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                     src={categoryBannerUrl}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="sync"
                   />
                   <div className="absolute inset-0 bg-black/45 pointer-events-none" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none z-10">

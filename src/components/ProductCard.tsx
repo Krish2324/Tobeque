@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { type Product } from "../data/products";
 import { ImageWithSkeleton } from "./ImageWithSkeleton";
 import { useCart } from "../context/CartContext";
+import { useIntersectionObserver } from "../hooks/useIntersectionObserver";
 export type { Product };
 
 export interface ProductCardProps {
@@ -28,6 +29,16 @@ export function ProductCard({
 }: ProductCardProps) {
   const { wishlistItems, addToWishlist, removeFromWishlist } = useCart();
   const [isHeartPopping, setIsHeartPopping] = useState(false);
+
+  // Lazy visibility: only render gallery images when the card is near the viewport
+  const [cardRef, isCardVisible] = useIntersectionObserver<HTMLDivElement>({
+    rootMargin: '300px',
+    threshold: 0,
+  });
+
+  // Track first hover to gate hover-image DOM insertion (avoids loading hidden images)
+  // NOTE: We now gate on isCardVisible instead — so hover image preloads silently
+  // in the background as soon as the card scrolls into view. Hover is always instant.
 
   // ── Color-image swap state ───────────────────────────────────────────────
   const [selectedColorName, setSelectedColorName] = useState<string | null>(null);
@@ -66,7 +77,7 @@ export function ProductCard({
         const primary = product.imageSrc;
         // Only prepend primary thumbnail if it has no color tag OR its color matches the selected color
         const primaryColorTag = (product.galleryImageObjects?.[0]?.color || '').toLowerCase().trim();
-        const shouldPrepend = primary && 
+        const shouldPrepend = primary &&
           !matches.includes(primary) &&
           (!primaryColorTag ||
             primaryColorTag === activeColorName.toLowerCase() ||
@@ -75,11 +86,11 @@ export function ProductCard({
         return shouldPrepend ? [primary, ...matches] : matches;
       }
     }
-    
+
     if (product.galleryImages && product.galleryImages.length > 0) {
        return product.galleryImages;
     }
-    
+
     if (product.hoverImageSrc) {
        return [product.imageSrc, product.hoverImageSrc];
     }
@@ -131,7 +142,7 @@ export function ProductCard({
       <div className="group relative flex items-start sm:items-center gap-4 sm:gap-8 md:gap-12 border-b border-outline-variant/20 py-6 md:py-8 w-full text-left transition-colors">
         {/* Left Side: Responsive Image Container */}
         <div className="relative w-28 sm:w-56 md:w-72 lg:w-[280px] shrink-0 aspect-[4/5] bg-surface-container overflow-hidden rounded-md">
-          <Link 
+          <Link
             to={productUrl}
             className="absolute inset-0 z-0 block cursor-pointer"
           >
@@ -183,10 +194,10 @@ export function ProductCard({
               }`}
               title={isItemWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
             >
-              <span 
+              <span
                 className={`material-symbols-outlined text-[15px] transition-transform duration-300 ${
                   isHeartPopping ? 'animate-[heartPop_0.5s_ease-out]' : ''
-                }`} 
+                }`}
                 style={{ fontVariationSettings: isItemWishlisted ? "'FILL' 1" : "'FILL' 0" }}
               >
                 favorite
@@ -213,7 +224,10 @@ export function ProductCard({
   }
 
   return (
-    <div className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02] hover:z-10">
+    <div
+      ref={cardRef}
+      className="group relative flex flex-col transition-transform duration-300 ease-out hover:scale-[1.02] hover:z-10"
+    >
       {/* Image Container with Separated Link & Button Layers */}
       <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block group/carousel">
         {/* Mobile View: Swipable Image Gallery Layer */}
@@ -222,9 +236,33 @@ export function ProductCard({
           onScroll={handleScroll}
           className="sm:hidden absolute inset-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth z-0"
         >
-          {images.map((img, idx) => (
+          {/* Always render the first (primary) image immediately */}
+          <Link
+            key={`${images[0]}-0`}
+            to={productUrl}
+            className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
+          >
+            {isVideo(images[0]) ? (
+              <video
+                className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
+                src={images[0]}
+                autoPlay loop muted playsInline
+                preload="metadata"
+              />
+            ) : (
+              <ImageWithSkeleton
+                alt={`${product.imageAltTag || product.imageAlt || product.name} view 1`}
+                wrapperClassName="absolute inset-0"
+                className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
+                src={images[0]}
+              />
+            )}
+          </Link>
+
+          {/* Remaining gallery images: only render when card is in viewport */}
+          {isCardVisible && images.slice(1).map((img, idx) => (
             <Link
-              key={`${img}-${idx}`}
+              key={`${img}-${idx + 1}`}
               to={productUrl}
               className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
             >
@@ -233,10 +271,11 @@ export function ProductCard({
                   className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
                   src={img}
                   autoPlay loop muted playsInline
+                  preload="metadata"
                 />
               ) : (
                 <ImageWithSkeleton
-                  alt={`${product.imageAltTag || product.imageAlt || product.name} view ${idx + 1}`}
+                  alt={`${product.imageAltTag || product.imageAlt || product.name} view ${idx + 2}`}
                   wrapperClassName="absolute inset-0"
                   className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
                   src={img}
@@ -267,13 +306,15 @@ export function ProductCard({
               />
             )}
 
-            {/* Old Flow Hover Image Overlay on Webpage */}
-            {!selectedColorName && product.hoverImageSrc && (
+            {/* Hover Image/Video — preloaded silently once the card is visible (opacity-0).
+                When hovered, it's already cached → appears instantly via CSS transition. */}
+            {!selectedColorName && product.hoverImageSrc && isCardVisible && (
               isVideo(product.hoverImageSrc) ? (
                 <video
                   className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
                   src={product.hoverImageSrc}
                   autoPlay loop muted playsInline
+                  preload="metadata"
                 />
               ) : (
                 <ImageWithSkeleton
@@ -334,7 +375,7 @@ export function ProductCard({
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                 </svg>
               ) : (
-                <span 
+                <span
                   className={`material-symbols-outlined text-[18px] transition-transform duration-300 ${
                     isHeartPopping ? 'animate-[heartPop_0.5s_ease-out]' : ''
                   }`}
@@ -403,8 +444,8 @@ export function ProductCard({
 
       <div className="flex flex-col gap-0 px-0.5 mt-1.5 transition-opacity duration-300 group-hover:opacity-100 opacity-90">
         {/* Clickable Title */}
-        <Link 
-          to={productUrl} 
+        <Link
+          to={productUrl}
           className="hover:underline cursor-pointer block text-left"
         >
           <h3 className="font-body-md text-[10px] text-secondary truncate tracking-wide leading-tight">
@@ -440,7 +481,7 @@ export function ProductCard({
                         title={color.name}
                       >
                         {color.image && (
-                          <img src={color.image} alt={color.name} className="w-full h-full object-cover rounded-full" />
+                          <img src={color.image} alt={color.name} className="w-full h-full object-cover rounded-full" loading="lazy" />
                         )}
                         {!color.inStock && (
                           <div className="absolute inset-0 w-full h-full border border-red-500/50 rounded-full" />

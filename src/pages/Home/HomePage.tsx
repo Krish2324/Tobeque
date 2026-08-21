@@ -437,17 +437,21 @@ export function HomePage() {
             <span className="flex-1 h-px bg-gradient-to-l from-transparent to-outline-variant max-w-[120px]" />
           </div>
 
-          {featuredLoading ? (
+          {/* Initial load skeleton — only shown before we have any products */}
+          {featuredLoading && featuredProducts.length === 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 md:gap-1.5">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="aspect-[3/4] bg-surface-container animate-pulse rounded" />
               ))}
             </div>
-          ) : featuredProducts.length > 0 ? (
+          )}
+
+          {/* Product grid — stays mounted during Load More to prevent flicker */}
+          {featuredProducts.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 md:gap-1.5">
-              {featuredProducts.map((p, idx) => (
+              {featuredProducts.map((p) => (
                 <ProductCard
-                  key={idx}
+                  key={p.id}
                   product={p}
                   isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
                   onWishlistClick={handleWishlist}
@@ -460,8 +464,15 @@ export function HomePage() {
                   }}
                 />
               ))}
+              {/* Append skeleton slots for the next batch while loading more */}
+              {featuredLoading && Array.from({ length: 10 }).map((_, i) => (
+                <div key={`skel-more-${i}`} className="aspect-[3/4] bg-surface-container animate-pulse rounded" />
+              ))}
             </div>
-          ) : (
+          )}
+
+          {/* Empty state */}
+          {!featuredLoading && featuredProducts.length === 0 && (
             <div className="w-full flex flex-col items-center justify-center py-16 gap-3 text-center">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant">inventory_2</span>
               <p className="text-on-surface-variant font-body-md text-body-md">

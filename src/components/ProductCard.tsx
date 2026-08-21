@@ -230,39 +230,20 @@ export function ProductCard({
     >
       {/* Image Container with Separated Link & Button Layers */}
       <div className="relative aspect-[2/3] bg-surface-container overflow-hidden mb-2 block group/carousel">
-        {/* Mobile View: Swipable Image Gallery Layer */}
+        {/* Mobile View: Swipable Image Gallery Layer
+            All images are gated on isCardVisible so:
+            - Off-screen cards load nothing (bg-surface-container acts as skeleton)
+            - Once in viewport the observer fires and images load eagerly (no lazy-in-scroll-container bug)
+            Native loading="lazy" breaks inside overflow-x:auto on iOS Safari — we use
+            IntersectionObserver as the single lazy-loading mechanism instead. */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
           className="sm:hidden absolute inset-0 flex overflow-x-auto snap-x snap-mandatory no-scrollbar scroll-smooth z-0"
         >
-          {/* Always render the first (primary) image immediately */}
-          <Link
-            key={`${images[0]}-0`}
-            to={productUrl}
-            className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
-          >
-            {isVideo(images[0]) ? (
-              <video
-                className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
-                src={images[0]}
-                autoPlay loop muted playsInline
-                preload="metadata"
-              />
-            ) : (
-              <ImageWithSkeleton
-                alt={`${product.imageAltTag || product.imageAlt || product.name} view 1`}
-                wrapperClassName="absolute inset-0"
-                className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
-                src={images[0]}
-              />
-            )}
-          </Link>
-
-          {/* Remaining gallery images: only render when card is in viewport */}
-          {isCardVisible && images.slice(1).map((img, idx) => (
+          {isCardVisible && images.map((img, idx) => (
             <Link
-              key={`${img}-${idx + 1}`}
+              key={`${img}-${idx}`}
               to={productUrl}
               className="snap-center shrink-0 w-full h-full relative block cursor-pointer"
             >
@@ -275,10 +256,11 @@ export function ProductCard({
                 />
               ) : (
                 <ImageWithSkeleton
-                  alt={`${product.imageAltTag || product.imageAlt || product.name} view ${idx + 2}`}
+                  alt={`${product.imageAltTag || product.imageAlt || product.name} view ${idx + 1}`}
                   wrapperClassName="absolute inset-0"
                   className="object-center transition-transform duration-700 ease-in-out group-hover:scale-105"
                   src={img}
+                  priority={idx === 0}
                 />
               )}
             </Link>

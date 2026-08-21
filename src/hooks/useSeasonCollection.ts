@@ -42,10 +42,12 @@ export function resolveImageUrl(path: string | null | undefined): string {
   const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
   let apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
   
-  if (!apiBase && typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
-      apiBase = 'https://backend.tobeque.com';
+      if (!apiBase || apiBase.includes('localhost') || apiBase.includes('127.0.0.1')) {
+        apiBase = 'https://backend.tobeque.com';
+      }
     }
   }
 

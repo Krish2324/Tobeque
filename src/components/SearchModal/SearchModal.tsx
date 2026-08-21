@@ -12,9 +12,28 @@ export interface SearchModalProps {
 const isVideo = (url: string | undefined) => url && typeof url === 'string' && !!url.match(/\.(mp4|webm|ogg|mov)$/i);
 
 function resolveImageUrl(path: string | null | undefined): string {
-  if (!path) return 'https://via.placeholder.com/400x500?text=No+Image';
-  if (path.startsWith('http')) return path;
-  return path;
+  if (!path || typeof path !== 'string' || !path.trim()) return 'https://via.placeholder.com/400x500?text=No+Image';
+  const trimmed = path.trim();
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) return trimmed;
+  const normalizedPath = trimmed.replace(/\\/g, '/');
+  const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+  let apiBase = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+  
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+      if (!apiBase || apiBase.includes('localhost') || apiBase.includes('127.0.0.1')) {
+        apiBase = 'https://backend.tobeque.com';
+      }
+    }
+  }
+
+  return apiBase ? `${apiBase}${cleanPath}` : cleanPath;
 }
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Navbar } from "../../components/Navbar/Navbar";
 import { Footer } from "../../components/Footer/Footer";
 import api from "../../services/api";
+import { resolveImageUrl } from "../../hooks/useProducts";
 
 export function StyleJournalPage() {
   const [blogs, setBlogs] = useState<any[]>([]);
@@ -56,7 +57,7 @@ export function StyleJournalPage() {
               <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-16 relative">
                 <div className="w-full lg:w-[65%] overflow-hidden bg-surface-container rounded-sm shadow-2xl">
                   <img 
-                    src={featuredArticle.image!} 
+                    src={resolveImageUrl(featuredArticle.image)} 
                     alt={featuredArticle.imageAltTag || featuredArticle.title} 
                     className="w-full aspect-[4/3] lg:aspect-auto lg:h-[650px] object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.03]" 
                   />
@@ -93,7 +94,7 @@ export function StyleJournalPage() {
                 <article>
                   {entry.image && (
                     <div className="mb-8 overflow-hidden bg-surface-container rounded-sm shadow-md">
-                      <img src={entry.image} alt={entry.imageAltTag || entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
+                      <img src={resolveImageUrl(entry.image)} alt={entry.imageAltTag || entry.title} className="w-full h-auto object-cover transition-transform duration-[2s] ease-out group-hover:scale-[1.04]" loading="lazy" />
                     </div>
                   )}
                   

@@ -4,6 +4,7 @@ import { Footer } from "../../components/Footer/Footer";
 import { NotFoundPage } from "../NotFound/NotFoundPage";
 import { useEffect, useState } from "react";
 import api from "../../services/api";
+import { resolveImageUrl } from "../../hooks/useProducts";
 
 export function StyleJournalDetailPage() {
   const { id } = useParams();
@@ -148,7 +149,7 @@ export function StyleJournalDetailPage() {
               {post.image && (
                 <div className="mb-10 overflow-hidden bg-surface-container rounded-sm">
                   <img 
-                    src={post.image} 
+                    src={resolveImageUrl(post.image)} 
                     alt={post.imageAltTag || post.title} 
                     className="w-full h-auto max-h-[800px] object-cover"
                   />
@@ -171,7 +172,7 @@ export function StyleJournalDetailPage() {
                     {recentPosts.map((recentPost) => (
                       <Link to={`/blogs/${recentPost.slug}`} key={recentPost._id} className="flex items-start gap-4 group cursor-pointer">
                         {recentPost.image ? (
-                          <img src={recentPost.image} alt={recentPost.title} className="w-16 h-16 object-cover rounded-sm bg-surface-container" />
+                          <img src={resolveImageUrl(recentPost.image)} alt={recentPost.title} className="w-16 h-16 object-cover rounded-sm bg-surface-container" />
                         ) : (
                           <div className="w-16 h-16 bg-surface-container rounded-sm flex items-center justify-center text-[10px] text-outline-variant">No Img</div>
                         )}

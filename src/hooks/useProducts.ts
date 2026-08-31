@@ -146,8 +146,21 @@ function mapBackendProduct(bp: BackendProduct, currencySymbol: string = '₹'): 
       
       let hasStock = true;
       if (bp.variants && Array.isArray(bp.variants) && bp.variants.length > 0) {
-        // If they use variants, enforce stock check. If a color has 0 variants with stock > 0, disable it.
-        hasStock = colorStockMap.has(cleanColor.toLowerCase()) ? colorStockMap.get(cleanColor.toLowerCase())! > 0 : false;
+        // Check if ANY variant has a color key
+        const usesColorVariants = bp.variants.some((v: any) => Object.keys(v).some(k => k.toLowerCase() === 'color'));
+        if (usesColorVariants) {
+          hasStock = colorStockMap.has(cleanColor.toLowerCase()) ? colorStockMap.get(cleanColor.toLowerCase())! > 0 : false;
+        } else {
+          // If variants exist but none define color (e.g. they only define Size),
+          // then the color applies to the whole product. Check total stock.
+          const totalStock = bp.variants.reduce((acc: number, v: any) => {
+            const stockKey = Object.keys(v).find(k => k.toLowerCase() === 'stock');
+            return acc + (stockKey && v[stockKey] !== undefined ? Number(v[stockKey]) : 0);
+          }, 0);
+          hasStock = totalStock > 0;
+        }
+      } else {
+        hasStock = bp.stockQuantity > 0;
       }
 
       let swatchImage: string | undefined = undefined;

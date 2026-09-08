@@ -37,16 +37,6 @@ const RECOMMENDED = [
   { name: 'STEAL THE STYLE', path: '/product-category/steal-the-style' },
 ];
 
-const EXCLUDED_CATEGORIES = new Set([
-  'NEW IN',
-  'SUMMER CLOTHES',
-  'CUSTOMISABLE',
-  'COLLABORATION',
-  'BLOGS',
-  'STEAL THE STYLE',
-  'FASHION',
-]);
-
 const normalizeCategoryName = (name: string): string => {
   return name
     .toUpperCase()
@@ -113,6 +103,29 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
       .catch(() => { });
   }, []);
 
+  const EXCLUDED_CATEGORIES = new Set([
+    'NEW IN',
+    'SUMMER CLOTHES',
+    'CUSTOMISABLE',
+    'COLLABORATION',
+    'BLOGS',
+    'STEAL THE STYLE',
+    'FASHION',
+  ]);
+
+  const getCustomOrderIndex = (name: string): number => {
+    const norm = normalizeCategoryName(name);
+
+    if (norm === 'TOPS' || (norm.includes('TOP') && !norm.includes('SHIRT') && !norm.includes('CROP') && !norm.includes('TANK') && !norm.includes('TUBE') && !norm.includes('HALTER') && !norm.includes('CASUAL') && !norm.includes('VACATION') && !norm.includes('OUT GOING'))) return 1;
+    if (norm.includes('T-SHIRT') || norm.includes('TSHIRT') || norm.includes('VEST')) return 2;
+    if (norm.includes('SHIRT') || norm.includes('BLOUSE')) return 3;
+    if (norm === 'DRESSES' || norm === 'DRESS') return 4;
+    if (norm.includes('SKIRT') || norm.includes('SHORT')) return 5;
+    if (norm.includes('JEAN') || norm.includes('PANT')) return 6;
+
+    return 999;
+  };
+
   const combinedList = [...mainCategories, ...FALLBACK_CATEGORIES];
   const displayMainCategories: MainCategoryItem[] = [];
   const seenNames = new Set<string>();
@@ -128,8 +141,13 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
     }
   });
 
-  // Sort displayMainCategories alphabetically for a clean menu
-  displayMainCategories.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort displayMainCategories in explicit user-requested sequence
+  displayMainCategories.sort((a, b) => {
+    const idxA = getCustomOrderIndex(a.name);
+    const idxB = getCustomOrderIndex(b.name);
+    if (idxA !== idxB) return idxA - idxB;
+    return a.name.localeCompare(b.name);
+  });
 
   useEffect(() => {
     const handleScroll = () => {

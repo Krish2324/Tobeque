@@ -36,6 +36,137 @@ function resolveImageUrl(path: string | null | undefined): string {
   return apiBase ? `${apiBase}${cleanPath}` : cleanPath;
 }
 
+const COLOR_SYNONYMS: Record<string, string[]> = {
+  black: ['black', 'dark'],
+  white: ['white', 'ivory', 'cream', 'snow', 'off-white'],
+  grey: ['grey', 'gray', 'silver', 'charcoal', 'ash', 'slate'],
+  beige: ['beige', 'tan', 'sand', 'camel', 'mocha', 'oatmeal', 'nude'],
+  brown: ['brown', 'chocolate', 'coffee', 'chestnut'],
+  blue: ['blue', 'navy', 'indigo', 'sky', 'denim', 'teal', 'cyan', 'azure', 'sapphire'],
+  green: ['green', 'olive', 'mint', 'emerald', 'forest', 'sage', 'khaki'],
+  red: ['red', 'maroon', 'burgundy', 'wine', 'crimson', 'ruby'],
+  pink: ['pink', 'rose', 'magenta', 'fuchsia', 'peach', 'blush'],
+  yellow: ['yellow', 'mustard', 'gold', 'lemon'],
+  purple: ['purple', 'violet', 'lavender', 'lilac', 'plum'],
+  orange: ['orange', 'coral', 'tangerine'],
+};
+
+function getSearchedColors(queryStr: string): string[] {
+  if (!queryStr || !queryStr.trim()) return [];
+  const words = queryStr.toLowerCase().trim().split(/[\s\-_]+/);
+  const matchedColors: string[] = [];
+
+  words.forEach(word => {
+    const cleanWord = word.replace(/[^a-z]/g, '');
+    if (!cleanWord) return;
+
+    for (const [baseColor, synonyms] of Object.entries(COLOR_SYNONYMS)) {
+      if (synonyms.includes(cleanWord)) {
+        matchedColors.push(baseColor);
+        matchedColors.push(cleanWord);
+      }
+    }
+  });
+
+  return Array.from(new Set(matchedColors));
+}
+
+interface ColorResolution {
+  isColorSearch: boolean;
+  isMatch: boolean;
+  matchedColorName: string | null;
+  displayImageUrl: string;
+}
+
+function resolveProductColorAndImage(product: any, searchedColors: string[]): ColorResolution {
+  const defaultThumb = resolveImageUrl(product.thumbnail || product.imageSrc);
+
+  if (!searchedColors || searchedColors.length === 0) {
+    return {
+      isColorSearch: false,
+      isMatch: true,
+      matchedColorName: null,
+      displayImageUrl: defaultThumb,
+    };
+  }
+
+  const isTermMatch = (colorStr: string | null | undefined): boolean => {
+    if (!colorStr || typeof colorStr !== 'string') return false;
+    const lower = colorStr.toLowerCase().trim();
+    const tokens = lower.split(/[^a-z0-9]+/);
+    return searchedColors.some(sc => tokens.includes(sc) || lower === sc);
+  };
+
+  let matchedColorName: string | null = null;
+  let matchedImageUrl: string | null = null;
+
+  // 1. Check galleryImageObjects or raw backend images for matching color tag
+  const imageList = product.galleryImageObjects || product.images || [];
+  if (Array.isArray(imageList) && imageList.length > 0) {
+    for (const img of imageList) {
+      if (img && img.color && isTermMatch(img.color)) {
+        matchedColorName = img.color;
+        const rawUrl = img.imageUrl || img.url || img.path;
+        if (rawUrl) {
+          matchedImageUrl = resolveImageUrl(rawUrl);
+          break;
+        }
+      }
+    }
+  }
+
+  // 2. Check detailedColors / colorSwatches
+  if (!matchedImageUrl) {
+    const swatchList = product.colorSwatches || product.detailedColors || [];
+    if (Array.isArray(swatchList) && swatchList.length > 0) {
+      for (const s of swatchList) {
+        const colorName = s.color || s.name;
+        if (colorName && isTermMatch(colorName)) {
+          if (!matchedColorName) matchedColorName = colorName;
+          if (s.image && String(s.image).trim()) {
+            matchedImageUrl = resolveImageUrl(s.image);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // 3. Check thumbnailColor
+  if (product.thumbnailColor && isTermMatch(product.thumbnailColor)) {
+    if (!matchedColorName) matchedColorName = product.thumbnailColor;
+    if (!matchedImageUrl) matchedImageUrl = defaultThumb;
+  }
+
+  // 4. Check colors array or variants
+  if (!matchedColorName) {
+    if (Array.isArray(product.colors)) {
+      const matchCol = product.colors.find((c: string) => isTermMatch(c));
+      if (matchCol) matchedColorName = matchCol;
+    }
+  }
+
+  if (!matchedColorName && Array.isArray(product.variants)) {
+    for (const v of product.variants) {
+      const colorVal = v.color || v.Color;
+      if (colorVal && isTermMatch(colorVal)) {
+        matchedColorName = colorVal;
+        break;
+      }
+    }
+  }
+
+  const isMatch = !!matchedColorName;
+  const displayImageUrl = matchedImageUrl || defaultThumb;
+
+  return {
+    isColorSearch: true,
+    isMatch,
+    matchedColorName,
+    displayImageUrl,
+  };
+}
+
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const { currencySymbol } = useCurrency();
   const navigate = useNavigate();
@@ -93,11 +224,13 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   };
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: any, matchedColor?: string | null) => {
     dismissMobileKeyboard();
     onClose();
     const productId = product.id || product._id;
-    navigate(`/product-category/${product.categorySlug || 'all'}/${product.slug || productId}`);
+    const catSlug = product.categorySlug || (product.category && product.category.slug) || 'all';
+    const colorParam = matchedColor ? `?color=${encodeURIComponent(matchedColor)}` : '';
+    navigate(`/product-category/${catSlug}/${product.slug || productId}${colorParam}`);
   };
 
   useEffect(() => {
@@ -135,6 +268,40 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
+  const searchedColors = getSearchedColors(query);
+
+  const seenProductIds = new Set<string>();
+  const seenNormalizedNames = new Set<string>();
+
+  const processedResults = results
+    .map(product => {
+      const colorInfo = resolveProductColorAndImage(product, searchedColors);
+      return { product, colorInfo };
+    })
+    .filter(item => {
+      if (!item.colorInfo.isMatch) return false;
+
+      const pid = String(item.product.id || item.product._id || '').trim();
+
+      // Normalize product name strictly (e.g. "ASYMMETRIC DRAPE TOP" -> "asymmetricdrapetop")
+      const rawName = String(item.product.name || '').toLowerCase();
+      const normName = rawName.replace(/[^a-z]/g, '');
+
+      // Normalize product slug strictly (e.g. "asymmetric-drape-top-1" -> "asymmetricdrapetop")
+      const rawSlug = String(item.product.slug || '').toLowerCase().replace(/-\d+$/, '').replace(/\d+$/, '');
+      const normSlug = rawSlug.replace(/[^a-z]/g, '');
+
+      const uniqueKey = normName || normSlug;
+
+      if (pid && seenProductIds.has(pid)) return false;
+      if (uniqueKey && seenNormalizedNames.has(uniqueKey)) return false;
+
+      if (pid) seenProductIds.add(pid);
+      if (uniqueKey) seenNormalizedNames.add(uniqueKey);
+
+      return true;
+    });
+
   if (!isOpen) return null;
 
   return (
@@ -159,7 +326,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   handleSearchSubmit(e);
                 }
               }}
-              placeholder="Search products, SKU, barcode..."
+              placeholder="Search products, colors, SKU..."
               className="w-full bg-transparent text-headline-sm font-headline-sm text-primary placeholder:text-outline-variant border-none focus:ring-0 py-2 focus:outline-none [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none [&::-webkit-search-results-decoration]:appearance-none"
             />
             {loading && (
@@ -181,25 +348,25 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </form>
 
         {/* Results Dropdown Container */}
-        {(query.trim() !== "" || results.length > 0) && (
+        {(query.trim() !== "" || processedResults.length > 0) && (
           <div className="absolute top-[100%] left-0 w-full bg-white shadow-2xl border-t border-outline-variant max-h-[70vh] overflow-y-auto no-scrollbar z-50">
             
-            {query.trim() && !loading && results.length === 0 && (
+            {query.trim() && !loading && processedResults.length === 0 && (
               <div className="text-center py-8 text-secondary font-body-md">
                 No products found matching "{query}"
               </div>
             )}
 
-            {results.length > 0 && (
+            {processedResults.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-6">
-                {results.map((product) => {
-                  const thumbUrl = resolveImageUrl(product.thumbnail);
+                {processedResults.map(({ product, colorInfo }) => {
+                  const thumbUrl = colorInfo.displayImageUrl;
                   const displayPrice = typeof product.price === 'number' ? product.price.toFixed(2) : product.price;
 
                   return (
                     <button
                       key={product.id || product._id}
-                      onClick={() => handleProductClick(product)}
+                      onClick={() => handleProductClick(product, colorInfo.matchedColorName)}
                       className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                     >
                       <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative rounded-md">
@@ -224,6 +391,11 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
+                        )}
+                        {colorInfo.isColorSearch && colorInfo.matchedColorName && (
+                          <div className="absolute bottom-2 left-2 bg-black/75 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded tracking-wider uppercase">
+                            {colorInfo.matchedColorName}
+                          </div>
                         )}
                       </div>
                       <h3 className="font-body-md text-xs text-primary uppercase tracking-wider mb-1 line-clamp-1">{product.name}</h3>

@@ -331,6 +331,14 @@ export function ProductDetailPage() {
     setZoomedImage(null);
     resetZoomState();
   };
+
+  const handleGalleryClick = (img: string) => {
+    if (isVideo(img)) return;
+
+    // Single click/tap opens full-screen modal focused view at normal 1x scale
+    setZoomedImage(img);
+    resetZoomState();
+  };
   const [askName, setAskName] = useState('');
   const [askEmail, setAskEmail] = useState('');
   const [askMessage, setAskMessage] = useState('');
@@ -742,7 +750,7 @@ export function ProductDetailPage() {
               {displayedImages.map((img, index) => (
                 <div
                   key={`${img}-${index}`}
-                  onClick={() => { setZoomedImage(img); setInnerZoom(false); }}
+                  onClick={() => handleGalleryClick(img)}
                   className="snap-center shrink-0 w-full h-full lg:h-auto lg:aspect-[2/3] relative overflow-hidden bg-surface-container cursor-zoom-in group"
                 >
                   {isVideo(img) ? (
@@ -1429,20 +1437,19 @@ export function ProductDetailPage() {
           <div 
             className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-none sm:rounded-xl shadow-none sm:shadow-[0_0_50px_rgba(0,0,0,0.3)] bg-transparent sm:bg-black/20 select-none touch-none"
             onClick={(e) => {
-               if (isVideo(zoomedImage)) {
-                 e.stopPropagation();
-                 return;
-               }
                e.stopPropagation(); 
-               // Click zoom for desktop
+            }}
+            onDoubleClick={(e) => {
+               if (isVideo(zoomedImage)) return;
+               e.stopPropagation(); 
                const rect = e.currentTarget.getBoundingClientRect();
                const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
                const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
                setMousePos({ x, y });
-               if (touchScale > 1) {
+               if (touchScale > 1 || innerZoom) {
                  resetZoomState();
                } else {
-                 setInnerZoom(!innerZoom);
+                 setTouchScale(2.5);
                }
             }}
             onTouchStart={(e) => {
@@ -1546,7 +1553,7 @@ export function ProductDetailPage() {
             ) : (
               <img
                 alt="Zoomed view"
-                className="w-full h-full object-contain transition-transform duration-100 ease-out select-none"
+                className="w-full h-full object-contain transition-transform duration-300 ease-out select-none"
                 src={zoomedImage}
                 style={{
                   transform: touchScale > 1
@@ -1571,7 +1578,7 @@ export function ProductDetailPage() {
             {/* Hint text */}
             {touchScale === 1 && !innerZoom && !isVideo(zoomedImage) && (
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/60 text-white/90 px-6 py-2.5 rounded-full text-[10px] font-medium tracking-[0.2em] uppercase backdrop-blur-md border border-white/10 pointer-events-none transition-opacity duration-500 opacity-70">
-                Pinch to Zoom & Pan
+                Double-Tap or Pinch to Zoom &amp; Pan
               </div>
             )}
           </div>

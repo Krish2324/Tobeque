@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ProductCard, type Product } from "../../components/ProductCard";
 import { useCart } from "../../context/CartContext";
 import { useProducts, resolveImageUrl } from "../../hooks/useProducts";
@@ -874,10 +874,10 @@ function HomeSeoSection() {
                 Your fashion sense should never be about compromising your identity for style. Being born in India and influenced by the youthful vibrancy of modern-day Gen-Z, our collection is all about effortless yet confident and stylish designs. Whatever you're wearing, whether it's for hanging out, going for a coffee, partying, meeting with friends at school or taking photos and posting them on Instagram, we make sure that you will love how you look!
               </p>
               <p>
-                Clothes for teenagers should be both cool &amp; comfortable, &amp; all yours. At Tobeque, we offer you the most fashionable designs with unique silhouettes, trendy details, comfy fits and affordable prices. Great style has never been more attainable, because we are here for quality fashion and individuality!
+                <Link to="/product-category/all" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">Clothes for teenagers</Link> should be both cool &amp; comfortable, &amp; all yours. At Tobeque, we offer you the most fashionable designs with unique silhouettes, trendy details, comfy fits and affordable prices. Great style has never been more attainable, because we are here for quality fashion and individuality!
               </p>
               <p>
-                Order trendy tops for young girl online and discover styles made to keep up with your plans, moods, and everyday moments. Based in India &amp; serving fashion lovers around the world, we’re here to make finding your next favourite outfit feel effortless.
+                Order <Link to="/product-category/tops-for-teens" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">trendy tops for young girl online</Link> and discover styles made to keep up with your plans, moods, and everyday moments. Based in India &amp; serving fashion lovers around the world, we’re here to make finding your next favourite outfit feel effortless.
               </p>
             </div>
 
@@ -891,12 +891,12 @@ function HomeSeoSection() {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 {[
-                  { title: "1. Trend-Led Styles", desc: "Aesthetic outfits for teens must look up-to-date, rather than ripped from a page in a fashion magazine. We tailor to new Gen-Z trends from the Y2K era to contemporary streetwear, making designs that are contemporary, creative & comfortable." },
-                  { title: "2. Quality Fabrics", desc: "Every garment is made with materials we consider to be fit for the body, that form to the body & that will look great while in use." },
-                  { title: "3. Fits That Feel Right", desc: "The first step to a great style is a great fit. Our silhouettes are carefully chosen to be flattering, comfortable to wear and make a girl feel confident in her outfit, for teen and young girl's clothing." },
-                  { title: "4. Fashion Without the Markup", desc: "Even though it looks the part, it doesn't need to cost a lot of money. We always maintain a friendly price spectrum and emphasise fashionable designs, quality materials and practical designs that add value to your wardrobe." },
-                  { title: "5. Styles Made to Mix", desc: "Your clothes ought to work harder. Pair a smocked midi dress with sneakers, wear tops with denim or combine them together for more than one outfit from the same pieces." },
-                  { title: "6. India to the World", desc: "Based in India & serving customers around the world, we make discovering fresh fashion simple. From everyday outfits to statement looks, your next wardrobe favourite is never far away." }
+                  { title: "1. Trend-Led Styles", desc: <>Aesthetic outfits for teens must look up-to-date, rather than ripped from a page in a fashion magazine. We tailor to new Gen-Z trends from the Y2K era to contemporary streetwear, making designs that are contemporary, creative &amp; comfortable.</> },
+                  { title: "2. Quality Fabrics", desc: <>Every garment is made with materials we consider to be fit for the body, that form to the body &amp; that will look great while in use.</> },
+                  { title: "3. Fits That Feel Right", desc: <>The first step to a great style is a great fit. Our silhouettes are carefully chosen to be flattering, comfortable to wear and make a girl feel confident in her outfit, for teen and young girl's clothing.</> },
+                  { title: "4. Fashion Without the Markup", desc: <>Even though it looks the part, it doesn't need to cost a lot of money. We always maintain a friendly price spectrum and emphasise fashionable designs, quality materials and practical designs that add value to your wardrobe.</> },
+                  { title: "5. Styles Made to Mix", desc: <>Your clothes ought to work harder. Pair a smocked <Link to="/product-category/dresses-for-girls" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">midi dress</Link> with sneakers, wear <Link to="/product-category/tops-for-teens" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">tops</Link> with <Link to="/product-category/jeans-pants" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">denim</Link> or combine them together for more than one outfit from the same pieces.</> },
+                  { title: "6. India to the World", desc: <>Based in India &amp; serving customers around the world, we make discovering fresh fashion simple. From everyday outfits to statement looks, your next wardrobe favourite is never far away.</> }
                 ].map((item, idx) => (
                   <div key={idx} className="bg-surface-container/40 border border-outline-variant/30 p-4 rounded-md">
                     <h4 className="text-xs font-bold text-primary mb-1 uppercase tracking-wide">{item.title}</h4>
@@ -916,11 +916,11 @@ function HomeSeoSection() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                 {[
-                  { title: "1. Explore the Collection", desc: "Start by browsing our latest edits and discover stylish clothes for girls across everyday, party, streetwear, and trend-led collections. Filter by your vibe, occasion, or favourite style." },
-                  { title: "2. Find Your Favourite", desc: "Spotted something that instantly feels like you? Take a closer look at the design, fabric, fit, available sizes & styling details before adding your chosen piece to your cart." },
-                  { title: "3. Check Your Size", desc: "Use the available size information to select the fit that works best for you. Taking a quick look at measurements can make choosing your perfect outfit much easier." },
-                  { title: "4. Place Your Order", desc: "Ready to check out? Add your favourites to the cart, enter your delivery details, & complete your purchase securely. Whether you want a dress or a casual shirt for teenage girls online, ordering stays simple." },
-                  { title: "5. Get Ready to Style", desc: "Once your order is on its way, all that’s left is to plan the look. Mix, match, layer, accessorise, & make your new pieces completely your own." }
+                  { title: "1. Explore the Collection", desc: <>Start by browsing our latest edits and discover <Link to="/product-category/all" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">stylish clothes for girls</Link> across everyday, party, streetwear, and trend-led collections. Filter by your vibe, occasion, or favourite style.</> },
+                  { title: "2. Find Your Favourite", desc: <>Spotted something that instantly feels like you? Take a closer look at the design, fabric, fit, available sizes &amp; styling details before adding your chosen piece to your cart.</> },
+                  { title: "3. Check Your Size", desc: <>Use the available size information to select the fit that works best for you. Taking a quick look at measurements can make choosing your perfect outfit much easier.</> },
+                  { title: "4. Place Your Order", desc: <>Ready to check out? Add your favourites to the cart, enter your delivery details, &amp; complete your purchase securely. Whether you want a <Link to="/product-category/dresses-for-girls" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">dress</Link> or a casual <Link to="/product-category/shirt-blouses" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">shirt for teenage girls</Link> online, ordering stays simple.</> },
+                  { title: "5. Get Ready to Style", desc: <>Once your order is on its way, all that’s left is to plan the look. Mix, match, layer, accessorise, &amp; make your new pieces completely your own.</> }
                 ].map((item, idx) => (
                   <div key={idx} className="bg-surface-container/40 border border-outline-variant/30 p-4 rounded-md">
                     <h4 className="text-xs font-bold text-primary mb-1 uppercase tracking-wide">{item.title}</h4>
@@ -940,11 +940,11 @@ function HomeSeoSection() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
                 {[
-                  { title: "1. Delhi & NCR", desc: "Born in Delhi, we understand the city’s ever-changing youth style. Our collections bring together easy everyday pieces, statement looks & fresh trends inspired by the energy around us." },
-                  { title: "2. Major Indian Cities", desc: "From Mumbai & Bengaluru to Hyderabad, Chennai & beyond, we deliver fashion-forward styles to young girls across India, making it easier to refresh your wardrobe from anywhere." },
-                  { title: "3. Emerging Indian Locations", desc: "Fashion isn’t limited to major metros. We serve customers across smaller cities and towns too, bringing Gen Z fashion closer to those who love experimenting with their personal style." },
-                  { title: "4. Pan-India Online Shopping", desc: "Wherever you’re based in India, you can explore our collections online and find pieces suited to college days, casual plans, parties, holidays, and everything between." },
-                  { title: "5. Around the World", desc: "Our journey doesn’t stop at India. We’re growing our reach internationally so more young fashion lovers can discover versatile pieces, from everyday tops to straight leg pants for teen girls." }
+                  { title: "1. Delhi & NCR", desc: <>Born in Delhi, we understand the city’s ever-changing youth style. Our collections bring together easy everyday pieces, statement looks &amp; fresh trends inspired by the energy around us.</> },
+                  { title: "2. Major Indian Cities", desc: <>From Mumbai &amp; Bengaluru to Hyderabad, Chennai &amp; beyond, we deliver fashion-forward styles to young girls across India, making it easier to refresh your wardrobe from anywhere.</> },
+                  { title: "3. Emerging Indian Locations", desc: <>Fashion isn’t limited to major metros. We serve customers across smaller cities and towns too, bringing Gen Z fashion closer to those who love experimenting with their personal style.</> },
+                  { title: "4. Pan-India Online Shopping", desc: <>Wherever you’re based in India, you can explore our collections online and find pieces suited to college days, casual plans, parties, holidays, and everything between.</> },
+                  { title: "5. Around the World", desc: <>Our journey doesn’t stop at India. We’re growing our reach internationally so more young fashion lovers can discover versatile pieces, from everyday <Link to="/product-category/tops-for-teens" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">tops</Link> to straight leg <Link to="/product-category/jeans-pants" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">pants for teen girls</Link>.</> }
                 ].map((item, idx) => (
                   <div key={idx} className="bg-surface-container/40 border border-outline-variant/30 p-4 rounded-md">
                     <h4 className="text-xs font-bold text-primary mb-1 uppercase tracking-wide">{item.title}</h4>
@@ -963,10 +963,10 @@ function HomeSeoSection() {
                 Need any sizing, fabric or order information or just something that matches your vibe? We’re always happy to help. Shopping with the intent of fashion should be enjoyable, hassle-free, and personal, not a game of guessing.
               </p>
               <p className="text-xs md:text-sm text-secondary/80 leading-relaxed max-w-3xl mx-auto">
-                At Tobeque, we’re passionate about making girls fashion online India more exciting for teens and young girls who love experimenting with their style. From regular wear to a statement piece to comfortable clothes for teenagers, we're here to help you find the ideal outfit.
+                At Tobeque, we’re passionate about making <Link to="/product-category/all" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">girls fashion online India</Link> more exciting for teens and young girls who love experimenting with their style. From regular wear to a statement piece to comfortable <Link to="/product-category/all" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">clothes for teenagers</Link>, we're here to help you find the ideal outfit.
               </p>
               <p className="text-xs md:text-sm text-secondary/80 leading-relaxed max-w-3xl mx-auto">
-                Want something easy to do on a lazy day? Well then try our trendy oversized t-shirts for teen girls and create your own style using the jeans of your choice.
+                Want something easy to do on a lazy day? Well then try our <Link to="/product-category/t-shirt-vests" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">trendy oversized t-shirts for teen girls</Link> and create your own style using the <Link to="/product-category/jeans-pants" className="text-primary font-semibold underline underline-offset-2 hover:text-secondary transition-colors">jeans</Link> of your choice.
               </p>
             </div>
 

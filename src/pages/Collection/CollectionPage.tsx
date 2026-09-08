@@ -120,25 +120,94 @@ export function CollectionPage() {
   // Infinite scroll sentinel ref
   const infiniteScrollRef = useRef<HTMLDivElement>(null);
 
-  // Compute what tabs to show based on the tree and current categoryParam
+const CATEGORY_301_REDIRECTS: Record<string, string> = {
+  // Tops -> tops-for-teens
+  'tops': 'tops-for-teens',
+  'top': 'tops-for-teens',
+  'tops-s': 'tops-for-teens',
+  'top-s': 'tops-for-teens',
+  'tops-for-teen': 'tops-for-teens',
+  'tops-for-teens-s': 'tops-for-teens',
+
+  // Summer 26 -> summer-clothes
+  'summer-26': 'summer-clothes',
+  'summer26': 'summer-clothes',
+  'summer-2026': 'summer-clothes',
+  'summer-clothe': 'summer-clothes',
+  'summer-clothes-s': 'summer-clothes',
+
+  // Shirts and blouses -> shirt-blouses
+  'shirts-and-blouses': 'shirt-blouses',
+  'shirts-and-blouse': 'shirt-blouses',
+  'shirt-and-blouse': 'shirt-blouses',
+  'shirt-and-blouses': 'shirt-blouses',
+  'shirts-blouses': 'shirt-blouses',
+  'shirts-blouse': 'shirt-blouses',
+  'shirt-blouse': 'shirt-blouses',
+  'shirts-and-blouses-s': 'shirt-blouses',
+  'shirts-and-blouse-s': 'shirt-blouses',
+  'shirt-blouses-s': 'shirt-blouses',
+
+  // Dresses -> dresses-for-girls
+  'dresses': 'dresses-for-girls',
+  'dress': 'dresses-for-girls',
+  'dresses-for-girl': 'dresses-for-girls',
+  'dresses-for-girls-s': 'dresses-for-girls',
+  'dresses-s': 'dresses-for-girls',
+
+  // Skirts and shorts -> skirt-shorts
+  'skirts-and-shorts': 'skirt-shorts',
+  'skirts-and-short': 'skirt-shorts',
+  'skirt-and-shorts': 'skirt-shorts',
+  'skirt-and-short': 'skirt-shorts',
+  'skirts-shorts': 'skirt-shorts',
+  'skirts-short': 'skirt-shorts',
+  'skirt-shorts-s': 'skirt-shorts',
+  'skirts-and-shorts-s': 'skirt-shorts',
+
+  // T-shirts and vests -> t-shirt-vests
+  't-shirts-and-vests': 't-shirt-vests',
+  't-shirts-and-vest': 't-shirt-vests',
+  't-shirt-and-vests': 't-shirt-vests',
+  't-shirt-and-vest': 't-shirt-vests',
+  't-shirts-vests': 't-shirt-vests',
+  't-shirts-vest': 't-shirt-vests',
+  't-shirt-vests-s': 't-shirt-vests',
+  't-shirts-and-vests-s': 't-shirt-vests',
+};
+
+// Compute what tabs to show based on the tree and current categoryParam
   const { currentContext, siblings, canonicalCategory } = useMemo<{ currentContext: Category | null, siblings: Category[], canonicalCategory: Category | null }>(() => {
     const searchId = searchParams.get('category') || stateCategory;
     const searchName = searchParams.get('name') || stateName;
 
     const normalizeCategoryString = (str: string) =>
-      str.toLowerCase().trim()
-        .replace(/&/g, 'and')
-        .replace(/[^a-z0-9]/g, '');
+      str
+        .toLowerCase()
+        .trim()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w !== '' && w !== 'and')
+        .map(w => w.replace(/s+$/, ''))
+        .join('');
 
     let foundCategory: Category | null = null;
     let parentCategory: Category | null = null;
 
     if (categoryParam || searchId || searchName) {
-      const targetParam = decodeURIComponent(categoryParam || searchName || '').trim();
+      let targetParam = decodeURIComponent(categoryParam || searchName || '').trim();
+      const lowerTarget = targetParam.toLowerCase();
+
+      // Check 301 alias redirect map
+      if (CATEGORY_301_REDIRECTS[lowerTarget]) {
+        targetParam = CATEGORY_301_REDIRECTS[lowerTarget];
+      }
+
       const targetNormalized = normalizeCategoryString(targetParam);
 
       const dfs = (nodes: Category[], parent: Category | null): { node: Category; parent: Category | null } | null => {
-        // 1. Exact match pass
+        // 1. Exact & direct slug match pass
         for (const n of nodes) {
           const nodeId = String(n.id || n._id || '');
           const nodeName = String(n.name || '');
@@ -146,7 +215,7 @@ export function CollectionPage() {
 
           if (
             (searchId && nodeId === searchId) ||
-            (targetParam && nodeId === targetParam) ||
+            (targetParam && (nodeId === targetParam || nodeSlug.toLowerCase() === targetParam.toLowerCase() || nodeName.toLowerCase() === targetParam.toLowerCase())) ||
             (targetNormalized && (
               normalizeCategoryString(nodeName) === targetNormalized ||
               normalizeCategoryString(nodeSlug) === targetNormalized ||
@@ -162,7 +231,7 @@ export function CollectionPage() {
           }
         }
 
-        // 2. Partial / Prefix match pass (e.g. "tops" matching "tops-for-teens")
+        // 2. Partial / Prefix / Plural match pass
         for (const n of nodes) {
           const nodeName = String(n.name || '');
           const nodeSlug = (n as any).slug ? String((n as any).slug) : '';
@@ -217,22 +286,32 @@ export function CollectionPage() {
     if (!categorySlug) return true;
     const lowerSlug = categorySlug.toLowerCase().trim();
     if (SPECIAL_SLUGS.has(lowerSlug)) return true;
+    if (CATEGORY_301_REDIRECTS[lowerSlug]) return true;
     if (currentContext) return true;
     return false;
   }, [categoriesLoading, categorySlug, SPECIAL_SLUGS, currentContext]);
 
-  // Auto-redirect URL to full canonical category slug (e.g. /product-category/tops -> /product-category/tops-for-teens)
+  // Auto-redirect URL to full canonical category slug (301 Redirection rules)
   useEffect(() => {
-    if (categoriesLoading) return;
     if (!categorySlug) return;
     const lowerSlug = categorySlug.toLowerCase().trim();
     if (SPECIAL_SLUGS.has(lowerSlug)) return;
 
-    if (canonicalCategory) {
+    // 1. Check explicit 301 redirect map first
+    if (CATEGORY_301_REDIRECTS[lowerSlug]) {
+      const targetSlug = CATEGORY_301_REDIRECTS[lowerSlug];
+      if (lowerSlug !== targetSlug) {
+        navigate(`/product-category/${targetSlug}`, { replace: true, state: location.state });
+        return;
+      }
+    }
+
+    // 2. Canonical redirect if category matched via fuzzy/partial
+    if (!categoriesLoading && canonicalCategory) {
       const rawSlug = (canonicalCategory as any).slug ? String((canonicalCategory as any).slug).replace(/-\d+$/, '') : canonicalCategory.name;
       const canonicalSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
 
-      if (canonicalSlug && categorySlug !== canonicalSlug) {
+      if (canonicalSlug && categorySlug !== canonicalSlug && lowerSlug !== canonicalSlug) {
         navigate(`/product-category/${canonicalSlug}`, { replace: true, state: location.state });
       }
     }

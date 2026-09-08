@@ -124,18 +124,69 @@ export function RefundRequestPage() {
 
         <div className="max-w-2xl mx-auto px-6 pt-10">
           {success ? (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-6 border border-green-100">
-                <svg className="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
-                </svg>
+            <div className="bg-white border border-gray-100 rounded-2xl p-8 md:p-12 shadow-sm text-[#111] space-y-8 my-6">
+              {/* Header & Icon */}
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-serif tracking-wide text-[#111] mb-2">
+                  Return Request Received
+                </h2>
+                <p className="text-sm text-gray-600 max-w-md mx-auto">
+                  Thank you for submitting your return request! We&apos;ve got it, and here&apos;s what happens next:
+                </p>
               </div>
-              <h2 className="text-2xl font-serif text-[#111] mb-3">Return Request Submitted</h2>
-              <p className="text-sm text-gray-500 mb-2">Your return request has been received for order <strong>{form.orderId}</strong>.</p>
-              <p className="text-sm text-gray-400 mb-8">Our team will review it and contact you at <strong>{form.email}</strong> within 3–5 business days.</p>
-              <Link to="/profile" className="inline-flex items-center gap-2 bg-[#111] text-white px-8 py-3 text-xs tracking-widest uppercase font-semibold hover:bg-[#333] transition-colors">
-                Back to My Orders
-              </Link>
+
+              <div className="border-t border-b border-gray-100 py-6 space-y-6 text-sm text-gray-600 leading-relaxed">
+                {/* What to expect */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs mb-1.5 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                    What to expect:
+                  </h3>
+                  <p className="text-gray-600">
+                    Our team is reviewing your request right now. You&apos;ll hear back from us within <strong>3–5 business days</strong> with an update on whether your return has been approved.
+                  </p>
+                </div>
+
+                {/* Once approved */}
+                <div>
+                  <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs mb-3">
+                    Once approved, here&apos;s how it works:
+                  </h3>
+                  <ol className="space-y-2.5 pl-5 list-decimal text-gray-600">
+                    <li>You&apos;ll receive a confirmation email with your return authorization and pickup/drop-off instructions.</li>
+                    <li>Pack the item securely in its original packaging, with tags intact.</li>
+                    <li>Our courier partner will pick it up from your registered address (or you can drop it off, depending on the option you choose).</li>
+                    <li>Once we receive and inspect the item, your refund or exchange will be processed within the timeline mentioned in our Return Policy.</li>
+                  </ol>
+                </div>
+
+                {/* Need to check on something */}
+                <div className="pt-2">
+                  <h3 className="font-semibold text-gray-900 uppercase tracking-wider text-xs mb-1">
+                    Need to check on something in the meantime?
+                  </h3>
+                  <p className="text-gray-600">
+                    Reach out to us at <a href="mailto:care@tobeque.com" className="text-[#111] font-medium underline">care@tobeque.com</a> or call/WhatsApp us at <a href="tel:+918447000200" className="text-[#111] font-medium underline">+91 8447000200</a>: we&apos;re happy to help.
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer thanks & CTA */}
+              <div className="text-center space-y-4 pt-2">
+                <p className="text-sm font-medium text-gray-800">
+                  Thanks for shopping with Tobeque. We&apos;ll be in touch soon!
+                </p>
+                <div>
+                  <Link to="/profile" className="inline-flex items-center gap-2 bg-[#111] text-white px-8 py-3.5 text-xs tracking-widest uppercase font-semibold hover:bg-[#333] transition-colors rounded-lg">
+                    Back to My Orders
+                  </Link>
+                </div>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-7">

@@ -8,6 +8,7 @@ export type { Product };
 
 export interface ProductCardProps {
   product: Product;
+  categorySlug?: string;
   isWishlisted?: boolean;
   onWishlistClick?: (e: React.MouseEvent, product: Product) => void;
   onQuickViewClick?: (product: Product) => void;
@@ -20,6 +21,7 @@ const isVideo = (url: string | undefined) => url && !!url.match(/\.(mp4|webm|ogg
 
 export function ProductCard({
   product,
+  categorySlug,
   isWishlisted = false,
   onWishlistClick,
   onQuickViewClick,
@@ -97,7 +99,8 @@ export function ProductCard({
     return [product.imageSrc];
   }, [product, activeColorName]);
 
-  const productUrl = `/product-category/${product.categorySlug || 'all'}/${product.slug || product.id}${activeColorName ? `?color=${encodeURIComponent(activeColorName)}` : ''}`;
+  const activeCategorySlug = (categorySlug && categorySlug !== 'all') ? categorySlug : (product.categorySlug || 'all');
+  const productUrl = `/product-category/${activeCategorySlug}/${product.slug || product.id}${activeColorName ? `?color=${encodeURIComponent(activeColorName)}` : ''}`;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);

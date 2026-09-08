@@ -111,7 +111,7 @@ export function CollectionPage() {
   const infiniteScrollRef = useRef<HTMLDivElement>(null);
 
   // Compute what tabs to show based on the tree and current categoryParam
-  const { currentContext, siblings } = useMemo<{ currentContext: Category | null, siblings: Category[] }>(() => {
+  const { currentContext, siblings, canonicalCategory } = useMemo<{ currentContext: Category | null, siblings: Category[], canonicalCategory: Category | null }>(() => {
     const searchId = searchParams.get('category') || stateCategory;
     const searchName = searchParams.get('name') || stateName;
 
@@ -128,6 +128,7 @@ export function CollectionPage() {
       const targetNormalized = normalizeCategoryString(targetParam);
 
       const dfs = (nodes: Category[], parent: Category | null): { node: Category; parent: Category | null } | null => {
+        // 1. Exact match pass
         for (const n of nodes) {
           const nodeId = String(n.id || n._id || '');
           const nodeName = String(n.name || '');
@@ -150,6 +151,30 @@ export function CollectionPage() {
             if (res) return res;
           }
         }
+
+        // 2. Partial / Prefix match pass (e.g. "tops" matching "tops-for-teens")
+        for (const n of nodes) {
+          const nodeName = String(n.name || '');
+          const nodeSlug = (n as any).slug ? String((n as any).slug) : '';
+          const normName = normalizeCategoryString(nodeName);
+          const normSlug = normalizeCategoryString(nodeSlug);
+
+          if (
+            targetNormalized && targetNormalized.length >= 2 && (
+              normSlug.startsWith(targetNormalized) ||
+              normName.startsWith(targetNormalized) ||
+              targetNormalized.startsWith(normSlug) ||
+              targetNormalized.startsWith(normName)
+            )
+          ) {
+            return { node: n, parent };
+          }
+          if (n.subcategories && n.subcategories.length > 0) {
+            const res = dfs(n.subcategories, n);
+            if (res) return res;
+          }
+        }
+
         return null;
       };
       const res = dfs(categoriesTree, null);
@@ -162,16 +187,16 @@ export function CollectionPage() {
     if (foundCategory) {
       // 1. If foundCategory has subcategories, show its subcategories as tabs
       if (foundCategory.subcategories && foundCategory.subcategories.length > 0) {
-        return { currentContext: foundCategory, siblings: foundCategory.subcategories };
+        return { currentContext: foundCategory, siblings: foundCategory.subcategories, canonicalCategory: foundCategory };
       }
       // 2. If foundCategory is a subcategory, show all sibling subcategories under the same parent
       if (parentCategory && parentCategory.subcategories && parentCategory.subcategories.length > 0) {
-        return { currentContext: parentCategory, siblings: parentCategory.subcategories };
+        return { currentContext: parentCategory, siblings: parentCategory.subcategories, canonicalCategory: foundCategory };
       }
     }
 
     // Default: show all main categories
-    return { currentContext: foundCategory, siblings: categoriesTree };
+    return { currentContext: foundCategory, siblings: categoriesTree, canonicalCategory: foundCategory };
   }, [categoriesTree, categoryParam, searchParams]);
 
   // Valid category check: redirect/render 404 if slug is unknown
@@ -185,6 +210,23 @@ export function CollectionPage() {
     if (currentContext) return true;
     return false;
   }, [categoriesLoading, categorySlug, SPECIAL_SLUGS, currentContext]);
+
+  // Auto-redirect URL to full canonical category slug (e.g. /product-category/tops -> /product-category/tops-for-teens)
+  useEffect(() => {
+    if (categoriesLoading) return;
+    if (!categorySlug) return;
+    const lowerSlug = categorySlug.toLowerCase().trim();
+    if (SPECIAL_SLUGS.has(lowerSlug)) return;
+
+    if (canonicalCategory) {
+      const rawSlug = (canonicalCategory as any).slug ? String((canonicalCategory as any).slug).replace(/-\d+$/, '') : canonicalCategory.name;
+      const canonicalSlug = String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+
+      if (canonicalSlug && categorySlug !== canonicalSlug) {
+        navigate(`/product-category/${canonicalSlug}`, { replace: true, state: location.state });
+      }
+    }
+  }, [categoriesLoading, categorySlug, canonicalCategory, SPECIAL_SLUGS, navigate, location.state]);
 
   if (!categoriesLoading && !isValidCategory) {
     return <NotFoundPage />;
@@ -662,6 +704,7 @@ export function CollectionPage() {
                   <ProductCard
                     key={p.id}
                     product={p}
+                    categorySlug={categorySlug}
                     viewMode="list"
                     isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
                     onWishlistClick={handleWishlist}
@@ -685,6 +728,7 @@ export function CollectionPage() {
                   <ProductCard
                     key={p.id}
                     product={p}
+                    categorySlug={categorySlug}
                     viewMode="grid"
                     isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
                     onWishlistClick={handleWishlist}
@@ -708,6 +752,7 @@ export function CollectionPage() {
                   <ProductCard
                     key={p.id}
                     product={p}
+                    categorySlug={categorySlug}
                     viewMode="grid"
                     isWishlisted={!!wishlistItems.find(item => item.name === p.name)}
                     onWishlistClick={handleWishlist}

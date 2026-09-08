@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
 import { useProduct, useProducts } from "../../hooks/useProducts";
 import api from "../../services/api";
@@ -131,7 +131,9 @@ function useDragScroll() {
 }
 
 export function ProductDetailPage() {
-  const { productSlug } = useParams<{ categorySlug?: string; productSlug: string }>();
+  const { categorySlug, productSlug } = useParams<{ categorySlug?: string; productSlug: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { currencySymbol } = useCurrency();
 
   const [searchParams] = useSearchParams();
@@ -139,6 +141,76 @@ export function ProductDetailPage() {
 
   // Fetch specific product from backend
   const { product, loading, error } = useProduct(productSlug);
+
+  // Categories tree for canonical category slug resolution fallback
+  const [categoriesTree, setCategoriesTree] = useState<any[]>([]);
+  useEffect(() => {
+    api.get('/api/categories/public')
+      .then(res => {
+        if (res.data.success && Array.isArray(res.data.categories)) {
+          setCategoriesTree(res.data.categories);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const SPECIAL_SLUGS = React.useMemo(() => new Set(['all', 'new-in', 'summer-clothes', 'customisable', 'collaboration', 'steal-the-style']), []);
+
+  const canonicalCategorySlug = React.useMemo(() => {
+    if (!categorySlug) return null;
+    const lowerSlug = categorySlug.toLowerCase().trim();
+    if (SPECIAL_SLUGS.has(lowerSlug)) return null;
+
+    if (product?.categorySlug) {
+      return product.categorySlug;
+    }
+
+    if (categoriesTree.length > 0) {
+      const normalize = (str: string) => str.toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+      const targetNorm = normalize(decodeURIComponent(categorySlug));
+
+      let matchedCat: any = null;
+      const dfs = (nodes: any[]) => {
+        for (const n of nodes) {
+          const nameNorm = normalize(n.name || '');
+          const slugNorm = normalize(n.slug || '');
+          if (nameNorm === targetNorm || slugNorm === targetNorm) {
+            matchedCat = n;
+            return;
+          }
+          if (n.subcategories?.length) dfs(n.subcategories);
+          if (matchedCat) return;
+        }
+        for (const n of nodes) {
+          const nameNorm = normalize(n.name || '');
+          const slugNorm = normalize(n.slug || '');
+          if (targetNorm.length >= 2 && (slugNorm.startsWith(targetNorm) || nameNorm.startsWith(targetNorm) || targetNorm.startsWith(slugNorm))) {
+            matchedCat = n;
+            return;
+          }
+          if (n.subcategories?.length) dfs(n.subcategories);
+          if (matchedCat) return;
+        }
+      };
+      dfs(categoriesTree);
+      if (matchedCat) {
+        const rawSlug = matchedCat.slug ? String(matchedCat.slug).replace(/-\d+$/, '') : matchedCat.name;
+        return String(rawSlug).toLowerCase().trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+      }
+    }
+
+    return null;
+  }, [categorySlug, product, categoriesTree, SPECIAL_SLUGS]);
+
+  useEffect(() => {
+    if (loading || !product || !categorySlug || !canonicalCategorySlug) return;
+    const lowerSlug = categorySlug.toLowerCase().trim();
+    if (SPECIAL_SLUGS.has(lowerSlug)) return;
+
+    if (categorySlug !== canonicalCategorySlug) {
+      navigate(`/product-category/${canonicalCategorySlug}/${productSlug}${location.search}`, { replace: true });
+    }
+  }, [loading, product, categorySlug, productSlug, canonicalCategorySlug, SPECIAL_SLUGS, navigate, location.search]);
 
   // Fetch related products catalog
   const { products: relatedProducts } = useProducts({ limit: 20, status: 'published' });
@@ -177,7 +249,6 @@ export function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<string>("S");
 
   const { addToCart, setIsCartOpen, wishlistItems, addToWishlist, removeFromWishlist } = useCart();
-  const navigate = useNavigate();
   const { user, isAuthenticated, openLoginModal } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -1203,6 +1274,7 @@ export function ProductDetailPage() {
                   >
                     <ProductCard
                       product={item}
+                      categorySlug={categorySlug}
                       onAddToCartClick={handleQuickAdd}
                       onQuickViewClick={setQuickViewProduct}
                     />
@@ -1249,6 +1321,7 @@ export function ProductDetailPage() {
                   >
                     <ProductCard
                       product={item}
+                      categorySlug={categorySlug}
                       onAddToCartClick={handleQuickAdd}
                       onQuickViewClick={setQuickViewProduct}
                     />

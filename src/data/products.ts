@@ -34,6 +34,14 @@ export type Product = {
   seoDescription?: string;
   seoKeywords?: string;
   seoSchema?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  twitterCard?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogType?: string;
   rawVariants?: any[]; // For frontend price/stock logic based on selections
   hotRightNowMedia?: string;
   styleItWith?: Product[];

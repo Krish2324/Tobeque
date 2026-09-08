@@ -10,6 +10,10 @@ export function AboutPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "About Us | Tobeque";
+  }, []);
+
+  useEffect(() => {
     const fetchPage = async () => {
       try {
         const response = await api.get('/api/about-us');

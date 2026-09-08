@@ -252,9 +252,18 @@ export function ProductCard({
             >
               {isVideo(img) ? (
                 <video
+                  ref={(el) => {
+                    if (el) {
+                      el.defaultMuted = true;
+                      el.muted = true;
+                    }
+                  }}
                   className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
                   src={img}
-                  autoPlay loop muted playsInline
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                   preload="metadata"
                 />
               ) : (
@@ -278,9 +287,18 @@ export function ProductCard({
           >
             {isVideo(displayImage) ? (
               <video
+                ref={(el) => {
+                  if (el) {
+                    el.defaultMuted = true;
+                    el.muted = true;
+                  }
+                }}
                 className="w-full h-full object-cover object-center absolute inset-0 transition-transform duration-700 ease-in-out group-hover:scale-105"
                 src={displayImage}
-                autoPlay loop muted playsInline
+                autoPlay
+                loop
+                muted
+                playsInline
               />
             ) : (
               <ImageWithSkeleton
@@ -296,9 +314,18 @@ export function ProductCard({
             {!selectedColorName && product.hoverImageSrc && isCardVisible && (
               isVideo(product.hoverImageSrc) ? (
                 <video
+                  ref={(el) => {
+                    if (el) {
+                      el.defaultMuted = true;
+                      el.muted = true;
+                    }
+                  }}
                   className="w-full h-full object-cover object-center absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out"
                   src={product.hoverImageSrc}
-                  autoPlay loop muted playsInline
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                   preload="metadata"
                 />
               ) : (

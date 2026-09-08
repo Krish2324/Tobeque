@@ -35,7 +35,7 @@ export function StyleJournalDetailPage() {
     if (!post) return;
 
     const originalTitle = document.title;
-    document.title = post.seoTitle || `${post.title} | Tobeque Journal`;
+    document.title = post.seoTitle || `${post.title} | Tobeque`;
 
     // Meta Description Tag
     let metaDesc = document.querySelector('meta[name="description"]');

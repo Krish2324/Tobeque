@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 import { Link } from 'react-router-dom';
@@ -38,6 +38,10 @@ const COOKIE_CATEGORIES = [
 
 export function CookieSettingsPage() {
   const [openSection, setOpenSection] = useState<string | null>('necessary');
+
+  useEffect(() => {
+    document.title = "Cookie Settings | Tobeque";
+  }, []);
 
   const toggleSection = (id: string) => {
     setOpenSection(openSection === id ? null : id);

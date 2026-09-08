@@ -135,7 +135,20 @@ export function CartDrawer() {
                       <span className="material-symbols-outlined text-[16px]">close</span>
                     </button>
                     {isVideo(item.imageSrc) ? (
-                      <video src={item.imageSrc} autoPlay loop muted playsInline className="w-24 h-32 object-cover bg-surface-container" />
+                      <video
+                        ref={(el) => {
+                          if (el) {
+                            el.defaultMuted = true;
+                            el.muted = true;
+                          }
+                        }}
+                        src={item.imageSrc}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-24 h-32 object-cover bg-surface-container"
+                      />
                     ) : (
                       <img src={item.imageSrc} alt={item.name} className="w-24 h-32 object-cover bg-surface-container" />
                     )}
@@ -330,7 +343,20 @@ export function CartDrawer() {
                     <div key={idx} className="flex flex-col gap-2">
                       <div className="aspect-[2/3] relative bg-surface-container">
                         {isVideo(p.imageSrc) ? (
-                          <video src={p.imageSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                          <video
+                            ref={(el) => {
+                              if (el) {
+                                el.defaultMuted = true;
+                                el.muted = true;
+                              }
+                            }}
+                            src={p.imageSrc}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <img src={p.imageSrc} alt={p.name} className="w-full h-full object-cover" />
                         )}

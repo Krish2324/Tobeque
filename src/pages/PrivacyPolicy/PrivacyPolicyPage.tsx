@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 
 export function PrivacyPolicyPage() {
+  useEffect(() => {
+    document.title = "Privacy Policy | Tobeque";
+  }, []);
+
   return (
     <>
       <Navbar />

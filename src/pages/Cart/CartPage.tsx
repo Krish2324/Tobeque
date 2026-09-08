@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +8,9 @@ import { Navbar } from '../../components/Navbar/Navbar';
 const isVideo = (url: string | undefined) => url && /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(url);
 
 export function CartPage() {
+  useEffect(() => {
+    document.title = "Shopping Bag | Tobeque";
+  }, []);
   const navigate = useNavigate();
   const { currencySymbol } = useCurrency();
   const {
@@ -83,7 +87,20 @@ export function CartPage() {
                     {/* Image */}
                     <div className="w-20 h-28 sm:w-24 sm:h-32 shrink-0 bg-gray-50 overflow-hidden">
                       {isVideo(item.imageSrc) ? (
-                        <video src={item.imageSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                        <video
+                          ref={(el) => {
+                            if (el) {
+                              el.defaultMuted = true;
+                              el.muted = true;
+                            }
+                          }}
+                          src={item.imageSrc}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <img src={item.imageSrc} alt={item.name} className="w-full h-full object-cover" />
                       )}

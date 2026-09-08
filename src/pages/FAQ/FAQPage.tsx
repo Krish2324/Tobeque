@@ -17,6 +17,7 @@ export function FAQPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "FAQs | Tobeque";
     api.get("/api/faqs")
       .then((res) => {
         if (res.data.success) setFaqs(res.data.faqs);

@@ -30,6 +30,7 @@ export function ContactPage() {
   const [responseMsg, setResponseMsg] = useState("");
 
   useEffect(() => {
+    document.title = "Contact Us | Tobeque";
     api.get("/api/contact/settings")
       .then(res => { if (res.data?.data) setSettings(res.data.data); })
       .catch(() => {}); // fallback to defaults

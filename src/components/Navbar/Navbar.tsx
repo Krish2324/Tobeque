@@ -151,7 +151,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
           <div className="flex md:hidden flex-1 items-center justify-start">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="text-secondary p-1 -ml-1 transition-transform active:scale-95 cursor-pointer"
+              className="text-primary hover:text-secondary p-1 -ml-1 transition-colors active:scale-95 cursor-pointer"
             >
               <span className="material-symbols-outlined font-light !text-[22px]">menu</span>
             </button>
@@ -164,7 +164,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <div className="relative group py-4">
               <button
                 type="button"
-                className="text-on-surface-variant dark:text-on-secondary-fixed-variant group-hover:text-primary dark:group-hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-pointer"
+                className="text-primary hover:text-secondary transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase flex items-center gap-1 cursor-pointer font-semibold"
               >
                 Shop
                 <span className="material-symbols-outlined !text-[13px] transition-transform duration-300 group-hover:rotate-180">keyboard_arrow_down</span>
@@ -253,13 +253,13 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
             {/* New Arrivals */}
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
-              to="/"
+              className="text-primary hover:text-secondary transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase font-semibold"
+              to="/product-category/new-in"
             >
               New Arrivals
             </Link>
             <Link
-              className="text-on-surface-variant dark:text-on-secondary-fixed-variant hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase"
+              className="text-primary hover:text-secondary transition-colors duration-300 font-label-caps text-[10px] tracking-wider uppercase font-semibold"
               to="/collection"
             >
               Collections
@@ -274,11 +274,11 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
           </div>
 
           {/* Trailing Icons - Right (Desktop) */}
-          <div className="hidden md:flex flex-1 shrink-0 items-center justify-end gap-3 text-secondary dark:text-on-primary-fixed">
+          <div className="hidden md:flex flex-1 shrink-0 items-center justify-end gap-3 text-primary dark:text-on-primary-fixed">
             <button
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
-              className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
+              className="hover:text-secondary transition-colors duration-300 cursor-pointer flex items-center"
             >
               <span className="material-symbols-outlined !text-[18px]" data-icon="search">
                 search
@@ -289,7 +289,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
                 <button
                   aria-label="Account"
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
+                  className="hover:text-secondary transition-colors duration-300 cursor-pointer flex items-center"
                 >
                   <span className="material-symbols-outlined !text-[18px]" data-icon="person">
                     person
@@ -311,7 +311,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
               <button
                 aria-label="Login"
                 onClick={() => openLoginModal()}
-                className="hover:text-primary dark:hover:text-on-primary-fixed transition-colors duration-300 cursor-pointer flex items-center"
+                className="hover:text-secondary transition-colors duration-300 cursor-pointer flex items-center"
               >
                 <span className="material-symbols-outlined !text-[18px]" data-icon="person">
                   person
@@ -322,7 +322,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag and Wishlist"
-              className={`hover:text-primary dark:hover:text-on-primary-fixed transition-all duration-300 relative cursor-pointer flex items-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+              className={`hover:text-secondary transition-all duration-300 relative cursor-pointer flex items-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
                 }`}
             >
               <span
@@ -351,7 +351,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsSearchOpen(true)}
               aria-label="Search"
-              className="text-secondary p-1 transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+              className="text-primary hover:text-secondary p-1 transition-colors active:scale-95 cursor-pointer flex items-center justify-center"
             >
               <span className="material-symbols-outlined font-light !text-[20px]">search</span>
             </button>
@@ -360,7 +360,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label="Shopping Bag and Wishlist"
-              className={`text-secondary p-1 -mr-1 relative transition-transform active:scale-95 cursor-pointer flex items-center justify-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
+              className={`text-primary hover:text-secondary p-1 -mr-1 relative transition-colors active:scale-95 cursor-pointer flex items-center justify-center ${isCartBouncing ? 'animate-[headerCartBounce_0.6s_cubic-bezier(0.175,0.885,0.32,1.275)]' : ''
                 }`}
             >
               <span className={`material-symbols-outlined font-light !text-[20px] ${showWishlistBadge ? 'text-red-500' : ''
@@ -441,7 +441,7 @@ export function Navbar({ onSearchProductSelect }: NavbarProps) {
 
               {/* Navigation Links */}
               <div className="flex flex-col gap-5 pt-1">
-                <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-black flex items-center justify-between hover:text-gray-700 transition-colors">
+                <Link to="/product-category/new-in" onClick={() => setIsMobileMenuOpen(false)} className="text-[12px] font-bold tracking-widest uppercase text-black flex items-center justify-between hover:text-gray-700 transition-colors">
                   NEW ARRIVALS
                   <span className="material-symbols-outlined text-[16px] text-gray-600">chevron_right</span>
                 </Link>

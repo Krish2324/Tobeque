@@ -408,6 +408,37 @@ export function ProductDetailPage() {
       metaKeywords.setAttribute('content', product.seoKeywords);
     }
 
+    // Helper function for dynamic meta tag injection (Twitter & OG)
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attrName, attrVal);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    const toAbsoluteUrl = (url: string | undefined): string => {
+      if (!url) return `${window.location.origin}/2bq Logo2.png`;
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
+
+    // Open Graph (OG) Meta Tags
+    setMetaTag('property', 'og:title', product.ogTitle || product.seoTitle || `${product.name} | Tobeque`);
+    setMetaTag('property', 'og:description', product.ogDescription || product.seoDescription || product.description || product.name);
+    setMetaTag('property', 'og:image', toAbsoluteUrl(product.ogImage || product.imageSrc));
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', product.ogType || 'product');
+
+    // Twitter Card Meta Tags
+    setMetaTag('name', 'twitter:card', product.twitterCard || 'summary_large_image');
+    setMetaTag('name', 'twitter:title', product.twitterTitle || product.seoTitle || `${product.name} | Tobeque`);
+    setMetaTag('name', 'twitter:description', product.twitterDescription || product.seoDescription || product.description || product.name);
+    setMetaTag('name', 'twitter:image', toAbsoluteUrl(product.twitterImage || product.imageSrc));
+
     // JSON-LD Structured Data Schema Injection
     let scriptTag = document.getElementById('product-schema-jsonld') as HTMLScriptElement | null;
     if (!scriptTag) {
@@ -430,7 +461,7 @@ export function ProductDetailPage() {
         "offers": {
           "@type": "Offer",
           "priceCurrency": "INR",
-          "price": product.price ? product.price.replace(/[^0-9.]/g, '') : "0",
+          "price": product.price ? String(product.price).replace(/[^0-9.]/g, '') : "0",
           "availability": "https://schema.org/InStock"
         }
       };

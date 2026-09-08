@@ -1,7 +1,12 @@
+import { useEffect } from 'react';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 
 export function TermsAndConditionsPage() {
+  useEffect(() => {
+    document.title = "Terms & Conditions | Tobeque";
+  }, []);
+
   return (
     <>
       <Navbar />

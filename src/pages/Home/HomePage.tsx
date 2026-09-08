@@ -275,6 +275,12 @@ export function HomePage() {
 
               return isVideoContent ? (
                 <video
+                  ref={(el) => {
+                    if (el) {
+                      el.defaultMuted = true;
+                      el.muted = true;
+                    }
+                  }}
                   key={mediaUrl}
                   autoPlay
                   loop
@@ -543,6 +549,12 @@ export function HomePage() {
 
                 return isVideo ? (
                   <video
+                    ref={(el) => {
+                      if (el) {
+                        el.defaultMuted = true;
+                        el.muted = true;
+                      }
+                    }}
                     autoPlay
                     loop
                     muted
@@ -709,8 +721,17 @@ export function HomePage() {
                 >
                   {isVid ? (
                     <video
+                      ref={(el) => {
+                        if (el) {
+                          el.defaultMuted = true;
+                          el.muted = true;
+                        }
+                      }}
                       src={mediaUrl}
-                      autoPlay loop muted playsInline
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     />
                   ) : (

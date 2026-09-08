@@ -279,6 +279,10 @@ export function CareerPage() {
   const [applyingForJob, setApplyingForJob] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Careers | Tobeque";
+  }, []);
+
+  useEffect(() => {
     const fetchJobs = async () => {
       try {
         const response = await api.get('/api/job-postings/public');

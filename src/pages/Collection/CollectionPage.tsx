@@ -34,6 +34,16 @@ interface Category {
   subcategories?: Category[];
   seoTitle?: string;
   seoDescription?: string;
+  seoKeywords?: string;
+  seoSchema?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  twitterImage?: string;
+  twitterCard?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  ogType?: string;
 }
 
 export function CollectionPage() {
@@ -55,6 +65,10 @@ export function CollectionPage() {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const { categorySlug } = useParams<{ categorySlug?: string }>();
+
+  useEffect(() => {
+    setIsDescriptionExpanded(false);
+  }, [categorySlug]);
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const stateCategory = (location.state as any)?.category;
@@ -62,10 +76,6 @@ export function CollectionPage() {
 
   const categoryParam = categorySlug || searchParams.get('category') || stateCategory;
   const categoryNameParam = searchParams.get('name') || stateName;
-
-  useEffect(() => {
-    setIsDescriptionExpanded(false);
-  }, [categorySlug]);
 
   // ── Live categories tree ──────────────────────────────────────────────────
   const [categoriesTree, setCategoriesTree] = useState<Category[]>([]);
@@ -373,7 +383,7 @@ export function CollectionPage() {
         ? decodeURIComponent(categorySlug).replace(/-/g, ' ').toUpperCase()
         : 'ALL PRODUCTS');
 
-  // Dynamic Head SEO Metadata Management (Meta Title & Meta Description)
+  // Dynamic Head SEO Metadata Management (Title, Description, Keywords, Schema, Twitter, OG)
   useEffect(() => {
     const originalTitle = document.title;
 
@@ -403,9 +413,76 @@ export function CollectionPage() {
     const oldDesc = metaDesc.getAttribute('content') || '';
     metaDesc.setAttribute('content', descText);
 
+    // Meta Keywords Tag
+    let metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (!metaKeywords) {
+      metaKeywords = document.createElement('meta');
+      metaKeywords.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKeywords);
+    }
+    const oldKeywords = metaKeywords.getAttribute('content') || '';
+    if (currentContext?.seoKeywords) {
+      metaKeywords.setAttribute('content', currentContext.seoKeywords);
+    }
+
+    // Helper for setting dynamic meta tags (Twitter & OG)
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attrName, attrVal);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    const toAbsoluteUrl = (url: string | undefined): string => {
+      if (!url) return `${window.location.origin}/2bq Logo2.png`;
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
+
+    // Open Graph (OG) Meta Tags
+    setMetaTag('property', 'og:title', currentContext?.ogTitle || titleText);
+    setMetaTag('property', 'og:description', currentContext?.ogDescription || descText);
+    setMetaTag('property', 'og:image', toAbsoluteUrl(currentContext?.ogImage));
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', currentContext?.ogType || 'website');
+
+    // Twitter Card Meta Tags
+    setMetaTag('name', 'twitter:card', currentContext?.twitterCard || 'summary_large_image');
+    setMetaTag('name', 'twitter:title', currentContext?.twitterTitle || titleText);
+    setMetaTag('name', 'twitter:description', currentContext?.twitterDescription || descText);
+    setMetaTag('name', 'twitter:image', toAbsoluteUrl(currentContext?.twitterImage));
+
+    // JSON-LD Structured Data Schema Injection
+    let scriptTag = document.getElementById('category-schema-jsonld') as HTMLScriptElement | null;
+    if (!scriptTag) {
+      scriptTag = document.createElement('script');
+      scriptTag.id = 'category-schema-jsonld';
+      scriptTag.setAttribute('type', 'application/ld+json');
+      document.head.appendChild(scriptTag);
+    }
+
+    if (currentContext?.seoSchema) {
+      scriptTag.textContent = currentContext.seoSchema;
+    } else {
+      const defaultSchema = {
+        "@context": "https://schema.org/",
+        "@type": "CollectionPage",
+        "name": displayTitle,
+        "description": descText,
+        "url": window.location.href
+      };
+      scriptTag.textContent = JSON.stringify(defaultSchema);
+    }
+
     return () => {
       document.title = originalTitle;
       if (metaDesc) metaDesc.setAttribute('content', oldDesc);
+      if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
+      if (scriptTag) scriptTag.remove();
     };
   }, [currentContext, displayTitle]);
 
@@ -438,8 +515,17 @@ export function CollectionPage() {
 
                     return isVideo ? (
                       <video
+                        ref={(el) => {
+                          if (el) {
+                            el.defaultMuted = true;
+                            el.muted = true;
+                          }
+                        }}
                         key={mediaUrl}
-                        autoPlay loop muted playsInline
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
                         className="w-[102%] h-[102%] object-cover object-center absolute -top-[1%] -left-[1%] max-w-none"
                       >
                         <source src={mediaUrl} type="video/mp4" />
@@ -1001,9 +1087,9 @@ export function CollectionPage() {
                 </div>
               )}
 
-              {/* Dynamic Description Sections: Fully hidden until Read More is clicked */}
-              {hasSections && isDescriptionExpanded && (
-                <div className={`grid grid-cols-1 ${validSections.length > 1 ? 'md:grid-cols-2' : ''} gap-8 md:gap-12 ${hasDesc ? 'border-t border-slate-200/60 pt-8' : ''} animate-fade-in`}>
+              {/* Dynamic Description Sections: Always physically in DOM HTML for SEO/crawlers, hidden visually via CSS until Read More is clicked */}
+              {hasSections && (
+                <div className={`${isDescriptionExpanded ? 'grid' : 'hidden'} grid-cols-1 ${validSections.length > 1 ? 'md:grid-cols-2' : ''} gap-8 md:gap-12 ${hasDesc ? 'border-t border-slate-200/60 pt-8' : ''} transition-all duration-300`}>
                   {validSections.map((sec, idx) => (
                     <div key={idx} className="space-y-3">
                       {sec.title?.trim() && (
@@ -1026,7 +1112,7 @@ export function CollectionPage() {
                 </div>
               )}
 
-              {/* Read More / Read Less Text Link (Left Aligned) */}
+              {/* Read More / Read Less Toggle Button */}
               {hasSections && (
                 <div className="flex justify-start pt-1">
                   <button

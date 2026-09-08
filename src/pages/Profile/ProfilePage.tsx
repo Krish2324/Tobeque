@@ -83,6 +83,10 @@ export function ProfilePage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState('');
 
+  useEffect(() => {
+    document.title = "My Account | Tobeque";
+  }, []);
+
   // Sync tab if navigated from Navbar (e.g. clicking wishlist heart icon while already on profile page)
   useEffect(() => {
     if (location.state?.activeTab) {
@@ -857,6 +861,12 @@ export function ProfilePage() {
                         <Link to={`/product-category/${item.categorySlug || 'all'}/${item.slug || item.id}`} className="aspect-[3/4] overflow-hidden bg-surface-container block">
                           {isVideo(item.imageSrc) ? (
                             <video
+                              ref={(el) => {
+                                if (el) {
+                                  el.defaultMuted = true;
+                                  el.muted = true;
+                                }
+                              }}
                               src={item.imageSrc}
                               autoPlay
                               loop

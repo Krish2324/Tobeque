@@ -12,6 +12,10 @@ export function StealTheStylePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Steal the Style | Tobeque";
+  }, []);
+
+  useEffect(() => {
     const fetchStyles = async () => {
       try {
         const response = await api.get('/api/community-styles/public');

@@ -10,6 +10,10 @@ export function StyleJournalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "Style Journal | Tobeque";
+  }, []);
+
+  useEffect(() => {
     const fetchBlogs = async () => {
       try {
         const response = await api.get('/api/blogs?status=published');

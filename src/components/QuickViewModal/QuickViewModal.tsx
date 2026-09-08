@@ -259,9 +259,18 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
 
           {isVideo(currentImage) ? (
             <video
+              ref={(el) => {
+                if (el) {
+                  el.defaultMuted = true;
+                  el.muted = true;
+                }
+              }}
               src={currentImage}
               className={`w-full h-full object-cover object-top transition-opacity duration-500 relative z-10 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-              autoPlay loop muted playsInline
+              autoPlay
+              loop
+              muted
+              playsInline
               onLoadedData={() => setImageLoaded(true)}
             />
           ) : (
@@ -290,7 +299,20 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
                     }`}
                   >
                     {isVideo(img) ? (
-                      <video src={img} className="w-full h-full object-cover" muted />
+                      <video
+                        ref={(el) => {
+                          if (el) {
+                            el.defaultMuted = true;
+                            el.muted = true;
+                          }
+                        }}
+                        src={img}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                      />
                     ) : (
                       <img src={img} alt={product.imageAltTag || product.imageAlt || product.name} className="w-full h-full object-cover" />
                     )}

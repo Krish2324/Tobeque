@@ -163,6 +163,10 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('online');
 
   useEffect(() => {
+    document.title = "Checkout | Tobeque";
+  }, []);
+
+  useEffect(() => {
     if (document.getElementById('razorpay-checkout-script')) return;
     const script = document.createElement('script');
     script.id = 'razorpay-checkout-script';
@@ -1181,7 +1185,20 @@ export function CheckoutPage() {
                           {item.imageSrc && (
                             <div className="w-12 h-14 rounded-lg overflow-hidden bg-surface-container shrink-0 relative group">
                               {item.imageSrc.match(/\.(mp4|webm|ogg)$/i) ? (
-                                <video src={item.imageSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                                <video
+                                  ref={(el) => {
+                                    if (el) {
+                                      el.defaultMuted = true;
+                                      el.muted = true;
+                                    }
+                                  }}
+                                  src={item.imageSrc}
+                                  autoPlay
+                                  loop
+                                  muted
+                                  playsInline
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
                                 <img src={item.imageSrc} alt={item.name} className="w-full h-full object-cover" />
                               )}

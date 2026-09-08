@@ -33,6 +33,7 @@ export function RefundRequestPage() {
 
   // Pre-fill form from URL query param + logged-in user details
   useEffect(() => {
+    document.title = "Refund Request | Tobeque";
     const params = new URLSearchParams(location.search);
     const prefilledOrderId = params.get('orderId') || '';
     setForm(prev => ({

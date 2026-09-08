@@ -205,9 +205,18 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                       <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative rounded-md">
                         {isVideo(thumbUrl) ? (
                           <video
+                            ref={(el) => {
+                              if (el) {
+                                el.defaultMuted = true;
+                                el.muted = true;
+                              }
+                            }}
                             src={thumbUrl}
                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            autoPlay loop muted playsInline
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
                           />
                         ) : (
                           <img

@@ -1,8 +1,13 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '../../components/Navbar/Navbar';
 import { Footer } from '../../components/Footer/Footer';
 
 export function NotFoundPage() {
+  useEffect(() => {
+    document.title = "404 Not Found | Tobeque";
+  }, []);
+
   return (
     <div className="min-h-[100dvh] bg-surface flex flex-col font-sans">
       <Navbar />

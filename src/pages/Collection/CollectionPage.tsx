@@ -504,16 +504,38 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
       metaKeywords.setAttribute('content', currentContext.seoKeywords);
     }
 
+    const injectedMetaElements: Element[] = [];
+
     // Helper for setting dynamic meta tags (Twitter & OG)
     const setMetaTag = (attrName: string, attrVal: string, content: string) => {
       let tag = document.querySelector(`meta[${attrName}="${attrVal}"]`);
       if (!tag) {
         tag = document.createElement('meta');
         tag.setAttribute(attrName, attrVal);
+        tag.setAttribute('data-dynamic-meta', 'true');
         document.head.appendChild(tag);
+        injectedMetaElements.push(tag);
       }
       tag.setAttribute('content', content);
       return tag;
+    };
+
+    const injectRawMetaSyntax = (syntaxText: string | undefined) => {
+      if (!syntaxText || !syntaxText.trim()) return false;
+      const metaRegex = /<meta\s+([^>]+)>/gi;
+      let match;
+      let count = 0;
+      while ((match = metaRegex.exec(syntaxText)) !== null) {
+        const attrs = match[1];
+        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
+        const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
+        if (nameMatch && contentMatch) {
+          const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
+          setMetaTag(attrName, nameMatch[1], contentMatch[1]);
+          count++;
+        }
+      }
+      return count > 0;
     };
 
     const toAbsoluteUrl = (url: string | undefined): string => {
@@ -523,17 +545,23 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
     };
 
     // Open Graph (OG) Meta Tags
-    setMetaTag('property', 'og:title', currentContext?.ogTitle || titleText);
-    setMetaTag('property', 'og:description', currentContext?.ogDescription || descText);
-    setMetaTag('property', 'og:image', toAbsoluteUrl(currentContext?.ogImage));
-    setMetaTag('property', 'og:url', window.location.href);
-    setMetaTag('property', 'og:type', currentContext?.ogType || 'website');
+    const hasCustomOg = injectRawMetaSyntax((currentContext as any)?.ogMeta);
+    if (!hasCustomOg) {
+      setMetaTag('property', 'og:title', currentContext?.ogTitle || titleText);
+      setMetaTag('property', 'og:description', currentContext?.ogDescription || descText);
+      setMetaTag('property', 'og:image', toAbsoluteUrl(currentContext?.ogImage));
+      setMetaTag('property', 'og:url', window.location.href);
+      setMetaTag('property', 'og:type', currentContext?.ogType || 'website');
+    }
 
     // Twitter Card Meta Tags
-    setMetaTag('name', 'twitter:card', currentContext?.twitterCard || 'summary_large_image');
-    setMetaTag('name', 'twitter:title', currentContext?.twitterTitle || titleText);
-    setMetaTag('name', 'twitter:description', currentContext?.twitterDescription || descText);
-    setMetaTag('name', 'twitter:image', toAbsoluteUrl(currentContext?.twitterImage));
+    const hasCustomTwitter = injectRawMetaSyntax((currentContext as any)?.twitterMeta);
+    if (!hasCustomTwitter) {
+      setMetaTag('name', 'twitter:card', currentContext?.twitterCard || 'summary_large_image');
+      setMetaTag('name', 'twitter:title', currentContext?.twitterTitle || titleText);
+      setMetaTag('name', 'twitter:description', currentContext?.twitterDescription || descText);
+      setMetaTag('name', 'twitter:image', toAbsoluteUrl(currentContext?.twitterImage));
+    }
 
     // JSON-LD Structured Data Schema Injection
     let scriptTag = document.getElementById('category-schema-jsonld') as HTMLScriptElement | null;
@@ -562,6 +590,8 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
       if (metaDesc) metaDesc.setAttribute('content', oldDesc);
       if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
       if (scriptTag) scriptTag.remove();
+      // Remove all dynamic injected meta tags to ensure clean head tag on navigation
+      document.querySelectorAll('meta[data-dynamic-meta="true"]').forEach(el => el.remove());
     };
   }, [currentContext, displayTitle]);
 

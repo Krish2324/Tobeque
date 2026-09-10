@@ -422,10 +422,29 @@ export function ProductDetailPage() {
       if (!tag) {
         tag = document.createElement('meta');
         tag.setAttribute(attrName, attrVal);
+        tag.setAttribute('data-dynamic-meta', 'true');
         document.head.appendChild(tag);
       }
       tag.setAttribute('content', content);
       return tag;
+    };
+
+    const injectRawMetaSyntax = (syntaxText: string | undefined) => {
+      if (!syntaxText || !syntaxText.trim()) return false;
+      const metaRegex = /<meta\s+([^>]+)>/gi;
+      let match;
+      let count = 0;
+      while ((match = metaRegex.exec(syntaxText)) !== null) {
+        const attrs = match[1];
+        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
+        const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
+        if (nameMatch && contentMatch) {
+          const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
+          setMetaTag(attrName, nameMatch[1], contentMatch[1]);
+          count++;
+        }
+      }
+      return count > 0;
     };
 
     const toAbsoluteUrl = (url: string | undefined): string => {
@@ -435,17 +454,23 @@ export function ProductDetailPage() {
     };
 
     // Open Graph (OG) Meta Tags
-    setMetaTag('property', 'og:title', product.ogTitle || product.seoTitle || `${product.name} | Tobeque`);
-    setMetaTag('property', 'og:description', product.ogDescription || product.seoDescription || product.description || product.name);
-    setMetaTag('property', 'og:image', toAbsoluteUrl(product.ogImage || product.imageSrc));
-    setMetaTag('property', 'og:url', window.location.href);
-    setMetaTag('property', 'og:type', product.ogType || 'product');
+    const hasCustomOg = injectRawMetaSyntax((product as any)?.ogMeta);
+    if (!hasCustomOg) {
+      setMetaTag('property', 'og:title', product.ogTitle || product.seoTitle || `${product.name} | Tobeque`);
+      setMetaTag('property', 'og:description', product.ogDescription || product.seoDescription || product.description || product.name);
+      setMetaTag('property', 'og:image', toAbsoluteUrl(product.ogImage || product.imageSrc));
+      setMetaTag('property', 'og:url', window.location.href);
+      setMetaTag('property', 'og:type', product.ogType || 'product');
+    }
 
     // Twitter Card Meta Tags
-    setMetaTag('name', 'twitter:card', product.twitterCard || 'summary_large_image');
-    setMetaTag('name', 'twitter:title', product.twitterTitle || product.seoTitle || `${product.name} | Tobeque`);
-    setMetaTag('name', 'twitter:description', product.twitterDescription || product.seoDescription || product.description || product.name);
-    setMetaTag('name', 'twitter:image', toAbsoluteUrl(product.twitterImage || product.imageSrc));
+    const hasCustomTwitter = injectRawMetaSyntax((product as any)?.twitterMeta);
+    if (!hasCustomTwitter) {
+      setMetaTag('name', 'twitter:card', product.twitterCard || 'summary_large_image');
+      setMetaTag('name', 'twitter:title', product.twitterTitle || product.seoTitle || `${product.name} | Tobeque`);
+      setMetaTag('name', 'twitter:description', product.twitterDescription || product.seoDescription || product.description || product.name);
+      setMetaTag('name', 'twitter:image', toAbsoluteUrl(product.twitterImage || product.imageSrc));
+    }
 
     // JSON-LD Structured Data Schema Injection
     let scriptTag = document.getElementById('product-schema-jsonld') as HTMLScriptElement | null;
@@ -481,6 +506,7 @@ export function ProductDetailPage() {
       if (metaDesc) metaDesc.setAttribute('content', oldDesc);
       if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
       if (scriptTag) scriptTag.remove();
+      document.querySelectorAll('meta[data-dynamic-meta="true"]').forEach(el => el.remove());
     };
   }, [product]);
 

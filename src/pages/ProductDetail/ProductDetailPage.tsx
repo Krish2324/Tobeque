@@ -392,7 +392,10 @@ export function ProductDetailPage() {
     if (!product) return;
 
     const originalTitle = document.title;
-    document.title = product.seoTitle || `${product.name} | Tobeque`;
+    const titleText = product.seoTitle || product.ogTitle || product.twitterTitle || `${product.name} | Tobeque`;
+    document.title = titleText;
+
+    const descText = product.seoDescription || product.ogDescription || product.twitterDescription || product.description || product.name;
 
     // Meta Description Tag
     let metaDesc = document.querySelector('meta[name="description"]');
@@ -402,7 +405,7 @@ export function ProductDetailPage() {
       document.head.appendChild(metaDesc);
     }
     const oldDesc = metaDesc.getAttribute('content') || '';
-    metaDesc.setAttribute('content', product.seoDescription || product.description || product.name);
+    metaDesc.setAttribute('content', descText);
 
     // Meta Keywords Tag
     let metaKeywords = document.querySelector('meta[name="keywords"]');
@@ -418,16 +421,22 @@ export function ProductDetailPage() {
 
     // Helper function for dynamic meta tag injection (Twitter & OG)
     const setMetaTag = (attrName: string, attrVal: string, content: string) => {
-      let tag = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+
       if (!tag) {
         tag = document.createElement('meta');
-        tag.setAttribute(attrName, attrVal);
+        tag.setAttribute(canonicalAttr, attrVal);
         tag.setAttribute('data-dynamic-meta', 'true');
         document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
       }
       tag.setAttribute('content', content);
       return tag;
     };
+
+    const injectedTagKeys = new Set<string>();
 
     const injectRawMetaSyntax = (syntaxText: string | undefined) => {
       if (!syntaxText || !syntaxText.trim()) return false;
@@ -439,8 +448,11 @@ export function ProductDetailPage() {
         const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
         const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
         if (nameMatch && contentMatch) {
+          const tagName = nameMatch[1].trim();
+          const contentVal = contentMatch[1].trim();
           const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
-          setMetaTag(attrName, nameMatch[1], contentMatch[1]);
+          setMetaTag(attrName, tagName, contentVal);
+          injectedTagKeys.add(tagName.toLowerCase());
           count++;
         }
       }
@@ -453,22 +465,38 @@ export function ProductDetailPage() {
       return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
     };
 
-    // Open Graph (OG) Meta Tags
-    const hasCustomOg = injectRawMetaSyntax((product as any)?.ogMeta);
-    if (!hasCustomOg) {
-      setMetaTag('property', 'og:title', product.ogTitle || product.seoTitle || `${product.name} | Tobeque`);
-      setMetaTag('property', 'og:description', product.ogDescription || product.seoDescription || product.description || product.name);
+    // Inject raw custom OG & Twitter syntax if provided
+    injectRawMetaSyntax((product as any)?.ogMeta);
+    injectRawMetaSyntax((product as any)?.twitterMeta);
+
+    // Open Graph (OG) Meta Tags - Fallback for any un-injected tag
+    if (!injectedTagKeys.has('og:title')) {
+      setMetaTag('property', 'og:title', product.ogTitle || titleText);
+    }
+    if (!injectedTagKeys.has('og:description')) {
+      setMetaTag('property', 'og:description', product.ogDescription || descText);
+    }
+    if (!injectedTagKeys.has('og:image')) {
       setMetaTag('property', 'og:image', toAbsoluteUrl(product.ogImage || product.imageSrc));
+    }
+    if (!injectedTagKeys.has('og:url')) {
       setMetaTag('property', 'og:url', window.location.href);
+    }
+    if (!injectedTagKeys.has('og:type')) {
       setMetaTag('property', 'og:type', product.ogType || 'product');
     }
 
-    // Twitter Card Meta Tags
-    const hasCustomTwitter = injectRawMetaSyntax((product as any)?.twitterMeta);
-    if (!hasCustomTwitter) {
+    // Twitter Card Meta Tags - Fallback for any un-injected tag
+    if (!injectedTagKeys.has('twitter:card')) {
       setMetaTag('name', 'twitter:card', product.twitterCard || 'summary_large_image');
-      setMetaTag('name', 'twitter:title', product.twitterTitle || product.seoTitle || `${product.name} | Tobeque`);
-      setMetaTag('name', 'twitter:description', product.twitterDescription || product.seoDescription || product.description || product.name);
+    }
+    if (!injectedTagKeys.has('twitter:title')) {
+      setMetaTag('name', 'twitter:title', product.twitterTitle || titleText);
+    }
+    if (!injectedTagKeys.has('twitter:description')) {
+      setMetaTag('name', 'twitter:description', product.twitterDescription || descText);
+    }
+    if (!injectedTagKeys.has('twitter:image')) {
       setMetaTag('name', 'twitter:image', toAbsoluteUrl(product.twitterImage || product.imageSrc));
     }
 

@@ -467,9 +467,13 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
     const originalTitle = document.title;
 
     // Determine Meta Title
-    const titleText = currentContext?.seoTitle && currentContext.seoTitle.trim()
+    const titleText = (currentContext?.seoTitle && currentContext.seoTitle.trim())
       ? currentContext.seoTitle.trim()
-      : `${displayTitle} | Tobeque`;
+      : (currentContext?.ogTitle && currentContext.ogTitle.trim())
+        ? currentContext.ogTitle.trim()
+        : (currentContext?.twitterTitle && currentContext.twitterTitle.trim())
+          ? currentContext.twitterTitle.trim()
+          : `${displayTitle} | Tobeque`;
 
     document.title = titleText;
 
@@ -477,6 +481,10 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
     let descText = '';
     if (currentContext?.seoDescription && currentContext.seoDescription.trim()) {
       descText = currentContext.seoDescription.trim();
+    } else if (currentContext?.ogDescription && currentContext.ogDescription.trim()) {
+      descText = currentContext.ogDescription.trim();
+    } else if (currentContext?.twitterDescription && currentContext.twitterDescription.trim()) {
+      descText = currentContext.twitterDescription.trim();
     } else if (currentContext?.description && currentContext.description.trim()) {
       descText = currentContext.description.replace(/<[^>]*>/g, '').trim();
     } else {
@@ -508,17 +516,23 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
 
     // Helper for setting dynamic meta tags (Twitter & OG)
     const setMetaTag = (attrName: string, attrVal: string, content: string) => {
-      let tag = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+
       if (!tag) {
         tag = document.createElement('meta');
-        tag.setAttribute(attrName, attrVal);
+        tag.setAttribute(canonicalAttr, attrVal);
         tag.setAttribute('data-dynamic-meta', 'true');
         document.head.appendChild(tag);
         injectedMetaElements.push(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
       }
       tag.setAttribute('content', content);
       return tag;
     };
+
+    const injectedTagKeys = new Set<string>();
 
     const injectRawMetaSyntax = (syntaxText: string | undefined) => {
       if (!syntaxText || !syntaxText.trim()) return false;
@@ -530,8 +544,11 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
         const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
         const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
         if (nameMatch && contentMatch) {
+          const tagName = nameMatch[1].trim();
+          const contentVal = contentMatch[1].trim();
           const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
-          setMetaTag(attrName, nameMatch[1], contentMatch[1]);
+          setMetaTag(attrName, tagName, contentVal);
+          injectedTagKeys.add(tagName.toLowerCase());
           count++;
         }
       }
@@ -544,22 +561,38 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
       return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
     };
 
-    // Open Graph (OG) Meta Tags
-    const hasCustomOg = injectRawMetaSyntax((currentContext as any)?.ogMeta);
-    if (!hasCustomOg) {
+    // Inject raw custom OG & Twitter syntax if provided
+    injectRawMetaSyntax((currentContext as any)?.ogMeta);
+    injectRawMetaSyntax((currentContext as any)?.twitterMeta);
+
+    // Open Graph (OG) Meta Tags - Fallback for any un-injected tag
+    if (!injectedTagKeys.has('og:title')) {
       setMetaTag('property', 'og:title', currentContext?.ogTitle || titleText);
+    }
+    if (!injectedTagKeys.has('og:description')) {
       setMetaTag('property', 'og:description', currentContext?.ogDescription || descText);
+    }
+    if (!injectedTagKeys.has('og:image')) {
       setMetaTag('property', 'og:image', toAbsoluteUrl(currentContext?.ogImage));
+    }
+    if (!injectedTagKeys.has('og:url')) {
       setMetaTag('property', 'og:url', window.location.href);
+    }
+    if (!injectedTagKeys.has('og:type')) {
       setMetaTag('property', 'og:type', currentContext?.ogType || 'website');
     }
 
-    // Twitter Card Meta Tags
-    const hasCustomTwitter = injectRawMetaSyntax((currentContext as any)?.twitterMeta);
-    if (!hasCustomTwitter) {
+    // Twitter Card Meta Tags - Fallback for any un-injected tag
+    if (!injectedTagKeys.has('twitter:card')) {
       setMetaTag('name', 'twitter:card', currentContext?.twitterCard || 'summary_large_image');
+    }
+    if (!injectedTagKeys.has('twitter:title')) {
       setMetaTag('name', 'twitter:title', currentContext?.twitterTitle || titleText);
+    }
+    if (!injectedTagKeys.has('twitter:description')) {
       setMetaTag('name', 'twitter:description', currentContext?.twitterDescription || descText);
+    }
+    if (!injectedTagKeys.has('twitter:image')) {
       setMetaTag('name', 'twitter:image', toAbsoluteUrl(currentContext?.twitterImage));
     }
 

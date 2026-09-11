@@ -391,52 +391,32 @@ export function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
 
-    const originalTitle = document.title;
-    const titleText = product.seoTitle || product.ogTitle || product.twitterTitle || `${product.name} | Tobeque`;
-    document.title = titleText;
-
-    const descText = product.seoDescription || product.ogDescription || product.twitterDescription || product.description || product.name;
-
-    // Meta Description Tag
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    const oldDesc = metaDesc.getAttribute('content') || '';
-    metaDesc.setAttribute('content', descText);
-
-    // Meta Keywords Tag
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    const oldKeywords = metaKeywords.getAttribute('content') || '';
-    if (product.seoKeywords) {
-      metaKeywords.setAttribute('content', product.seoKeywords);
-    }
-
     // Helper function for dynamic meta tag injection (Twitter & OG)
     const setMetaTag = (attrName: string, attrVal: string, content: string) => {
-      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
       const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      const tags = document.querySelectorAll(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
 
-      if (!tag) {
-        tag = document.createElement('meta');
+      if (tags.length === 0) {
+        const tag = document.createElement('meta');
         tag.setAttribute(canonicalAttr, attrVal);
-        tag.setAttribute('data-dynamic-meta', 'true');
+        tag.setAttribute('content', content);
         document.head.appendChild(tag);
+        return tag;
       } else {
-        tag.setAttribute(canonicalAttr, attrVal);
+        tags.forEach((tag, idx) => {
+          if (idx === 0) {
+            tag.setAttribute(canonicalAttr, attrVal);
+            tag.setAttribute('content', content);
+          } else {
+            tag.remove();
+          }
+        });
+        return tags[0];
       }
-      tag.setAttribute('content', content);
-      return tag;
     };
 
     const injectedTagKeys = new Set<string>();
+    const parsedRawMeta: Record<string, string> = {};
 
     const injectRawMetaSyntax = (syntaxText: string | undefined) => {
       if (!syntaxText || !syntaxText.trim()) return false;
@@ -445,14 +425,15 @@ export function ProductDetailPage() {
       let count = 0;
       while ((match = metaRegex.exec(syntaxText)) !== null) {
         const attrs = match[1];
-        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
-        const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
-        if (nameMatch && contentMatch) {
+        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']?([^"'\s>]+)["']?/i);
+        const contentMatch = attrs.match(/content\s*=\s*["']([^"']*)["']|content\s*=\s*([^\s>]+)/i);
+        if (nameMatch && (contentMatch?.[1] !== undefined || contentMatch?.[2] !== undefined)) {
           const tagName = nameMatch[1].trim();
-          const contentVal = contentMatch[1].trim();
+          const contentVal = (contentMatch[1] !== undefined ? contentMatch[1] : contentMatch[2]).trim();
           const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
           setMetaTag(attrName, tagName, contentVal);
           injectedTagKeys.add(tagName.toLowerCase());
+          parsedRawMeta[tagName.toLowerCase()] = contentVal;
           count++;
         }
       }
@@ -465,9 +446,22 @@ export function ProductDetailPage() {
       return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
     };
 
-    // Inject raw custom OG & Twitter syntax if provided
+    // Inject raw custom OG & Twitter syntax if provided first
     injectRawMetaSyntax((product as any)?.ogMeta);
     injectRawMetaSyntax((product as any)?.twitterMeta);
+
+    const titleText = parsedRawMeta['og:title'] || parsedRawMeta['twitter:title'] || parsedRawMeta['title'] || product.seoTitle || product.ogTitle || product.twitterTitle || `${product.name} | Tobeque`;
+    document.title = titleText;
+
+    const descText = parsedRawMeta['og:description'] || parsedRawMeta['twitter:description'] || parsedRawMeta['description'] || product.seoDescription || product.ogDescription || product.twitterDescription || product.description || product.name;
+
+    setMetaTag('name', 'description', descText);
+
+    if (product.seoKeywords) {
+      setMetaTag('name', 'keywords', product.seoKeywords);
+    } else if (parsedRawMeta['keywords']) {
+      setMetaTag('name', 'keywords', parsedRawMeta['keywords']);
+    }
 
     // Open Graph (OG) Meta Tags - Fallback for any un-injected tag
     if (!injectedTagKeys.has('og:title')) {
@@ -530,11 +524,7 @@ export function ProductDetailPage() {
     }
 
     return () => {
-      document.title = originalTitle;
-      if (metaDesc) metaDesc.setAttribute('content', oldDesc);
-      if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
       if (scriptTag) scriptTag.remove();
-      document.querySelectorAll('meta[data-dynamic-meta="true"]').forEach(el => el.remove());
     };
   }, [product]);
 

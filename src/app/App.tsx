@@ -48,6 +48,15 @@ export default function App() {
             <CanonicalUrl />
             <Routes>
               <Route path="/" element={<HomePage />} />
+
+              {/* Legacy URL Redirections (Placed BEFORE dynamic routes so exact paths match first) */}
+              <Route path="/fashion-for-teens-trendy-styles-every-teen-girl-should-try" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
+              <Route path="/fashion-for-teens-trendy-styles-every-teen-girl-should-try/" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
+              <Route path="/blogs/fashion-for-teens-trendy-styles-every-teen-girl-should-try" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
+              <Route path="/blogs/fashion-for-teens-trendy-styles-every-teen-girl-should-try/" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
+              <Route path="/product-category/fashion-for-teens" element={<Navigate to="/product-category/new-in" replace />} />
+              <Route path="/product-category/fashion-for-teens/" element={<Navigate to="/product-category/new-in" replace />} />
+
               <Route path="/collection" element={<CollectionPage />} />
               <Route path="/product-category/:categorySlug" element={<CollectionPage />} />
               <Route path="/product-category/:categorySlug/:productSlug" element={<ProductDetailPage />} />
@@ -61,11 +70,6 @@ export default function App() {
               <Route path="/style-journal/:id" element={<Navigate to="/blogs" replace />} />
               <Route path="/journal" element={<Navigate to="/blogs" replace />} />
               <Route path="/journal/:id" element={<Navigate to="/blogs" replace />} />
-              {/* Legacy URL 301 Redirections */}
-              <Route path="/fashion-for-teens-trendy-styles-every-teen-girl-should-try" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
-              <Route path="/fashion-for-teens-trendy-styles-every-teen-girl-should-try/" element={<Navigate to="/blogs/clothing-for-teens-stylish-outfit-ideas" replace />} />
-              <Route path="/product-category/fashion-for-teens" element={<Navigate to="/product-category/new-in" replace />} />
-              <Route path="/product-category/fashion-for-teens/" element={<Navigate to="/product-category/new-in" replace />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditionsPage />} />
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
               <Route path="/cookie-policy" element={<CookiePolicyPage />} />

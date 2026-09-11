@@ -17,7 +17,43 @@ export function FAQPage() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "FAQs | Tobeque";
+    const title = "Tobeque FAQs | Orders, Returns, Sizing & Shopping Help";
+    const desc = "Find answers to common Tobeque questions about orders, returns, sizing, products and shopping support. Get quick help before or after placing your order.";
+    const keywords = "Tobeque FAQs, Tobeque order help, Tobeque returns, Tobeque sizing help, shopping FAQs, teen fashion FAQs, Tobeque customer support";
+    const image = `${window.location.origin}/2bq Logo2.png`;
+
+    document.title = title;
+
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(canonicalAttr, attrVal);
+        document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    setMetaTag('name', 'description', desc);
+    setMetaTag('name', 'keywords', keywords);
+
+    // Open Graph Tags
+    setMetaTag('property', 'og:title', title);
+    setMetaTag('property', 'og:description', desc);
+    setMetaTag('property', 'og:image', image);
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', 'website');
+
+    // Twitter Tags
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', title);
+    setMetaTag('name', 'twitter:description', desc);
+    setMetaTag('name', 'twitter:image', image);
+
     api.get("/api/faqs")
       .then((res) => {
         if (res.data.success) setFaqs(res.data.faqs);

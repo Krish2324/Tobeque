@@ -10,7 +10,42 @@ export function StyleJournalPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Blogs | Tobeque";
+    const title = "Teen Fashion Blog | Style Tips & Outfit Ideas | Tobeque";
+    const desc = "Read Tobeque fashion blogs for teen style tips, outfit ideas, seasonal trends and easy styling inspiration made for girls who love fresh, modern fashion.";
+    const keywords = "Tobeque fashion blog, teen fashion blog, teen style tips, outfit ideas for girls, teenage fashion trends, styling tips for teens";
+    const image = `${window.location.origin}/2bq Logo2.png`;
+
+    document.title = title;
+
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(canonicalAttr, attrVal);
+        document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    setMetaTag('name', 'description', desc);
+    setMetaTag('name', 'keywords', keywords);
+
+    // Open Graph Tags
+    setMetaTag('property', 'og:title', title);
+    setMetaTag('property', 'og:description', desc);
+    setMetaTag('property', 'og:image', image);
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', 'website');
+
+    // Twitter Tags
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', title);
+    setMetaTag('name', 'twitter:description', desc);
+    setMetaTag('name', 'twitter:image', image);
   }, []);
 
   useEffect(() => {

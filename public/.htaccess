@@ -1,12 +1,6 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-
-  # 301 Permanent Redirects
-  Redirect 301 /fashion-for-teens-trendy-styles-every-teen-girl-should-try/ https://tobeque.com/blogs/clothing-for-teens-stylish-outfit-ideas
-  Redirect 301 /fashion-for-teens-trendy-styles-every-teen-girl-should-try https://tobeque.com/blogs/clothing-for-teens-stylish-outfit-ideas
-  Redirect 301 /product-category/fashion-for-teens/ https://tobeque.com/product-category/new-in
-  Redirect 301 /product-category/fashion-for-teens https://tobeque.com/product-category/new-in
   
   # Allow direct access to robots.txt and sitemap.xml without routing to React index.html
   RewriteRule ^(robots\.txt|sitemap\.xml)$ - [L]

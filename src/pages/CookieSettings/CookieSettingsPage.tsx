@@ -40,7 +40,42 @@ export function CookieSettingsPage() {
   const [openSection, setOpenSection] = useState<string | null>('necessary');
 
   useEffect(() => {
-    document.title = "Cookie Settings | Tobeque";
+    const title = "Cookie Settings | Manage Your Preferences | Tobeque";
+    const desc = "Manage your cookie preferences on Tobeque. Review and update consent choices for essential, analytics and marketing cookies used across our website anytime.";
+    const keywords = "Tobeque cookie settings, manage cookie preferences, cookie consent settings, analytics cookies, marketing cookies";
+    const image = `${window.location.origin}/2bq Logo2.png`;
+
+    document.title = title;
+
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(canonicalAttr, attrVal);
+        document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    setMetaTag('name', 'description', desc);
+    setMetaTag('name', 'keywords', keywords);
+
+    // Open Graph Tags
+    setMetaTag('property', 'og:title', title);
+    setMetaTag('property', 'og:description', desc);
+    setMetaTag('property', 'og:image', image);
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', 'website');
+
+    // Twitter Tags
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', title);
+    setMetaTag('name', 'twitter:description', desc);
+    setMetaTag('name', 'twitter:image', image);
   }, []);
 
   const toggleSection = (id: string) => {

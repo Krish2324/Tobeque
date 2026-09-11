@@ -469,75 +469,32 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
 
   // Dynamic Head SEO Metadata Management (Title, Description, Keywords, Schema, Twitter, OG)
   useEffect(() => {
-    const originalTitle = document.title;
-
-    // Determine Meta Title
-    const titleText = (currentContext?.seoTitle && currentContext.seoTitle.trim())
-      ? currentContext.seoTitle.trim()
-      : (currentContext?.ogTitle && currentContext.ogTitle.trim())
-        ? currentContext.ogTitle.trim()
-        : (currentContext?.twitterTitle && currentContext.twitterTitle.trim())
-          ? currentContext.twitterTitle.trim()
-          : `${displayTitle} | Tobeque`;
-
-    document.title = titleText;
-
-    // Determine Meta Description
-    let descText = '';
-    if (currentContext?.seoDescription && currentContext.seoDescription.trim()) {
-      descText = currentContext.seoDescription.trim();
-    } else if (currentContext?.ogDescription && currentContext.ogDescription.trim()) {
-      descText = currentContext.ogDescription.trim();
-    } else if (currentContext?.twitterDescription && currentContext.twitterDescription.trim()) {
-      descText = currentContext.twitterDescription.trim();
-    } else if (currentContext?.description && currentContext.description.trim()) {
-      descText = currentContext.description.replace(/<[^>]*>/g, '').trim();
-    } else {
-      descText = `Explore ${displayTitle} collection at Tobeque. Discover effortless silhouettes and timeless fashion.`;
-    }
-
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    const oldDesc = metaDesc.getAttribute('content') || '';
-    metaDesc.setAttribute('content', descText);
-
-    // Meta Keywords Tag
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    const oldKeywords = metaKeywords.getAttribute('content') || '';
-    if (currentContext?.seoKeywords) {
-      metaKeywords.setAttribute('content', currentContext.seoKeywords);
-    }
-
-    const injectedMetaElements: Element[] = [];
-
     // Helper for setting dynamic meta tags (Twitter & OG)
     const setMetaTag = (attrName: string, attrVal: string, content: string) => {
-      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
       const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      const tags = document.querySelectorAll(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
 
-      if (!tag) {
-        tag = document.createElement('meta');
+      if (tags.length === 0) {
+        const tag = document.createElement('meta');
         tag.setAttribute(canonicalAttr, attrVal);
-        tag.setAttribute('data-dynamic-meta', 'true');
+        tag.setAttribute('content', content);
         document.head.appendChild(tag);
-        injectedMetaElements.push(tag);
+        return tag;
       } else {
-        tag.setAttribute(canonicalAttr, attrVal);
+        tags.forEach((tag, idx) => {
+          if (idx === 0) {
+            tag.setAttribute(canonicalAttr, attrVal);
+            tag.setAttribute('content', content);
+          } else {
+            tag.remove();
+          }
+        });
+        return tags[0];
       }
-      tag.setAttribute('content', content);
-      return tag;
     };
 
     const injectedTagKeys = new Set<string>();
+    const parsedRawMeta: Record<string, string> = {};
 
     const injectRawMetaSyntax = (syntaxText: string | undefined) => {
       if (!syntaxText || !syntaxText.trim()) return false;
@@ -546,14 +503,15 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
       let count = 0;
       while ((match = metaRegex.exec(syntaxText)) !== null) {
         const attrs = match[1];
-        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']([^"']+)["']/i);
-        const contentMatch = attrs.match(/content\s*=\s*["']([^"']+)["']/i);
-        if (nameMatch && contentMatch) {
+        const nameMatch = attrs.match(/(?:name|property)\s*=\s*["']?([^"'\s>]+)["']?/i);
+        const contentMatch = attrs.match(/content\s*=\s*["']([^"']*)["']|content\s*=\s*([^\s>]+)/i);
+        if (nameMatch && (contentMatch?.[1] !== undefined || contentMatch?.[2] !== undefined)) {
           const tagName = nameMatch[1].trim();
-          const contentVal = contentMatch[1].trim();
+          const contentVal = (contentMatch[1] !== undefined ? contentMatch[1] : contentMatch[2]).trim();
           const attrName = attrs.toLowerCase().includes('property=') ? 'property' : 'name';
           setMetaTag(attrName, tagName, contentVal);
           injectedTagKeys.add(tagName.toLowerCase());
+          parsedRawMeta[tagName.toLowerCase()] = contentVal;
           count++;
         }
       }
@@ -566,9 +524,47 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
       return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
     };
 
-    // Inject raw custom OG & Twitter syntax if provided
+    // Inject raw custom OG & Twitter syntax if provided first
     injectRawMetaSyntax((currentContext as any)?.ogMeta);
     injectRawMetaSyntax((currentContext as any)?.twitterMeta);
+
+    // Determine Meta Title
+    const titleText = (parsedRawMeta['og:title'] || parsedRawMeta['twitter:title'] || parsedRawMeta['title'])
+      ? (parsedRawMeta['og:title'] || parsedRawMeta['twitter:title'] || parsedRawMeta['title'])
+      : (currentContext?.seoTitle && currentContext.seoTitle.trim())
+        ? currentContext.seoTitle.trim()
+        : (currentContext?.ogTitle && currentContext.ogTitle.trim())
+          ? currentContext.ogTitle.trim()
+          : (currentContext?.twitterTitle && currentContext.twitterTitle.trim())
+            ? currentContext.twitterTitle.trim()
+            : `${displayTitle} | Tobeque`;
+
+    document.title = titleText;
+
+    // Determine Meta Description
+    let descText = '';
+    if (parsedRawMeta['og:description'] || parsedRawMeta['twitter:description'] || parsedRawMeta['description']) {
+      descText = parsedRawMeta['og:description'] || parsedRawMeta['twitter:description'] || parsedRawMeta['description'];
+    } else if (currentContext?.seoDescription && currentContext.seoDescription.trim()) {
+      descText = currentContext.seoDescription.trim();
+    } else if (currentContext?.ogDescription && currentContext.ogDescription.trim()) {
+      descText = currentContext.ogDescription.trim();
+    } else if (currentContext?.twitterDescription && currentContext.twitterDescription.trim()) {
+      descText = currentContext.twitterDescription.trim();
+    } else if (currentContext?.description && currentContext.description.trim()) {
+      descText = currentContext.description.replace(/<[^>]*>/g, '').trim();
+    } else {
+      descText = `Explore ${displayTitle} collection at Tobeque. Discover effortless silhouettes and timeless fashion.`;
+    }
+
+    setMetaTag('name', 'description', descText);
+
+    // Meta Keywords Tag
+    if (currentContext?.seoKeywords) {
+      setMetaTag('name', 'keywords', currentContext.seoKeywords);
+    } else if (parsedRawMeta['keywords']) {
+      setMetaTag('name', 'keywords', parsedRawMeta['keywords']);
+    }
 
     // Open Graph (OG) Meta Tags - Fallback for any un-injected tag
     if (!injectedTagKeys.has('og:title')) {
@@ -624,12 +620,7 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
     }
 
     return () => {
-      document.title = originalTitle;
-      if (metaDesc) metaDesc.setAttribute('content', oldDesc);
-      if (metaKeywords) metaKeywords.setAttribute('content', oldKeywords);
       if (scriptTag) scriptTag.remove();
-      // Remove all dynamic injected meta tags to ensure clean head tag on navigation
-      document.querySelectorAll('meta[data-dynamic-meta="true"]').forEach(el => el.remove());
     };
   }, [currentContext, displayTitle]);
 

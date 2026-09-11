@@ -33,7 +33,43 @@ export function RefundRequestPage() {
 
   // Pre-fill form from URL query param + logged-in user details
   useEffect(() => {
-    document.title = "Refund Request | Tobeque";
+    const title = "Refund Request | Returns & Refund Support | Tobeque";
+    const desc = "Submit a refund request to Tobeque for eligible orders. Get guidance on returns, refund status and required order details through our customer support process.";
+    const keywords = "Tobeque refund request, request refund Tobeque, Tobeque returns, refund status, order refund support, return and refund help";
+    const image = `${window.location.origin}/2bq Logo2.png`;
+
+    document.title = title;
+
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(canonicalAttr, attrVal);
+        document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    setMetaTag('name', 'description', desc);
+    setMetaTag('name', 'keywords', keywords);
+
+    // Open Graph Tags
+    setMetaTag('property', 'og:title', title);
+    setMetaTag('property', 'og:description', desc);
+    setMetaTag('property', 'og:image', image);
+    setMetaTag('property', 'og:url', window.location.href);
+    setMetaTag('property', 'og:type', 'website');
+
+    // Twitter Tags
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', title);
+    setMetaTag('name', 'twitter:description', desc);
+    setMetaTag('name', 'twitter:image', image);
+
     const params = new URLSearchParams(location.search);
     const prefilledOrderId = params.get('orderId') || '';
     setForm(prev => ({

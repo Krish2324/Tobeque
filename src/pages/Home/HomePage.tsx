@@ -55,23 +55,42 @@ export function HomePage() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    document.title = "Tobeque | Clothes for Teenagers & Aesthetic Outfits for Teens";
+    const homeTitle = "Tobeque | Clothes for Teenagers & Aesthetic Outfits for Teens";
+    const homeDesc = "Explore clothes for teenagers at Tobeque, featuring stylish everyday pieces and aesthetic outfits for teens designed for comfort, confidence, and modern looks.";
+    const homeKeywords = "clothes for teenager, aesthetic outfits for teens, outfits for teens, clothes for teenage girls, aesthetic clothes for girls, trendy teen outfits";
+    const homeImage = `${window.location.origin}/2bq Logo2.png`;
 
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute('content', 'Explore clothes for teenagers at Tobeque, featuring stylish everyday pieces and aesthetic outfits for teens designed for comfort, confidence, and modern looks.');
+    document.title = homeTitle;
 
-    let metaKeywords = document.querySelector('meta[name="keywords"]');
-    if (!metaKeywords) {
-      metaKeywords = document.createElement('meta');
-      metaKeywords.setAttribute('name', 'keywords');
-      document.head.appendChild(metaKeywords);
-    }
-    metaKeywords.setAttribute('content', 'clothes for teenager, aesthetic outfits for teens, outfits for teens, clothes for teenage girls, aesthetic clothes for girls, trendy teen outfits');
+    const setMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let tag = document.querySelector(`meta[name="${attrVal}"], meta[property="${attrVal}"]`);
+      const canonicalAttr = attrVal.startsWith('og:') ? 'property' : (attrVal.startsWith('twitter:') ? 'name' : attrName);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(canonicalAttr, attrVal);
+        document.head.appendChild(tag);
+      } else {
+        tag.setAttribute(canonicalAttr, attrVal);
+      }
+      tag.setAttribute('content', content);
+      return tag;
+    };
+
+    setMetaTag('name', 'description', homeDesc);
+    setMetaTag('name', 'keywords', homeKeywords);
+
+    // Open Graph Tags
+    setMetaTag('property', 'og:title', homeTitle);
+    setMetaTag('property', 'og:description', homeDesc);
+    setMetaTag('property', 'og:image', homeImage);
+    setMetaTag('property', 'og:url', window.location.origin);
+    setMetaTag('property', 'og:type', 'website');
+
+    // Twitter Tags
+    setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:title', homeTitle);
+    setMetaTag('name', 'twitter:description', homeDesc);
+    setMetaTag('name', 'twitter:image', homeImage);
 
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);

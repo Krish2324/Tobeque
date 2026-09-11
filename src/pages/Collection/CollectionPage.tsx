@@ -174,6 +174,11 @@ const CATEGORY_301_REDIRECTS: Record<string, string> = {
   't-shirts-vest': 't-shirt-vests',
   't-shirt-vests-s': 't-shirt-vests',
   't-shirts-and-vests-s': 't-shirt-vests',
+
+  // Fashion for teens -> new-in
+  'fashion-for-teens': 'new-in',
+  'fashion-for-teen': 'new-in',
+  'fashion-for-teens-s': 'new-in',
 };
 
 // Compute what tabs to show based on the tree and current categoryParam

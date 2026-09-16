@@ -2,11 +2,14 @@
   RewriteEngine On
   RewriteBase /
   
-  # Allow direct access to robots.txt and sitemap.xml without routing to React index.html
+  # Allow direct access to robots.txt and sitemap.xml
   RewriteRule ^(robots\.txt|sitemap\.xml)$ - [L]
 
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
+  # Allow direct access to real existing files or directories (CSS, JS, images, favicons)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Route all SPA page requests to index.php (Dynamic Open Graph Meta Tag Injector)
+  RewriteRule . /index.php [L]
 </IfModule>

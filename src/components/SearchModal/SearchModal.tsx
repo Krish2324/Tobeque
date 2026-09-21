@@ -224,13 +224,12 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   };
 
-  const handleProductClick = (product: any, matchedColor?: string | null) => {
+  const handleProductClick = (product: any) => {
     dismissMobileKeyboard();
     onClose();
     const productId = product.id || product._id;
     const catSlug = product.categorySlug || (product.category && product.category.slug) || 'all';
-    const colorParam = matchedColor ? `?color=${encodeURIComponent(matchedColor)}` : '';
-    navigate(`/product-category/${catSlug}/${product.slug || productId}${colorParam}`);
+    navigate(`/product-category/${catSlug}/${product.slug || productId}`);
   };
 
   useEffect(() => {
@@ -366,7 +365,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   return (
                     <button
                       key={product.id || product._id}
-                      onClick={() => handleProductClick(product, colorInfo.matchedColorName)}
+                      onClick={() => handleProductClick(product)}
                       className="group flex flex-col items-center text-center cursor-pointer appearance-none bg-transparent border-none p-0 focus:outline-none"
                     >
                       <div className="w-full aspect-[3/4] bg-surface-container overflow-hidden mb-3 relative rounded-md">

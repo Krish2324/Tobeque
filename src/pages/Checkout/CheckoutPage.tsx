@@ -472,7 +472,9 @@ export function CheckoutPage() {
   const exTaxSubtotal = cartSubtotal - totalGst;
   const finalExTaxSubtotal = exTaxSubtotal * (1 - discountRatio);
 
-  const cartTotal = cartSubtotal - discountAmount + shippingCost + (paymentMethod === 'cod' ? codFee : 0);
+  const isFreeShippingApplied = !!appliedCoupon?.freeShipping;
+  const effectiveCodFee = isFreeShippingApplied ? 0 : (paymentMethod === 'cod' ? codFee : 0);
+  const cartTotal = cartSubtotal - discountAmount + shippingCost + effectiveCodFee;
 
   /* ─── Calculate shipping whenever pincode or payment method changes ─── */
   const deliveryPincode = shipDifferent ? shippingPincode : billingPincode;
@@ -487,7 +489,7 @@ export function CheckoutPage() {
 
     if (appliedCoupon?.freeShipping) {
       setShippingCost(0);
-      setCodFee(0);
+      setCodFee(0);   // free-shipping coupon waives COD fee too
       setShippingSource('free');
       return;
     }
@@ -633,6 +635,7 @@ export function CheckoutPage() {
           companyName,
           companyGst,
           shippingCost,
+          codFee: effectiveCodFee,
         });
 
         clearCart();
@@ -662,6 +665,7 @@ export function CheckoutPage() {
             companyName,
             companyGst,
             shippingCost,
+            codFee: effectiveCodFee,
           });
 
           clearCart();
@@ -694,6 +698,7 @@ export function CheckoutPage() {
                 companyName,
                 companyGst,
                 shippingCost,
+                codFee: effectiveCodFee,
               });
 
               clearCart();
@@ -1326,7 +1331,7 @@ export function CheckoutPage() {
                     </div>
                   )}
                   <div className="flex justify-between text-secondary/70">
-                    <span>Shipping {codFee > 0 ? '(Base)' : ''}</span>
+                    <span>Shipping {codFee > 0 && !isFreeShippingApplied ? '(Base)' : ''}</span>
                     {isCalculatingShipping ? (
                       <span className="text-secondary/40 animate-pulse">Calculating...</span>
                     ) : shippingSource === 'free' || appliedCoupon?.freeShipping ? (
@@ -1342,7 +1347,7 @@ export function CheckoutPage() {
                       <span className="text-secondary/40">Enter pincode</span>
                     )}
                   </div>
-                  {codFee > 0 && (
+                  {codFee > 0 && !isFreeShippingApplied && (
                     <div className="flex justify-between text-amber-600 font-medium">
                       <span>COD Extra Charge</span>
                       <span>+{currencySymbol}{codFee.toFixed(2)}</span>

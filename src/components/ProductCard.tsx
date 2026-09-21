@@ -100,7 +100,7 @@ export function ProductCard({
   }, [product, activeColorName]);
 
   const activeCategorySlug = (categorySlug && categorySlug !== 'all') ? categorySlug : (product.categorySlug || 'all');
-  const productUrl = `/product-category/${activeCategorySlug}/${product.slug || product.id}${activeColorName ? `?color=${encodeURIComponent(activeColorName)}` : ''}`;
+  const productUrl = `/product-category/${activeCategorySlug}/${product.slug || product.id}`;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);

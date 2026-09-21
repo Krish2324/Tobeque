@@ -142,6 +142,7 @@ export const createOrder = async (
     companyName?: string;
     companyGst?: string;
     shippingCost?: number;
+    codFee?: number;
   }
 ) => {
   const res = await fetch(`${API_BASE}/orders`, {

@@ -67,7 +67,8 @@ export function CartDrawer() {
       applyCoupon({
         code: coupon.code,
         discountValue: coupon.discountValue,
-        type: coupon.type
+        type: coupon.type,
+        freeShipping: coupon.freeShipping
       });
       setCouponInput('');
     } catch (err: any) {

@@ -472,7 +472,7 @@ export function CheckoutPage() {
   const exTaxSubtotal = cartSubtotal - totalGst;
   const finalExTaxSubtotal = exTaxSubtotal * (1 - discountRatio);
 
-  const cartTotal = cartSubtotal - discountAmount + shippingCost;
+  const cartTotal = cartSubtotal - discountAmount + shippingCost + (paymentMethod === 'cod' ? codFee : 0);
 
   /* ─── Calculate shipping whenever pincode or payment method changes ─── */
   const deliveryPincode = shipDifferent ? shippingPincode : billingPincode;
@@ -482,6 +482,13 @@ export function CheckoutPage() {
       setShippingCost(0);
       setCodFee(0);
       setShippingSource(null);
+      return;
+    }
+
+    if (appliedCoupon?.freeShipping) {
+      setShippingCost(0);
+      setCodFee(0);
+      setShippingSource('free');
       return;
     }
 
@@ -522,7 +529,7 @@ export function CheckoutPage() {
       .finally(() => { if (!cancelled) setIsCalculatingShipping(false); });
 
     return () => { cancelled = true; };
-  }, [deliveryPincode, paymentMethod, freeShippingThreshold, cartSubtotal, discountAmount]);
+  }, [deliveryPincode, paymentMethod, freeShippingThreshold, cartSubtotal, discountAmount, appliedCoupon?.freeShipping]);
 
   /* ─── Apply Coupon ─── */
   const handleApplyCoupon = async () => {
@@ -534,7 +541,8 @@ export function CheckoutPage() {
       applyCoupon({
         code: coupon.code,
         discountValue: coupon.discountValue,
-        type: coupon.type
+        type: coupon.type,
+        freeShipping: coupon.freeShipping
       });
       setCouponInput('');
     } catch (err: any) {
@@ -1321,7 +1329,7 @@ export function CheckoutPage() {
                     <span>Shipping {codFee > 0 ? '(Base)' : ''}</span>
                     {isCalculatingShipping ? (
                       <span className="text-secondary/40 animate-pulse">Calculating...</span>
-                    ) : shippingSource === 'free' ? (
+                    ) : shippingSource === 'free' || appliedCoupon?.freeShipping ? (
                       <span className="text-green-600 font-medium">🎉 Free</span>
                     ) : (shippingCost - codFee) > 0 ? (
                       <span className="font-medium">

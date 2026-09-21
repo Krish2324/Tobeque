@@ -11,7 +11,8 @@ export interface CartItem extends Product {
 export interface AppliedCoupon {
   code: string;
   discountValue: number;
-  type: string;
+  type: 'percentage' | 'fixed' | 'flat';
+  freeShipping?: boolean;
 }
 
 interface CartContextType {

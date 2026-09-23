@@ -72,6 +72,10 @@ function seoDevPlugin(): Plugin {
           'steal-the-style': {
             title: 'Steal The Style | Curated Teen Outfits | Tobeque',
             description: 'Get inspired by curated outfits and complete looks designed for teenagers at Tobeque.'
+          },
+          'delete-account': {
+            title: 'Delete Your Tobeque Account | Account Deletion Request',
+            description: 'Request permanent deletion of your Tobeque account and associated personal data. Submit your registered email or phone number to initiate the process.'
           }
         };
 

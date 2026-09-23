@@ -19,6 +19,7 @@ import { FAQPage } from "../pages/FAQ/FAQPage";
 import { ContactPage } from "../pages/Contact/ContactPage";
 import { StealTheStylePage } from "../pages/StealTheStyle/StealTheStylePage";
 import { RefundRequestPage } from "../pages/RefundRequest/RefundRequestPage";
+import { DeleteAccountRequestPage } from "../pages/DeleteAccount/DeleteAccountRequestPage";
 import { CartProvider } from "../context/CartContext";
 import { AuthProvider } from "../context/AuthContext";
 import { CurrencyProvider } from "../context/CurrencyContext";
@@ -78,6 +79,7 @@ export default function App() {
               <Route path="/faq" element={<FAQPage />} />
               <Route path="/steal-the-style" element={<StealTheStylePage />} />
               <Route path="/refund-request" element={<RefundRequestPage />} />
+              <Route path="/delete-account" element={<DeleteAccountRequestPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/cart" element={<CartPage />} />

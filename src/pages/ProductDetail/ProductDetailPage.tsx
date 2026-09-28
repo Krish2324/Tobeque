@@ -1211,9 +1211,10 @@ export function ProductDetailPage() {
                   Shipping &amp; Returns
                   <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                 </summary>
-                <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap">
-                  {globalShippingReturns}
-                </div>
+                <div 
+                  className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: product.shippingReturns || globalShippingReturns }}
+                />
               </details>
             </div>
 

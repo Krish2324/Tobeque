@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { type Product, type ProductColor } from "../../data/products";
-import { useProduct, useProducts } from "../../hooks/useProducts";
+import { useProduct, useProducts, resolveImageUrl } from "../../hooks/useProducts";
 import api from "../../services/api";
 
 import { ProductCard } from "../../components/ProductCard";
@@ -347,6 +347,7 @@ export function ProductDetailPage() {
   const [askError, setAskError] = useState('');
   const [deliveryEstimate, setDeliveryEstimate] = useState<string>('');
   const [globalShippingReturns, setGlobalShippingReturns] = useState<string>('Orders are processed within 1-2 business days. Returns accepted within 14 days of delivery.');
+  const [standardSizeGuideImage, setStandardSizeGuideImage] = useState<string>('');
   
   // Random Viewer Count
   const [viewers] = useState(() => Math.floor(Math.random() * 40) + 10);
@@ -374,6 +375,9 @@ export function ProductDetailPage() {
         const fmt = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
         if (res.data.settings?.shippingReturnsText) {
           setGlobalShippingReturns(res.data.settings.shippingReturnsText);
+        }
+        if (res.data.settings?.standardSizeGuideImage) {
+          setStandardSizeGuideImage(res.data.settings.standardSizeGuideImage);
         }
         setDeliveryEstimate(`${fmt(from)} - ${fmt(to)}, ${to.getFullYear()}`);
       })
@@ -1217,63 +1221,136 @@ export function ProductDetailPage() {
         </section>
 
         {/* ─── Size Guide Modal ─── */}
-        {isSizeGuideOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 overflow-y-auto p-4" onClick={() => setIsSizeGuideOpen(false)}>
-            <div className="bg-white max-w-lg w-full p-6 md:p-8 relative shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-              <button
-                className="absolute top-4 right-4 w-8 h-8 rounded-full border border-outline-variant flex items-center justify-center text-primary hover:bg-neutral-50 transition-colors"
-                onClick={() => setIsSizeGuideOpen(false)}
+        {isSizeGuideOpen && (() => {
+          const chart = product?.sizeChart;
+          const headers = (chart && Array.isArray(chart.headers) && chart.headers.length > 0) 
+            ? chart.headers 
+            : ['Size', 'Bust', 'Waist', 'Hip'];
+          const rows = (chart && Array.isArray(chart.rows) && chart.rows.length > 0)
+            ? chart.rows
+            : [
+                { Size: 'XS', Bust: '30.5', Waist: '24.5', Hip: '34' },
+                { Size: 'S',  Bust: '32',   Waist: '26',   Hip: '35.5' },
+                { Size: 'M',  Bust: '33.5', Waist: '27',   Hip: '37' },
+                { Size: 'L',  Bust: '35',   Waist: '29',   Hip: '38' },
+                { Size: 'XL', Bust: '36.5', Waist: '30.5', Hip: '40' },
+              ];
+          const note = chart?.note !== undefined ? chart.note : "All measurements are in inches. If you're between sizes, we recommend sizing up.";
+          // Priority: product-specific image > global standard image
+          let rawGuideImage = chart?.image || standardSizeGuideImage || '';
+          if (rawGuideImage === 'null' || rawGuideImage === 'undefined' || rawGuideImage.includes('via.placeholder.com')) {
+            rawGuideImage = '';
+          }
+          // Resolve the image using the same helper as product images so it handles backend API URLs correctly
+          const resolvedImage = rawGuideImage ? resolveImageUrl(rawGuideImage) : '';
+
+          return (
+            <div 
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease]" 
+              onClick={() => setIsSizeGuideOpen(false)}
+              style={{ animation: 'fadeIn 0.2s ease' }}
+            >
+              <style>{`
+                @keyframes sgFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes sgSlideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+                .sg-body { display: flex; flex-direction: row; align-items: stretch; }
+                @media (max-width: 600px) { .sg-body { flex-direction: column; } .sg-img-panel { width: 100% !important; border-right: none !important; border-bottom: 1px solid #efefef; min-height: 200px !important; } }
+              `}</style>
+              <div 
+                className="bg-white relative shadow-2xl overflow-hidden w-full"
+                style={{ maxWidth: resolvedImage ? '860px' : '560px', maxHeight: '92vh', overflowY: 'auto', animation: 'sgSlideUp 0.22s ease' }}
+                onClick={e => e.stopPropagation()}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-              <h2 className="text-center text-xl font-light tracking-widest mb-6">Size Chart</h2>
-              <h3 className="font-semibold text-sm mb-4">Size Guide</h3>
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-neutral-100">
+                  <div>
+                    <h2 className="text-base font-light tracking-[0.12em] uppercase text-neutral-900">Size Guide</h2>
+                    <p className="text-[10px] text-neutral-400 tracking-wider mt-0.5">Find your perfect fit</p>
+                  </div>
+                  <button
+                    className="w-8 h-8 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 transition-all"
+                    onClick={() => setIsSizeGuideOpen(false)}
+                    aria-label="Close size guide"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
 
-              {(() => {
-                const chart = product?.sizeChart;
-                const headers = (chart && Array.isArray(chart.headers) && chart.headers.length > 0) 
-                  ? chart.headers 
-                  : ['Size', 'Bust', 'Waist', 'Hip'];
-                const rows = (chart && Array.isArray(chart.rows) && chart.rows.length > 0)
-                  ? chart.rows
-                  : [
-                      { Size: 'XS', Bust: '30.5', Waist: '24.5', Hip: '34' },
-                      { Size: 'S',  Bust: '32',   Waist: '26',   Hip: '35.5' },
-                      { Size: 'M',  Bust: '33.5', Waist: '27',   Hip: '37' },
-                      { Size: 'L',  Bust: '35',   Waist: '29',   Hip: '38' },
-                      { Size: 'XL', Bust: '36.5', Waist: '30.5', Hip: '40' },
-                    ];
-                const note = chart?.note !== undefined ? chart.note : "All measurements are in inches. If you're between sizes, we recommend sizing up.";
+                {/* Body: Image left + Table right — use inline styles for reliable cross-browser flex */}
+                <div className="sg-body">
+                  
+                  {/* Image Panel — LEFT 42% */}
+                  {resolvedImage && (
+                    <div className="sg-img-panel" style={{ width: '42%', flexShrink: 0, background: '#f9f9f9', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0', minHeight: '260px', borderRight: '1px solid #efefef', overflow: 'hidden' }}>
+                      <img
+                        src={resolvedImage}
+                        alt="Size guide measurement chart"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        onError={(e) => {
+                          const panel = (e.currentTarget as HTMLImageElement).parentElement;
+                          if (panel) panel.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
 
-                return (
-                  <>
+                  {/* Table Panel — RIGHT, fills remaining space */}
+                  <div style={{ flex: 1, padding: '24px', minWidth: 0 }}>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-outline-variant">
+                          <tr className="border-b border-neutral-200">
                             {headers.map((h: string) => (
-                              <th key={h} className="text-center py-2 text-xs font-medium text-secondary tracking-wider uppercase">{h}</th>
+                              <th key={h} className="text-center py-2.5 text-[10px] font-semibold text-neutral-500 tracking-[0.15em] uppercase">{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {rows.map((row: any, rIdx: number) => (
-                            <tr key={rIdx} className="border-b border-outline-variant hover:bg-surface-container/50">
+                            <tr key={rIdx} className={`border-b border-neutral-100 transition-colors ${rIdx % 2 === 0 ? '' : 'bg-neutral-50/60'}`}>
                               {headers.map((h: string) => (
-                                <td key={h} className="text-center py-3 text-secondary font-medium">{row[h] !== undefined ? row[h] : (row[h.toLowerCase()] !== undefined ? row[h.toLowerCase()] : '-')}</td>
+                                <td key={h} className="text-center py-3 text-[12px] text-neutral-600 font-medium">
+                                  {row[h] !== undefined ? row[h] : (row[h.toLowerCase()] !== undefined ? row[h.toLowerCase()] : '-')}
+                                </td>
                               ))}
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                    {note && <p className="text-[11px] text-secondary mt-4">{note}</p>}
-                  </>
-                );
-              })()}
+
+                    {/* Note */}
+                    {note && (
+                      <div className="mt-4 flex items-start gap-2.5 p-3 bg-neutral-50 border border-neutral-100 rounded-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-400 mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <p className="text-[10.5px] text-neutral-500 leading-relaxed">{note}</p>
+                      </div>
+                    )}
+
+                    {/* How to Measure hint */}
+                    <div className="mt-4 pt-4 border-t border-neutral-100">
+                      <p className="text-[9.5px] text-neutral-400 tracking-wider uppercase font-medium mb-2">How to measure</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: 'Bust', desc: 'Measure around the fullest part of your chest' },
+                          { label: 'Waist', desc: 'Measure around the narrowest part of your waist' },
+                          { label: 'Hip', desc: 'Measure around the fullest part of your hips' },
+                          { label: 'Tip', desc: 'Keep the tape measure level and not too tight' },
+                        ].map(item => (
+                          <div key={item.label} className="flex items-start gap-1.5">
+                            <span className="text-[9px] font-bold text-neutral-800 shrink-0 mt-0.5">{item.label}:</span>
+                            <span className="text-[9px] text-neutral-400 leading-snug">{item.desc}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
+
 
         {/* ─── Ask a Question Modal ─── */}
         {isAskQuestionOpen && (

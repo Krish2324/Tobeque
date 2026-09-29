@@ -20,6 +20,11 @@ const isVideo = (url: string | undefined) => {
   return !!url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) || url.includes('/video/upload/');
 };
 
+const parseHtmlInput = (html: string | undefined) => {
+  if (!html) return '';
+  return html.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+};
+
 const AutoPlayVideo = ({ src, className }: { src: string; className?: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   
@@ -598,7 +603,7 @@ export function ProductDetailPage() {
       const imgColor = (imgObj.color || '').toLowerCase().trim();
       
       if (imgColor && currentSelectedColorName && currentSelectedColorName !== 'default') {
-        if (imgColor === currentSelectedColorName || currentSelectedColorName.includes(imgColor) || imgColor.includes(currentSelectedColorName)) {
+        if (imgColor === currentSelectedColorName) {
           if (!colorMatches.includes(imgObj.url)) {
             colorMatches.push(imgObj.url);
           }
@@ -616,9 +621,7 @@ export function ProductDetailPage() {
       const shouldPrepend = primaryImg &&
         !colorMatches.includes(primaryImg) &&
         (!primaryColorTag || 
-          primaryColorTag === currentSelectedColorName || 
-          currentSelectedColorName.includes(primaryColorTag) || 
-          primaryColorTag.includes(currentSelectedColorName));
+          primaryColorTag === currentSelectedColorName);
       return shouldPrepend ? [primaryImg, ...colorMatches] : colorMatches;
     }
 
@@ -1188,7 +1191,7 @@ export function ProductDetailPage() {
                     Description
                     <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                   </summary>
-                  <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: product.description }} />
+                  <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: parseHtmlInput(product.description) }} />
                 </details>
               )}
               
@@ -1199,9 +1202,10 @@ export function ProductDetailPage() {
                     {sec.title}
                     <span className="material-symbols-outlined group-open:rotate-180 transition-transform text-secondary/50" style={{ fontSize: '14px' }}>expand_more</span>
                   </summary>
-                  <div className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap">
-                    {sec.content}
-                  </div>
+                  <div 
+                    className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: parseHtmlInput(sec.content) }}
+                  />
                 </details>
               ))}
 
@@ -1213,7 +1217,7 @@ export function ProductDetailPage() {
                 </summary>
                 <div 
                   className="pt-2 pb-1 text-[11px] text-secondary/70 leading-relaxed pr-2 whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{ __html: product.shippingReturns || globalShippingReturns }}
+                  dangerouslySetInnerHTML={{ __html: parseHtmlInput(product.shippingReturns || globalShippingReturns) }}
                 />
               </details>
             </div>
